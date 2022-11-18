@@ -12,7 +12,7 @@ function matchTableCell(node: any, delta: Delta) {
     : node.parentNode.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
   const cells = Array.from(node.parentNode.querySelectorAll('td'));
-  const row = rows.indexOf(node.parentNode) + 1;
+  const row = node.parentNode.getAttribute('data-row') || rows.indexOf(node.parentNode) + 1;
   const cell = cells.indexOf(node) + 1;
   if (!delta.length()) delta.insert('\n');
   return applyFormat(delta, 'table-cell-block', { row, cell });
