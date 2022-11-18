@@ -27,66 +27,47 @@ class TableCellBlock extends Block {
     return node;
   }
 
-  // static formats(domNode: Element) {
-  //   // if (domNode.hasAttribute('data-row')) {
-  //   //   return domNode.getAttribute('data-row');
-  //   // }
-  //   // return undefined;
-  //   const formats = {}
-
-  //   if (domNode.hasAttribute('data-row')) {
-  //     // @ts-ignore
-  //     formats['row'] = domNode.getAttribute('data-row');
-  //   }
-
-  //   if (domNode.hasAttribute('data-cell')) {
-  //     // @ts-ignore
-  //     formats['cell'] = domNode.getAttribute('data-cell');
-  //   }
-
-  //   return formats;
-  // }
+  static formats(domNode: Element) {
+    const formats = {}
+    if (domNode.hasAttribute('data-row')) {
+      // @ts-ignore
+      formats['row'] = domNode.getAttribute('data-row');
+    }
+    if (domNode.hasAttribute('data-cell')) {
+      // @ts-ignore
+      formats['cell'] = domNode.getAttribute('data-cell');
+    }
+    return formats;
+  }
 
   formats() {
-    // if (this.domNode.hasAttribute('data-cell')) {
-    //   return this.domNode.getAttribute('data-cell');
-    // }
-    const formats = {}
-
-    if (this.domNode.hasAttribute('data-row')) {
-      // @ts-ignore
-      formats['row'] = this.domNode.getAttribute('data-row');
+    const formats = this.attributes.values();
+    const format = this.statics.formats(this.domNode, this.scroll);
+    if (format != null) {
+      formats[this.statics.blotName] = format;
     }
-
-    if (this.domNode.hasAttribute('data-cell')) {
-      // @ts-ignore
-      formats['cell'] = this.domNode.getAttribute('data-cell');
-    }
-
     return formats;
   }
 
   format(name: string, value: string | any) {
-    if (name === TableCellBlock.blotName && value) {
-      // this.domNode.setAttribute('data-row', value.row);
-      // this.domNode.setAttribute('data-cell', value.cell);
-      super.format(name, value);
+    if (name === TableCell.blotName && value) {
+      this.domNode.setAttribute('data-row', value);
     } else {
       super.format(name, value);
     }
   }
 
-  // optimize(context: any) {
-  //   // cover shadowBlot's wrap call, pass params parentBlot initialize
-  //   const row = this.domNode.getAttribute('data-row');
-  //   if (
-  //     this.statics.requiredContainer &&
-  //     !(this.parent instanceof this.statics.requiredContainer)
-  //   ) {
-  //     this.wrap(this.statics.requiredContainer.blotName, row);
-  //   }
-  //   super.optimize(context);
-  // }
+  optimize(context: any) {
+    // cover shadowBlot's wrap call, pass params parentBlot initialize
+    const row = this.domNode.getAttribute('data-row');
+    if (
+      this.statics.requiredContainer &&
+      !(this.parent instanceof this.statics.requiredContainer)
+    ) {
+      this.wrap(this.statics.requiredContainer.blotName, row);
+    }
+    super.optimize(context);
+  }
 }
 TableCellBlock.blotName = 'table-cell-block';
 TableCellBlock.tagName = 'P';
@@ -94,11 +75,10 @@ TableCellBlock.tagName = 'P';
 class TableCell extends Container {
   checkMerge() {
     if (super.checkMerge()) {
-      const thisHead = this.children.head.formats();
-      const thisTail = this.children.tail.formats();
-      const nextHead = this.next.children.head.formats();
-      const nextTail = this.next.children.tail.formats();
-      // console.log(thisHead, thisTail, nextHead, nextTail)
+      const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
+      const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
+      const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
+      const nextTail = this.next.children.tail.formats()[this.next.children.tail.statics.blotName];
       return (
         thisHead.cell === thisTail.cell &&
         thisHead.cell === nextHead.cell &&
@@ -177,12 +157,6 @@ class TableRow extends Container {
       const thisTail = this.children.tail.formats();
       const nextHead = this.next.children.head.formats();
       const nextTail = this.next.children.tail.formats();
-      // console.log(thisHead, thisTail, nextHead, nextTail)
-      // return (
-      //   thisHead.table === thisTail.table &&
-      //   thisHead.table === nextHead.table &&
-      //   thisHead.table === nextTail.table
-      // );
       return (
         thisHead === thisTail &&
         thisHead === nextHead &&
