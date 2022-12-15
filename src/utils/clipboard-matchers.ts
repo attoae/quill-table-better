@@ -14,8 +14,13 @@ function matchTableCell(node: any, delta: Delta) {
   const cells = Array.from(node.parentNode.querySelectorAll('td'));
   const row = node.parentNode.getAttribute('data-row') || rows.indexOf(node.parentNode) + 1;
   const cell = cells.indexOf(node) + 1;
-  if (!delta.length()) delta.insert('\n');
-  return applyFormat(delta, 'table-cell-block', { row, cell });
+  if (!delta.length()) delta.insert('\n', { table: { 'data-row': row } });
+  delta.ops.forEach(op => {
+    if (op.attributes && op.attributes.table) {
+      op.attributes.table = { ...op.attributes.table, 'data-row': row };
+    }
+  })
+  return applyFormat(delta, 'table-cell-block', cell);
 }
 
 function matchTableCol(node: Element, delta: Delta) {

@@ -1,6 +1,7 @@
 import Quill from 'quill';
 import QuillTableBetter from '../src/quill-table-better';
 import 'quill/dist/quill.snow.css';
+import '../src/assets/css/quill-table-better.scss';
 
 Quill.register({
   'modules/table-better': QuillTableBetter
