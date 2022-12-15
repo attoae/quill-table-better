@@ -19,8 +19,8 @@ class Table extends Module {
     Quill.register(TableCellBlock, true);
     Quill.register(TableCell, true);
     Quill.register(TableRow, true);
-    Quill.register(TableCol, true);
-    Quill.register(TableColGroup, true);
+    // Quill.register(TableCol, true);
+    // Quill.register(TableColGroup, true);
     Quill.register(TableBody, true);
     Quill.register(TableContainer, true);
   }
@@ -29,7 +29,7 @@ class Table extends Module {
     super(quill, options);
     this.listenBalanceCells();
     quill.clipboard.addMatcher('td', matchTableCell);
-    quill.clipboard.addMatcher('table', matchTableCol);
+    // quill.clipboard.addMatcher('table', matchTableCol);
   }
 
   deleteColumn() {

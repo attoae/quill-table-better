@@ -3,24 +3,13 @@ import Quill from 'quill';
 const Block = Quill.import('blots/block');
 const Container = Quill.import('blots/container');
 
-const CELL_ATTRIBUTES = ['data-row', 'width', 'height'];
-
-interface TableCellBlockValue {
-  row: number | string | undefined
-  cell: number | string | undefined
-}
+const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
 
 class TableCellBlock extends Block {
-  static create(value: TableCellBlockValue) {
-    const { row, cell } = value;
+  static create(value: string) {
     const node = super.create();
-    if (row) {
-      node.setAttribute('data-row', row);
-    } else {
-      node.setAttribute('data-row', tableId());
-    }
-    if (cell) {
-      node.setAttribute('data-cell', cell);
+    if (value) {
+      node.setAttribute('data-cell', value);
     } else {
       node.setAttribute('data-cell', cellId());
     }
@@ -28,48 +17,23 @@ class TableCellBlock extends Block {
   }
 
   static formats(domNode: Element) {
-    const formats = {}
-    if (domNode.hasAttribute('data-row')) {
-      // @ts-ignore
-      formats['row'] = domNode.getAttribute('data-row');
-    }
     if (domNode.hasAttribute('data-cell')) {
-      // @ts-ignore
-      formats['cell'] = domNode.getAttribute('data-cell');
+      return domNode.getAttribute('data-cell');
     }
-    return formats;
-  }
-
-  formats() {
-    const formats = this.attributes.values();
-    const format = this.statics.formats(this.domNode, this.scroll);
-    if (format != null) {
-      formats[this.statics.blotName] = format;
-    }
-    return formats;
+    return undefined;
   }
 
   format(name: string, value: string | any) {
     if (name === TableCell.blotName && value) {
-      this.domNode.setAttribute('data-row', value);
+      // this.domNode.setAttribute('data-row', value);
+      this.wrap(name, value);
     } else {
       super.format(name, value);
     }
   }
-
-  optimize(context: any) {
-    // cover shadowBlot's wrap call, pass params parentBlot initialize
-    const row = this.domNode.getAttribute('data-row');
-    if (
-      this.statics.requiredContainer &&
-      !(this.parent instanceof this.statics.requiredContainer)
-    ) {
-      this.wrap(this.statics.requiredContainer.blotName, row);
-    }
-    super.optimize(context);
-  }
 }
 TableCellBlock.blotName = 'table-cell-block';
+TableCellBlock.className = 'ql-table-block';
 TableCellBlock.tagName = 'P';
 
 class TableCell extends Container {
@@ -80,36 +44,36 @@ class TableCell extends Container {
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
       const nextTail = this.next.children.tail.formats()[this.next.children.tail.statics.blotName];
       return (
-        thisHead.cell === thisTail.cell &&
-        thisHead.cell === nextHead.cell &&
-        thisHead.cell === nextTail.cell
+        thisHead === thisTail &&
+        thisHead === nextHead &&
+        thisHead === nextTail
       );
     }
     return false;
   }
   
-  static create(value: string | Object) {
+  static create(value: Object) {
     const node = super.create();
-    if (value) {
-      node.setAttribute('data-row', value);
-    } else {
-      node.setAttribute('data-row', tableId());
+    const keys = Object.keys(value);
+    for (const key of keys) {
+      // @ts-ignore
+      node.setAttribute(key, value[key]);
     }
     return node;
   }
 
   static formats(domNode: Element) {
-    if (domNode.hasAttribute('data-row')) {
-      return domNode.getAttribute('data-row');
-    }
-    return undefined;
+    return CELL_ATTRIBUTE.reduce((formats, attr) => {
+      if (domNode.hasAttribute(attr)) {
+        // @ts-ignore
+        formats[attr] = domNode.getAttribute(attr);
+      }
+      return formats;
+    }, {});
   }
 
   formats() {
-    if (this.domNode.hasAttribute('data-row')) {
-      return this.domNode.getAttribute('data-row');
-    }
-    return undefined;
+    return this.statics.formats(this.domNode, this.scroll);
   }
 
   format(name: string, value: string) {
@@ -127,25 +91,6 @@ class TableCell extends Container {
     }
     return cur;
   }
-
-  // optimize(...args: any[]) {
-  //   super.optimize(...args);
-  //   this.children.forEach((child: any) => {
-  //     if (child.next == null) return;
-  //     const childFormats = child.formats();
-  //     const nextFormats = child.next.formats();
-  //     if (childFormats.table !== nextFormats.table) {
-  //       const next = this.splitAfter(child);
-  //       if (next) {
-  //         next.optimize();
-  //       }
-  //       // We might be able to merge with prev now
-  //       if (this.prev) {
-  //         this.prev.optimize();
-  //       }
-  //     }
-  //   });
-  // }
 }
 TableCell.blotName = 'table';
 TableCell.tagName = 'TD';
@@ -158,31 +103,12 @@ class TableRow extends Container {
       const nextHead = this.next.children.head.formats();
       const nextTail = this.next.children.tail.formats();
       return (
-        thisHead === thisTail &&
-        thisHead === nextHead &&
-        thisHead === nextTail
+        thisHead['data-row'] === thisTail['data-row'] &&
+        thisHead['data-row'] === nextHead['data-row'] &&
+        thisHead['data-row'] === nextTail['data-row']
       );
     }
     return false;
-  }
-
-  optimize(...args: any[]) {
-    super.optimize(...args);
-    this.children.forEach((child: any) => {
-      if (child.next == null) return;
-      const childFormats = child.formats();
-      const nextFormats = child.next.formats();
-      if (childFormats.table !== nextFormats.table) {
-        const next = this.splitAfter(child);
-        if (next) {
-          next.optimize();
-        }
-        // We might be able to merge with prev now
-        if (this.prev) {
-          this.prev.optimize();
-        }
-      }
-    });
   }
 }
 TableRow.blotName = 'table-row';
@@ -270,12 +196,13 @@ class TableContainer extends Container {
 TableContainer.blotName = 'table-container';
 TableContainer.tagName = 'TABLE';
 
-TableContainer.allowedChildren = [TableBody, TableColGroup];
+// TableContainer.allowedChildren = [TableBody, TableColGroup];
+TableContainer.allowedChildren = [TableBody];
 TableBody.requiredContainer = TableContainer;
 TableColGroup.requiredContainer = TableContainer;
 
-TableColGroup.allowedChildren = [TableCol];
-TableCol.requiredContainer = TableColGroup;
+// TableColGroup.allowedChildren = [TableCol];
+// TableCol.requiredContainer = TableColGroup;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
@@ -283,7 +210,7 @@ TableRow.requiredContainer = TableBody;
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
 
-TableCell.allowedChildren = [TableCellBlock];
+TableCell.allowedChildren = [TableCellBlock, TableContainer];
 TableCellBlock.requiredContainer = TableCell;
 
 function tableId() {
