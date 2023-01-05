@@ -7,9 +7,9 @@ interface Format {
 
 function matchTableCell(node: any, delta: Delta) {
   const table =
-  node.parentNode.parentNode.tagName === 'TABLE'
-    ? node.parentNode.parentNode
-    : node.parentNode.parentNode.parentNode;
+    node.parentNode.parentNode.tagName === 'TABLE'
+      ? node.parentNode.parentNode
+      : node.parentNode.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
   const cells = Array.from(node.parentNode.querySelectorAll('td'));
   const row = node.parentNode.getAttribute('data-row') || rows.indexOf(node.parentNode) + 1;
@@ -54,7 +54,7 @@ function applyFormat(delta: Delta, format: Format | string, value?: any): Delta 
     }
     return newDelta.insert(
       op.insert,
-      extend({}, { [format]: value }, op.attributes),
+      extend({}, { [format]: value }, op.attributes)
     );
   }, new Delta());
 }
