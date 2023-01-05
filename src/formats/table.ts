@@ -3,7 +3,9 @@ import Quill from 'quill';
 const Block = Quill.import('blots/block');
 const Container = Quill.import('blots/container');
 
-const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
+// const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
+const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan'];
+const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
 
 class TableCellBlock extends Block {
   static create(value: string) {
@@ -20,12 +22,14 @@ class TableCellBlock extends Block {
     if (domNode.hasAttribute('data-cell')) {
       return domNode.getAttribute('data-cell');
     }
-    return undefined;
+    // return undefined;
   }
 
   format(name: string, value: string | any) {
     if (name === TableCell.blotName && value) {
       // this.domNode.setAttribute('data-row', value);
+      this.wrap(name, value);
+    } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
     } else {
       super.format(name, value);
@@ -114,32 +118,35 @@ class TableRow extends Container {
 TableRow.blotName = 'table-row';
 TableRow.tagName = 'TR';
 
-class TableCol extends Block {
-  static create (value: any) {
-    const node = super.create();
-    return node;
-  }
-
-  // static formats(domNode: Element) {
-    
-  // }
-
-  format(name: string, value: any) {
-    super.format(name, value);
-  }
-}
-TableCol.blotName = 'table-col';
-TableCol.tagName = 'col';
-
-class TableColGroup extends Container {}
-TableColGroup.blotName = 'table-col-group';
-TableColGroup.tagName = 'colgroup';
-
 class TableBody extends Container {}
 TableBody.blotName = 'table-body';
 TableBody.tagName = 'TBODY';
 
 class TableContainer extends Container {
+  // static create(value: Object) {
+  //   const node = super.create();
+  //   const keys = Object.keys(value);
+  //   for (const key of keys) {
+  //     // @ts-ignore
+  //     node.setAttribute(key, value[key]);
+  //   }
+  //   return node;
+  // }
+
+  // static formats(domNode: Element) {
+  //   return TABLE_ATTRIBUTE.reduce((formats, attr) => {
+  //     if (domNode.hasAttribute(attr)) {
+  //       // @ts-ignore
+  //       formats[attr] = domNode.getAttribute(attr);
+  //     }
+  //     return formats;
+  //   }, {});
+  // }
+
+  // formats() {
+  //   return this.statics.formats(this.domNode, this.scroll);
+  // }
+
   balanceCells() {
     const rows = this.descendants(TableRow);
     const maxColumns = rows.reduce((max: number, row: any) => {
@@ -196,13 +203,8 @@ class TableContainer extends Container {
 TableContainer.blotName = 'table-container';
 TableContainer.tagName = 'TABLE';
 
-// TableContainer.allowedChildren = [TableBody, TableColGroup];
 TableContainer.allowedChildren = [TableBody];
 TableBody.requiredContainer = TableContainer;
-TableColGroup.requiredContainer = TableContainer;
-
-// TableColGroup.allowedChildren = [TableCol];
-// TableCol.requiredContainer = TableColGroup;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
@@ -231,8 +233,6 @@ export {
   TableCellBlock,
   TableCell,
   TableRow,
-  TableCol,
-  TableColGroup,
   TableBody,
   TableContainer,
   tableId

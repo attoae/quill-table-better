@@ -1,3 +1,22 @@
+$lineColor: #0589f3;
+
 table {
   width: auto !important;
+}
+.ql-operate-line-container {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .ql-operate-line {
+    background-color: $lineColor;
+  }
+}
+
+.ql-operate-box {
+  position: absolute;
+  z-index: 100;
+  border: 1px solid #979797;
+  cursor: nwse-resize;
 }

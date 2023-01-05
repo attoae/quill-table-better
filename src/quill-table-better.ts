@@ -4,13 +4,13 @@ import {
   TableCellBlock,
   TableCell,
   TableRow,
-  TableCol,
-  TableColGroup,
   TableBody,
   TableContainer,
   tableId,
 } from './formats/table';
 import { matchTableCell, matchTableCol } from './utils/clipboard-matchers';
+import { getEventComposedPath } from './utils';
+import OperateLine from './ui/operate-line';
 
 const Module = Quill.import('core/module');
 
@@ -19,8 +19,6 @@ class Table extends Module {
     Quill.register(TableCellBlock, true);
     Quill.register(TableCell, true);
     Quill.register(TableRow, true);
-    // Quill.register(TableCol, true);
-    // Quill.register(TableColGroup, true);
     Quill.register(TableBody, true);
     Quill.register(TableContainer, true);
   }
@@ -30,6 +28,28 @@ class Table extends Module {
     this.listenBalanceCells();
     quill.clipboard.addMatcher('td', matchTableCell);
     // quill.clipboard.addMatcher('table', matchTableCol);
+    this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
+      const path = getEventComposedPath(e);
+      if (!path || !path.length) return;
+      let cellNode, tableNode;
+      const mousePosition = {
+        clientX: 0,
+        clientY: 0
+      }
+      for (const node of path) {
+        if (cellNode && tableNode) break;
+        if (node.tagName && node.tagName.toUpperCase() === 'TABLE') {
+          tableNode = node;
+        }
+        if (node.tagName && node.tagName.toUpperCase() === 'TD') {
+          cellNode = node;
+          mousePosition.clientX = e.clientX;
+          mousePosition.clientY = e.clientY;
+        }
+      }
+      if (!tableNode) return;
+      new OperateLine(quill, { tableNode, cellNode, mousePosition });
+    })
   }
 
   deleteColumn() {
