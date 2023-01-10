@@ -47,8 +47,18 @@ class Table extends Module {
           mousePosition.clientY = e.clientY;
         }
       }
-      if (!tableNode) return;
-      new OperateLine(quill, { tableNode, cellNode, mousePosition });
+      if (!tableNode) {
+        if (this.operateLine) {
+          this.operateLine.hideLine();
+          this.operateLine.hideBox();
+        }
+        return;
+      }
+      if (!this.operateLine) {
+        this.operateLine = new OperateLine(quill, { tableNode, cellNode, mousePosition });
+      } else {
+        this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
+      }
     })
   }
 
