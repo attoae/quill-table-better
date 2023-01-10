@@ -16,13 +16,15 @@ class OperateLine {
   quill: any;
   options: Options;
   drag: boolean;
-  domNode: Element | null;
+  line: HTMLElement | null;
+  box: HTMLElement | null;
   direction: string | null;
   constructor(quill: any, options: Options) {
     this.quill = quill;
     this.options = options;
     this.drag = false;
-    this.domNode = null;
+    this.line = null;
+    this.box = null;
     this.direction = null; // 1.level 2.vertical
     this.createOperateLine();
     this.createOperateBox();
@@ -33,25 +35,27 @@ class OperateLine {
     const line = document.createElement('div');
     container.classList.add('ql-operate-line-container');
     line.classList.add('ql-operate-line');
-    const { containerProps, lineProps } = this.getProperty();
+    const { containerProps, lineProps } = this.getProperty(this.options);
     if (!containerProps || !lineProps) return;
     setElementProperty(container, containerProps);
     setElementProperty(line, lineProps);
     container.appendChild(line);
     this.quill.container.appendChild(container);
+    this.line = container;
     this.updateCell(container);
   }
 
   createOperateBox() {
     const box = document.createElement('div');
     box.classList.add('ql-operate-box');
-    const { boxProps } = this.getProperty();
+    const { boxProps } = this.getProperty(this.options);
     setElementProperty(box, boxProps);
+    this.box = box;
     this.quill.container.appendChild(box);
   }
 
-  getProperty() {
-    const { tableNode, cellNode, mousePosition } = this.options;
+  getProperty(options: Options) {
+    const { tableNode, cellNode, mousePosition } = options;
     const { clientX, clientY } = mousePosition;
     const tableRect = tableNode.getBoundingClientRect();
     const cellRect = cellNode.getBoundingClientRect();
@@ -62,7 +66,8 @@ class OperateLine {
       width: `${BOX_WIDTH}px`,
       height: `${BOX_HEIGHT}px`,
       top: `${tableRect.bottom - rootRect.top}px`,
-      left: `${tableRect.right - rootRect.left}px`
+      left: `${tableRect.right - rootRect.left}px`,
+      display: 'block'
     }
     if (Math.abs(x - clientX) <= 5) {
       this.direction = 'level';
@@ -98,45 +103,69 @@ class OperateLine {
           height: '1px'
         }
       }
+    } else {
+      this.hideLine();
     }
     return { boxProps };
   }
 
-  setCellRect(cell: Element, table: Element, clientX: number, clientY: number) {
+  updateProperty(options: Options) {
+    const { containerProps, lineProps, boxProps } = this.getProperty(options);
+    if (!containerProps || !lineProps) return;
+    setElementProperty(this.line, containerProps);
+    setElementProperty(this.line.firstChild as HTMLElement, lineProps);
+    setElementProperty(this.box, boxProps);
+    this.updateCell(this.line);
+  }
+
+  setCellRect(cell: Element, clientX: number, clientY: number) {
     if (this.direction === 'level') {
-      this.setCellLevelRect(cell, table, clientX);
+      this.setCellLevelRect(cell, clientX);
     } else if (this.direction === 'vertical') {
-      this.setCellVerticalRect(cell, table, clientY);
+      this.setCellVerticalRect(cell, clientY);
     }
   }
 
-  setCellLevelRect(cell: Element, table: Element, clientX: number) {
-    
+  setCellLevelRect(cell: Element, clientX: number) {
+    // this.line
   }
 
-  setCellVerticalRect(cell: Element, table: Element, clientY: number) {
-    
+  setCellVerticalRect(cell: Element, clientY: number) {
+    // this.line
   }
 
   updateCell(node: Element) {
+    if (!node) return;
     function handleDrag(e: MouseEvent) {
       e.preventDefault();
-      const { tableNode, cellNode } = this.options;
-      this.setCellRect(cellNode, tableNode, e.clientX, e.clientY);
+      if (this.drag) {
+        const { cellNode } = this.options;
+        this.setCellRect(cellNode, e.clientX, e.clientY);
+      }
     }
 
     function handleMouseup(e: MouseEvent) {
       e.preventDefault();
+      this.drag = false;
       document.removeEventListener('mousemove', handleDrag, false);
       document.removeEventListener('mouseup', handleMouseup, false);
     }
 
     function handleMousedown(e: MouseEvent) {
       e.preventDefault();
+      this.drag = true;
       document.addEventListener('mousemove', handleDrag, false);
       document.addEventListener('mouseup', handleMouseup, false);
     }
-    node && node.addEventListener('mousedown', handleMousedown, false);
+    node.addEventListener('mousedown', handleMousedown, false);
+  }
+
+  hideLine() {
+    setElementProperty(this.line, { display: 'none' });
+  }
+
+  hideBox() {
+    setElementProperty(this.box, { display: 'none' });
   }
 }
 
