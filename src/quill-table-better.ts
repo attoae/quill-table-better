@@ -48,7 +48,7 @@ class Table extends Module {
         }
       }
       if (!tableNode) {
-        if (this.operateLine) {
+        if (this.operateLine && !this.operateLine.drag) {
           this.operateLine.hideLine();
           this.operateLine.hideBox();
         }
@@ -57,9 +57,10 @@ class Table extends Module {
       if (!this.operateLine) {
         this.operateLine = new OperateLine(quill, { tableNode, cellNode, mousePosition });
       } else {
+        if (this.operateLine.drag) return;
         this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
       }
-    })
+    }, false)
   }
 
   deleteColumn() {

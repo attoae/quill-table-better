@@ -112,10 +112,10 @@ class OperateLine {
   updateProperty(options: Options) {
     const { containerProps, lineProps, boxProps } = this.getProperty(options);
     if (!containerProps || !lineProps) return;
+    this.options = options;
     setElementProperty(this.line, containerProps);
     setElementProperty(this.line.firstChild as HTMLElement, lineProps);
     setElementProperty(this.box, boxProps);
-    this.updateCell(this.line);
   }
 
   setCellRect(cell: Element, clientX: number, clientY: number) {
@@ -131,27 +131,45 @@ class OperateLine {
   }
 
   setCellVerticalRect(cell: Element, clientY: number) {
-    // this.line
+    const rowspan = ~~cell.getAttribute('rowspan') || 1;
+    const cells = rowspan > 1 ? this.getVerticalCells(cell, rowspan) : cell.parentElement.children;
+    const qlRect = this.quill.container.getBoundingClientRect();
+    for (const cell of cells) {
+      const { top } = cell.getBoundingClientRect();
+      cell.setAttribute('height', `${~~(clientY - top)}`);
+    }
+    setElementProperty(this.line, { top: `${clientY - qlRect.top - LINE_CONTAINER_HEIGHT / 2}px` });
+  }
+
+  getVerticalCells(cell: Element, rowspan: number) {
+    let row = cell.parentElement;
+    while (rowspan > 1 && row) {
+      // @ts-ignore
+      row = row.nextSibling;
+      rowspan--;
+    }
+    return row.children;
   }
 
   updateCell(node: Element) {
     if (!node) return;
-    function handleDrag(e: MouseEvent) {
+    const handleDrag = (e: MouseEvent) => {
       e.preventDefault();
       if (this.drag) {
         const { cellNode } = this.options;
         this.setCellRect(cellNode, e.clientX, e.clientY);
+        this.hideBox();
       }
     }
 
-    function handleMouseup(e: MouseEvent) {
+    const handleMouseup = (e: MouseEvent) => {
       e.preventDefault();
       this.drag = false;
       document.removeEventListener('mousemove', handleDrag, false);
       document.removeEventListener('mouseup', handleMouseup, false);
     }
 
-    function handleMousedown(e: MouseEvent) {
+    const handleMousedown = (e: MouseEvent) => {
       e.preventDefault();
       this.drag = true;
       document.addEventListener('mousemove', handleDrag, false);
