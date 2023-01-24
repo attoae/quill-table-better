@@ -21,6 +21,10 @@ export function getEventComposedPath(e: any) {
 
 export function setElementProperty(node: HTMLElement, properties: Properties) {
   const style = node.style;
+  if (!style) {
+    node.setAttribute('style', properties.toString());
+    return;
+  }
   for (const propertyName in properties) {
     style.setProperty(propertyName, properties[propertyName]);
   }
