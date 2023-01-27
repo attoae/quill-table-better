@@ -127,7 +127,50 @@ class OperateLine {
   }
 
   setCellLevelRect(cell: Element, clientX: number) {
-    // this.line
+    const { tableNode } = this.options;
+    const qlRect = this.quill.container.getBoundingClientRect();
+    const { right } = cell.getBoundingClientRect();
+    // const change = ~~(clientX - right);
+    const change = clientX - right;
+    const cols = this.getLevelColNum(cell);
+    const rows = cell.parentElement.parentElement.children;
+    const isLastCell = cell.nextElementSibling == null;
+    for (const row of rows) {
+      const cells = row.children;
+      if (isLastCell) {
+        const cell = cells[cells.length - 1];
+        const { width } = cell.getBoundingClientRect();
+        cell.setAttribute('width', `${~~(width + change)}`);
+        break;
+      }
+      let nums = 0;
+      for (const cell of cells) {
+        const colspan = ~~cell.getAttribute('colspan') || 1;
+        nums += colspan;
+        if (nums === cols) {
+          const { width } = cell.getBoundingClientRect();
+          const nextCell = cell.nextElementSibling;
+          const { width: nextWidth } = nextCell.getBoundingClientRect();
+          // cell.setAttribute('width', `${~~(width + change)}`);
+          // nextCell.setAttribute('width', `${~~(nextWidth - change)}`);
+          break;
+          // console.log(width + change, nextWidth - change, change, cols)
+        }
+      }
+    }
+    setElementProperty(this.line, { left: `${clientX - qlRect.left - LINE_CONTAINER_WIDTH / 2}px` });
+  }
+
+  getLevelColNum(cell: Element) {
+    let previousNode = cell;
+    let nums = 0;
+    while (previousNode) {
+      const colspan = ~~previousNode.getAttribute('colspan') || 1;
+      nums += colspan;
+      // @ts-ignore
+      previousNode = previousNode.previousSibling;
+    }
+    return nums;
   }
 
   setCellVerticalRect(cell: Element, clientY: number) {
