@@ -13,10 +13,17 @@ table {
     background-color: $lineColor;
   }
 }
-
 .ql-operate-box {
   position: absolute;
   z-index: 100;
   border: 1px solid #979797;
   cursor: nwse-resize;
+  &-move {
+    cursor: crosshair;
+    border: none;
+  }
+}
+.ql-operate-drag-table {
+  border: 1px dashed #000;
+  position: absolute;
 }
