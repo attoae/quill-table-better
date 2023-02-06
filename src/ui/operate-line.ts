@@ -243,8 +243,9 @@ class OperateLine {
     for (const row of rows) {
       const cells = row.children;
       for (const cell of cells) {
+        const colspan = ~~cell.getAttribute('colspan') || 1;
         const { width, height } = cell.getBoundingClientRect();
-        preNodes.push([cell, `${Math.ceil(width + averageX)}`, `${Math.ceil(height + averageY)}`]);
+        preNodes.push([cell, `${Math.ceil(width + averageX * colspan)}`, `${Math.ceil(height + averageY)}`]);
       }
     }
 
