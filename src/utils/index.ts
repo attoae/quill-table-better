@@ -1,11 +1,7 @@
 interface Properties {
   [propertyName: string]: string
 }
-/**
- * getEventComposedPath
- * @param {Event} e
- * @return {Array} event.path
- */
+
 export function getEventComposedPath(e: any) {
   const path = e.path || (e.composedPath && e.composedPath()) || [];
   if (path.length) return path;
@@ -17,6 +13,23 @@ export function getEventComposedPath(e: any) {
     path.push(target);
   }
   return path;
+}
+
+export function getBounds(target: Element, container: Element) {
+  const targetBounds = target.getBoundingClientRect();
+  const containerBounds = container.getBoundingClientRect();
+  const left = targetBounds.left - containerBounds.left;
+  const top = targetBounds.top - containerBounds.top;
+  const width = targetBounds.width;
+  const height = targetBounds.height;
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height
+  }
 }
 
 export function setElementProperty(node: HTMLElement, properties: Properties) {
