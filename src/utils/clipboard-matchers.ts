@@ -42,6 +42,17 @@ function matchTableCol(node: Element, delta: Delta) {
   return delta;
 }
 
+function matchTable(node: any, delta: Delta) {
+  const table =
+    node.parentNode.tagName === 'TABLE'
+      ? node.parentNode
+      : node.parentNode.parentNode;
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const row = rows.indexOf(node) + 1;
+  if (!node.innerHTML.replace(/\s/g, '')) return new Delta();
+  return applyFormat(delta, 'table', row);
+}
+
 function applyFormat(delta: Delta, format: Format | string, value?: any): Delta {
   if (typeof format === 'object') {
     return Object.keys(format).reduce((newDelta, key) => {
@@ -61,5 +72,6 @@ function applyFormat(delta: Delta, format: Format | string, value?: any): Delta 
 
 export {
   matchTableCell,
-  matchTableCol
+  matchTableCol,
+  matchTable
 }

@@ -67,10 +67,21 @@ class TableCell extends Container {
   }
 
   static formats(domNode: Element) {
+    let nextNode = domNode.parentElement.nextElementSibling;
+    let rowspan = 0;
+    while (nextNode && !nextNode.innerHTML.replace(/\s/g, '')) {
+      rowspan++;
+      nextNode = nextNode.nextElementSibling;
+    }
     return CELL_ATTRIBUTE.reduce((formats, attr) => {
       if (domNode.hasAttribute(attr)) {
-        // @ts-ignore
-        formats[attr] = domNode.getAttribute(attr);
+        if (attr === 'rowspan' && rowspan) {
+          // @ts-ignore
+          formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
+        } else {
+          // @ts-ignore
+          formats[attr] = domNode.getAttribute(attr);
+        }
       }
       return formats;
     }, {});
