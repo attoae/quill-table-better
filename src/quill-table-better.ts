@@ -8,7 +8,7 @@ import {
   TableContainer,
   tableId,
 } from './formats/table';
-import { matchTableCell, matchTableCol } from './utils/clipboard-matchers';
+import { matchTableCell, matchTableCol, matchTable } from './utils/clipboard-matchers';
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 
@@ -27,6 +27,7 @@ class Table extends Module {
     super(quill, options);
     this.listenBalanceCells();
     quill.clipboard.addMatcher('td', matchTableCell);
+    quill.clipboard.addMatcher('tr', matchTable);
     // quill.clipboard.addMatcher('table', matchTableCol);
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
