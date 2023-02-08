@@ -11,6 +11,7 @@ import {
 import { matchTableCell, matchTableCol, matchTable } from './utils/clipboard-matchers';
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
+import CellSelection from './ui/cell-selection';
 
 const Module = Quill.import('core/module');
 
@@ -61,7 +62,27 @@ class Table extends Module {
         if (this.operateLine.drag) return;
         this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
       }
-    }, false)
+    }, false);
+
+    this.quill.root.addEventListener('click', (e: MouseEvent) => {
+      const path = getEventComposedPath(e);
+      if (!path || !path.length) return;
+      let cellNode, tableNode;
+      for (const node of path) {
+        if (cellNode && tableNode) break;
+        if (node.tagName && node.tagName.toUpperCase() === 'TABLE') {
+          tableNode = node;
+        }
+        if (node.tagName && node.tagName.toUpperCase() === 'TD') {
+          cellNode = node;
+        }
+      }
+      if (!this.cellSelection) {
+        this.cellSelection = new CellSelection(quill, { tableNode, cellNode });
+      } else {
+        
+      }
+    }, false);
   }
 
   deleteColumn() {
@@ -125,7 +146,7 @@ class Table extends Module {
     this.insertColumn(1);
   }
 
-  insertRow(offset: any) {
+  insertRow(offset: number) {
     const range = this.quill.getSelection();
     const [table, row, cell] = this.getTable(range);
     if (cell == null) return;
@@ -151,7 +172,7 @@ class Table extends Module {
     this.insertRow(1);
   }
 
-  insertTable(rows: any, columns: any) {
+  insertTable(rows: number, columns: number) {
     const range = this.quill.getSelection();
     if (range == null) return;
     const delta = new Array(rows).fill(0).reduce(memo => {
@@ -166,7 +187,7 @@ class Table extends Module {
     this.quill.on(Quill.events.SCROLL_OPTIMIZE, (mutations: any) => {
       mutations.some((mutation: any) => {
         if (mutation.target.tagName === 'TABLE') {
-          this.quill.once(Quill.events.TEXT_CHANGE, (delta: Delta, old: any, source: string) => {
+          this.quill.once(Quill.events.TEXT_CHANGE, (delta: Delta, old: Delta, source: string) => {
             if (source !== Quill.sources.USER) return;
             this.quill.scroll.descendants(TableContainer).forEach((table: any) => {
               table.balanceCells();
