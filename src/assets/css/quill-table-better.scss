@@ -1,4 +1,6 @@
-$lineColor: #0589f3;
+$line-color: #0589f3;
+$focused-cell-background: #9ec9fa4d;
+$focused-border-color: #3779eb;
 
 table {
   width: auto !important;
@@ -10,7 +12,7 @@ table {
   justify-content: center;
   align-items: center;
   .ql-operate-line {
-    background-color: $lineColor;
+    background-color: $line-color;
   }
 }
 .ql-operate-box {
@@ -26,4 +28,21 @@ table {
 .ql-operate-drag-table {
   border: 1px dashed #000;
   position: absolute;
+}
+.ql-cell-focused {
+  position: relative;
+  &::after {
+    @extend .ql-cell-selected;
+    border: 1px solid $focused-border-color;
+  }
+}
+.ql-cell-selected {
+  background-color: $focused-cell-background;
+  bottom: 0;
+  content: "";
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
