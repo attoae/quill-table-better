@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import { setElementProperty } from '../utils';
+
 interface Options {
   tableNode: Element
   cellNode: Element
@@ -8,10 +9,12 @@ interface Options {
     clientY: number
   }
 }
+
 const LINE_CONTAINER_WIDTH = 5;
 const LINE_CONTAINER_HEIGHT = 5;
 const BOX_WIDTH = 8;
 const BOX_HEIGHT = 8;
+
 class OperateLine {
   quill: any;
   options: Options;
