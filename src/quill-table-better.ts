@@ -67,20 +67,17 @@ class Table extends Module {
     this.quill.root.addEventListener('click', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
       if (!path || !path.length) return;
-      let cellNode, tableNode;
+      let tableNode;
       for (const node of path) {
-        if (cellNode && tableNode) break;
+        if (tableNode) break;
         if (node.tagName && node.tagName.toUpperCase() === 'TABLE') {
           tableNode = node;
         }
-        if (node.tagName && node.tagName.toUpperCase() === 'TD') {
-          cellNode = node;
-        }
       }
       if (!this.cellSelection) {
-        this.cellSelection = new CellSelection(quill, { tableNode, cellNode });
+        this.cellSelection = new CellSelection(quill, tableNode);
       } else {
-        
+        this.cellSelection.updateTable(tableNode);
       }
     }, false);
   }

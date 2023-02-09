@@ -15,11 +15,11 @@ export function getEventComposedPath(e: any) {
   return path;
 }
 
-export function getBounds(target: Element, container: Element) {
+export function getCorrectBounds(target: Element, container: Element) {
   const targetBounds = target.getBoundingClientRect();
   const containerBounds = container.getBoundingClientRect();
-  const left = targetBounds.left - containerBounds.left;
-  const top = targetBounds.top - containerBounds.top;
+  const left = targetBounds.left - containerBounds.left - container.scrollLeft;
+  const top = targetBounds.top - containerBounds.top - container.scrollTop;
   const width = targetBounds.width;
   const height = targetBounds.height;
   return {
