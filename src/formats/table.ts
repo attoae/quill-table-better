@@ -67,12 +67,7 @@ class TableCell extends Container {
   }
 
   static formats(domNode: Element) {
-    let nextNode = domNode.parentElement.nextElementSibling;
-    let rowspan = 0;
-    while (nextNode && !nextNode.innerHTML.replace(/\s/g, '')) {
-      rowspan++;
-      nextNode = nextNode.nextElementSibling;
-    }
+    const rowspan = this.getEmptyRowspan(domNode);
     return CELL_ATTRIBUTE.reduce((formats, attr) => {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
@@ -89,6 +84,16 @@ class TableCell extends Container {
 
   formats() {
     return this.statics.formats(this.domNode, this.scroll);
+  }
+
+  static getEmptyRowspan(domNode: Element) {
+    let nextNode = domNode.parentElement.nextElementSibling;
+    let rowspan = 0;
+    while (nextNode && !nextNode.innerHTML.replace(/\s/g, '')) {
+      rowspan++;
+      nextNode = nextNode.nextElementSibling;
+    }
+    return rowspan;
   }
 
   format(name: string, value: string) {
