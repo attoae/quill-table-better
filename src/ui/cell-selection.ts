@@ -1,6 +1,7 @@
 import Quill from 'quill';
 import { setElementProperty, getCorrectBounds } from '../utils';
 import { TableCell } from '../formats/table';
+import { Blot } from 'parchment/dist/typings/blot/abstract/blot';
 
 interface CorrectBound {
   left: number;
@@ -26,8 +27,8 @@ class CellSelection {
   }
 
   handleMousedown(e: MouseEvent) {
-    if (!(e.target as Element).closest('table')) return;
     this.clearSelected();
+    if (!(e.target as Element).closest('table')) return;
     const startTd = (e.target as Element).closest('td');
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
@@ -39,20 +40,13 @@ class CellSelection {
       const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
       const computeBounds = this.getComputeBounds(startCorrectBounds, endCorrectBounds);
       this.selectedTds = this.getComputeSelectedTds(computeBounds, this.table);
-      if (this.selectedTds.length === 1) {
-        const td = this.selectedTds[0];
-        td.classList && td.classList.add('ql-cell-focused');
-      } else {
-        for (const td of this.selectedTds) {
-          td.classList && td.classList.add('ql-cell-selected');
-        }
+      for (const td of this.selectedTds) {
+        td.classList && td.classList.add('ql-cell-selected');
       }
-      // e.preventDefault();
       if (startTd !== endTd) this.quill.blur();
     }
 
     const handleMouseup = (e: MouseEvent) => {
-      // e.preventDefault();
       this.quill.root.removeEventListener('mousemove', handleMouseMove, false);
       this.quill.root.removeEventListener('mouseup', handleMouseup, false);
     }

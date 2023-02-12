@@ -20,6 +20,10 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: 'ts-loader'
+      },
+      {
+        test: /\.(html|svg)$/i,
+        loader: 'html-loader'
       }
     ]
   },
