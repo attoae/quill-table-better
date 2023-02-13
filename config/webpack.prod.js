@@ -6,9 +6,13 @@ const commonConfig = require('./webpack.common');
 
 module.exports = merge(commonConfig, {
   mode: 'production',
-  entry: path.resolve(__dirname, '../src/quill-table-better.ts'),
+  context: path.resolve(__dirname, '../src'),
+  entry: {
+    'quill-table-better.js': './quill-table-better.ts',
+    'quill-table-better': './assets/css/quill-table-better.scss'
+  },
   output:{
-    filename: 'quill-table-better.js',
+    filename: '[name]',
     library: 'QuillTableBetter',
     libraryExport: 'default',
     libraryTarget: 'umd',
@@ -29,10 +33,6 @@ module.exports = merge(commonConfig, {
       new CssMinimizerPlugin({
         parallel: 4
       })
-    ],
-    splitChunks: {
-      // include all types of chunks
-      chunks: 'all'
-    }
+    ]
   }
 });
