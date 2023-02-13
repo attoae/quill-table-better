@@ -2,7 +2,7 @@
   "name": "quill-table-better",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/quill-table-better.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --config config/webpack.dev.js",
     "build": "cross-env NODE_ENV=production webpack --config config/webpack.prod.js",
@@ -31,6 +31,7 @@
     "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "^2.6.0",
     "parchment": "^2.0.1",
+    "quill": "^2.0.0-dev.4",
     "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
     "ts-loader": "^9.3.0",
@@ -44,7 +45,6 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.17.9",
-    "quill": "^2.0.0-dev.4",
     "webpack-merge": "^5.8.0"
   },
   "browserslist": [
