@@ -339,10 +339,10 @@ class OperateLine {
         }
       }
       this.drag = true;
-      document.addEventListener('mousemove', handleDrag, false);
-      document.addEventListener('mouseup', handleMouseup, false);
+      document.addEventListener('mousemove', handleDrag);
+      document.addEventListener('mouseup', handleMouseup);
     }
-    node.addEventListener('mousedown', handleMousedown, false);
+    node.addEventListener('mousedown', handleMousedown);
   }
 
   hideLine() {

@@ -19,11 +19,10 @@ class CellSelection {
   table: Element;
   selectedTds: Element[];
   constructor(quill: any, table: Element) {
-    // if (table) return;
     this.quill = quill;
     this.table = table;
     this.selectedTds = [];
-    this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this), false);
+    this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
   }
 
   handleMousedown(e: MouseEvent) {
@@ -47,12 +46,12 @@ class CellSelection {
     }
 
     const handleMouseup = (e: MouseEvent) => {
-      this.quill.root.removeEventListener('mousemove', handleMouseMove, false);
-      this.quill.root.removeEventListener('mouseup', handleMouseup, false);
+      this.quill.root.removeEventListener('mousemove', handleMouseMove);
+      this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
 
-    this.quill.root.addEventListener('mousemove', handleMouseMove, false);
-    this.quill.root.addEventListener('mouseup', handleMouseup, false);
+    this.quill.root.addEventListener('mousemove', handleMouseMove);
+    this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
   clearSelected() {
