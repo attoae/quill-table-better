@@ -12,6 +12,7 @@ import { matchTableCell, matchTableCol, matchTable } from './utils/clipboard-mat
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
+import TableMenus from './ui/table-menus';
 
 const Module = Quill.import('core/module');
 
@@ -62,7 +63,7 @@ class Table extends Module {
         if (this.operateLine.drag) return;
         this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
       }
-    }, false);
+    });
 
     this.quill.root.addEventListener('click', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
@@ -79,7 +80,18 @@ class Table extends Module {
       } else {
         this.cellSelection.updateTable(tableNode);
       }
-    }, false);
+      if (!this.tableMenus) {
+        this.tableMenus = new TableMenus(quill, {
+          clientX: e.clientX,
+          clientY: e.clientY
+        });
+      } else {
+        this.tableMenus.updateMenus({
+          clientX: e.clientX,
+          clientY: e.clientY
+        });
+      }
+    });
   }
 
   deleteColumn() {
