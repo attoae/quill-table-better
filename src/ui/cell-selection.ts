@@ -16,33 +16,34 @@ const DEVIATION = 2;
 
 class CellSelection {
   quill: any;
-  table: Element;
   selectedTds: Element[];
-  constructor(quill: any, table: Element) {
+  constructor(quill: any) {
     this.quill = quill;
-    this.table = table;
     this.selectedTds = [];
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
   }
 
   handleMousedown(e: MouseEvent) {
     this.clearSelected();
-    if (!(e.target as Element).closest('table')) return;
+    const table = (e.target as Element).closest('table');
+    if (!table) return;
     const startTd = (e.target as Element).closest('td');
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
     
     const handleMouseMove = (e: MouseEvent) => {
-      this.clearSelected();
       const endTd = (e.target as Element).closest('td');
+      const isEqualNode = startTd.isEqualNode(endTd);
+      if (isEqualNode) return;
+      this.clearSelected();
       const startCorrectBounds = getCorrectBounds(startTd, this.quill.container);
       const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
       const computeBounds = this.getComputeBounds(startCorrectBounds, endCorrectBounds);
-      this.selectedTds = this.getComputeSelectedTds(computeBounds, this.table);
+      this.selectedTds = this.getComputeSelectedTds(computeBounds, table);
       for (const td of this.selectedTds) {
         td.classList && td.classList.add('ql-cell-selected');
       }
-      if (startTd !== endTd) this.quill.blur();
+      if (!isEqualNode) this.quill.blur();
     }
 
     const handleMouseup = (e: MouseEvent) => {
@@ -84,10 +85,6 @@ class CellSelection {
       }
       return selectedTds;
     }, []);
-  }
-
-  updateTable(table: Element) {
-    this.table = table;
   }
 }
 
