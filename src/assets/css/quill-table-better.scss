@@ -47,7 +47,7 @@ table {
   background-color: $focused-cell-background;
 }
 .ql-table-menus-container {
-  position: relative;
+  position: absolute;
   display: flex;
   align-items: center;
   height: 40px;

@@ -66,18 +66,28 @@ const MENUS_DEFAULTS: MenusDefaults = {
 
 class TableMenus {
   quill: any;
-  root: Element | null;
+  root: Element;
   prevList: HTMLUListElement | null;
-  constructor(quill: any, params: Params, options?: any) {
+  constructor(quill: any, options?: any) {
     this.quill = quill;
-    this.root = null;
+    this.root = this.createMenus();
     this.prevList = null;
-    this.createMenus();
+    this.quill.root.addEventListener('click', this.handleClick.bind(this));
+  }
+
+  handleClick(e: MouseEvent) {
+    const table = (e.target as Element).closest('table');
+    if (!table) {
+      this.root.classList.add('ql-hidden');
+      return;
+    } else {
+      this.root.classList.remove('ql-hidden');
+    }
   }
 
   createMenus() {
     const container = document.createElement('div');
-    container.classList.add('ql-table-menus-container');
+    container.classList.add('ql-table-menus-container', 'ql-hidden');
     for (const [, val] of Object.entries(MENUS_DEFAULTS)) {
       const { content, icon, children } = val;
       const list = this.createList(children);
@@ -89,6 +99,7 @@ class TableMenus {
       menu.addEventListener('click', this.toggleAttribute.bind(this, list));
     }
     this.quill.container.appendChild(container);
+    return container;
   }
 
   createMenu(left: string, right: string, isDropDown: boolean) {
