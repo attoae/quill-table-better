@@ -30,6 +30,8 @@ class Table extends Module {
     this.listenBalanceCells();
     quill.clipboard.addMatcher('td', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
+    this.cellSelection = new CellSelection(quill);
+    this.tableMenus = new TableMenus(quill);
     // quill.clipboard.addMatcher('table', matchTableCol);
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
@@ -46,8 +48,10 @@ class Table extends Module {
         }
         if (node.tagName && node.tagName.toUpperCase() === 'TD') {
           cellNode = node;
-          mousePosition.clientX = e.clientX;
-          mousePosition.clientY = e.clientY;
+          Object.assign(mousePosition, {
+            clientX: e.clientX,
+            clientY: e.clientY
+          });
         }
       }
       if (!tableNode) {
@@ -62,34 +66,6 @@ class Table extends Module {
       } else {
         if (this.operateLine.drag) return;
         this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
-      }
-    });
-
-    this.quill.root.addEventListener('click', (e: MouseEvent) => {
-      const path = getEventComposedPath(e);
-      if (!path || !path.length) return;
-      let tableNode;
-      for (const node of path) {
-        if (tableNode) break;
-        if (node.tagName && node.tagName.toUpperCase() === 'TABLE') {
-          tableNode = node;
-        }
-      }
-      if (!this.cellSelection) {
-        this.cellSelection = new CellSelection(quill, tableNode);
-      } else {
-        this.cellSelection.updateTable(tableNode);
-      }
-      if (!this.tableMenus) {
-        this.tableMenus = new TableMenus(quill, {
-          clientX: e.clientX,
-          clientY: e.clientY
-        });
-      } else {
-        this.tableMenus.updateMenus({
-          clientX: e.clientX,
-          clientY: e.clientY
-        });
       }
     });
   }
