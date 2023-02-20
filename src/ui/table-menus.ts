@@ -1,4 +1,5 @@
 import merge from 'lodash.merge';
+import { setElementProperty, getCorrectBounds } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import downIcon from '../assets/icon/down.svg';
 
@@ -66,10 +67,12 @@ const MENUS_DEFAULTS: MenusDefaults = {
 
 class TableMenus {
   quill: any;
-  root: Element;
+  table: Element | null;
+  root: HTMLElement;
   prevList: HTMLUListElement | null;
   constructor(quill: any, options?: any) {
     this.quill = quill;
+    this.table = null;
     this.root = this.createMenus();
     this.prevList = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
@@ -77,11 +80,30 @@ class TableMenus {
 
   handleClick(e: MouseEvent) {
     const table = (e.target as Element).closest('table');
+    this.prevList && this.prevList.classList.add('ql-hidden');
+    this.prevList = null;
     if (!table) {
       this.root.classList.add('ql-hidden');
       return;
     } else {
+      // const cell = (e.target as Element).closest('td');
+      // const { left, right, top } = getCorrectBounds(cell, this.quill.container);
+      // this.root.classList.remove('ql-hidden');
+      // const { height } = this.root.getBoundingClientRect();
+      // setElementProperty(this.root, {
+      //   left: `${left}px`,
+      //   top: `${top - height - 10}px`
+      // });
       this.root.classList.remove('ql-hidden');
+      if (!table.isEqualNode(this.table)) {
+        const { left, right, top } = getCorrectBounds(table, this.quill.container);
+        const { height, width } = this.root.getBoundingClientRect();
+        setElementProperty(this.root, {
+          left: `${(left + right - width) >> 1}px`,
+          top: `${top - height - 10}px`
+        });
+      }
+      this.table = table;
     }
   }
 
