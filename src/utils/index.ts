@@ -42,3 +42,9 @@ export function setElementProperty(node: HTMLElement, properties: Properties) {
     style.setProperty(propertyName, properties[propertyName]);
   }
 }
+
+export function removeElementProperty(node: HTMLElement, properties: string[]) {
+  for (const property of properties) {
+    node.style.removeProperty(property);
+  }
+}
