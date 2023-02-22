@@ -33,6 +33,7 @@ class CellSelection {
     
     const handleMouseMove = (e: MouseEvent) => {
       const endTd = (e.target as Element).closest('td');
+      if (!endTd) return;
       const isEqualNode = startTd.isEqualNode(endTd);
       if (isEqualNode) return;
       this.clearSelected();
