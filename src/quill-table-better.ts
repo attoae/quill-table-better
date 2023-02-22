@@ -31,7 +31,7 @@ class Table extends Module {
     quill.clipboard.addMatcher('td', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     this.cellSelection = new CellSelection(quill);
-    this.tableMenus = new TableMenus(quill);
+    this.tableMenus = new TableMenus(quill, this);
     // quill.clipboard.addMatcher('table', matchTableCol);
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
@@ -64,7 +64,7 @@ class Table extends Module {
       if (!this.operateLine) {
         this.operateLine = new OperateLine(quill, { tableNode, cellNode, mousePosition });
       } else {
-        if (this.operateLine.drag) return;
+        if (this.operateLine.drag || !cellNode) return;
         this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
       }
     });
@@ -105,7 +105,7 @@ class Table extends Module {
     return [table, row, cell, offset];
   }
 
-  insertColumn(offset: any) {
+  insertColumn(offset: number) {
     const range = this.quill.getSelection();
     const [table, row, cell] = this.getTable(range);
     if (cell == null) return;

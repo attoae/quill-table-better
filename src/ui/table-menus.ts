@@ -1,3 +1,4 @@
+import Quill from 'quill';
 import merge from 'lodash.merge';
 import { setElementProperty, getCorrectBounds } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
@@ -51,15 +52,35 @@ const MENUS_DEFAULTS: MenusDefaults = {
     children: {
       above: {
         content: 'Insert row above',
-        handler: () => {}
+        handler() {
+          // const tableBetterModule = this.quill.getModule('table-better');
+          const td = this.tableBetter.cellSelection.selectedTds[0];
+          this.insertRow(td, 0);
+        }
       },
       below: {
         content: 'Insert row below',
-        handler: () => {}
+        handler() {
+          const selectedTds = this.tableBetter.cellSelection.selectedTds;
+          const td = selectedTds[selectedTds.length - 1];
+          this.insertRow(td, 1);
+        }
       },
       delete: {
         content: 'Delete row',
-        handler: () => {}
+        handler() {
+          const selectedTds = this.tableBetter.cellSelection.selectedTds;
+          const rows = [];
+          let id = '';
+          for (const td of selectedTds) {
+            if (td.getAttribute('data-row') !== id) {
+              rows.push(Quill.find(td.parentElement));
+              id = td.getAttribute('data-row');
+            }
+          }
+          const tableBlot = Quill.find(selectedTds[0]).table();
+          tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+        }
       }
     }
   },
@@ -70,11 +91,13 @@ class TableMenus {
   table: Element | null;
   root: HTMLElement;
   prevList: HTMLUListElement | null;
-  constructor(quill: any, options?: any) {
+  tableBetter: any;
+  constructor(quill: any, tableBetter?: any) {
     this.quill = quill;
     this.table = null;
     this.root = this.createMenus();
     this.prevList = null;
+    this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
   }
 
@@ -82,8 +105,8 @@ class TableMenus {
     const table = (e.target as Element).closest('table');
     this.prevList && this.prevList.classList.add('ql-hidden');
     this.prevList = null;
-    if (!table) {
-      this.root.classList.add('ql-hidden');
+    if (!table && !this.tableBetter.cellSelection.selectedTds.length) {
+      this.hideMenus();
       return;
     } else {
       // const cell = (e.target as Element).closest('td');
@@ -94,7 +117,7 @@ class TableMenus {
       //   left: `${left}px`,
       //   top: `${top - height - 10}px`
       // });
-      this.root.classList.remove('ql-hidden');
+      this.showMenus();
       if (!table.isEqualNode(this.table)) {
         const { left, right, top } = getCorrectBounds(table, this.quill.container);
         const { height, width } = this.root.getBoundingClientRect();
@@ -144,7 +167,7 @@ class TableMenus {
       const { content, handler } = child;
       const list = document.createElement('li');
       list.innerText = content;
-      list.addEventListener('click', handler);
+      list.addEventListener('click', handler.bind(this));
       container.appendChild(list);
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
@@ -166,8 +189,23 @@ class TableMenus {
     this.prevList = list;
   }
 
+  insertRow(td: HTMLTableColElement, offset: number) {
+    const tdBlot = Quill.find(td);
+    const index = tdBlot.rowOffset();
+    const tableBlot = tdBlot.table();
+    tableBlot.insertRow(index + offset);
+  }
+
   updateMenus(params: Params) {
     
+  }
+
+  hideMenus() {
+    this.root.classList.add('ql-hidden');
+  }
+
+  showMenus() {
+    this.root.classList.remove('ql-hidden');
   }
 }
 
