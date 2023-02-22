@@ -1,6 +1,8 @@
 import Quill from 'quill';
+import { removeElementProperty } from '../utils';
 
 const Block = Quill.import('blots/block');
+const Break = Quill.import('blots/break');
 const Container = Quill.import('blots/container');
 
 // const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
@@ -66,13 +68,17 @@ class TableCell extends Container {
     return node;
   }
 
-  static formats(domNode: Element) {
+  static formats(domNode: HTMLElement) {
     const rowspan = this.getEmptyRowspan(domNode);
     return CELL_ATTRIBUTE.reduce((formats, attr) => {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
           // @ts-ignore
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
+        } else if (attr === 'style') {
+          removeElementProperty(domNode, ['width', 'height']);
+          // @ts-ignore
+          formats[attr] = domNode.getAttribute(attr);
         } else {
           // @ts-ignore
           formats[attr] = domNode.getAttribute(attr);
@@ -104,6 +110,17 @@ class TableCell extends Container {
     }
   }
 
+  row() {
+    return this.parent;
+  }
+
+  rowOffset() {
+    if (this.row()) {
+      return this.row().rowOffset();
+    }
+    return -1;
+  }
+
   table() {
     let cur = this.parent;
     while (cur != null && cur.statics.blotName !== 'table-container') {
@@ -129,6 +146,13 @@ class TableRow extends Container {
       );
     }
     return false;
+  }
+
+  rowOffset() {
+    if (this.parent) {
+      return this.parent.children.indexOf(this);
+    }
+    return -1;
   }
 }
 TableRow.blotName = 'table-row';
@@ -203,17 +227,42 @@ class TableContainer extends Container {
     });
   }
 
+  deleteRow(rows: TableRow[], hideMenus: () => void) {
+    const [body] = this.descendant(TableBody);
+    if (body == null || body.children.head == null) return;
+    if (rows.length === body.children.length) {
+      this.deleteTable();
+      hideMenus();
+    } else {
+      for (const row of rows) {
+        row.remove();
+      }
+    }
+  }
+
   insertRow(index: number) {
     const [body] = this.descendant(TableBody);
     if (body == null || body.children.head == null) return;
     const id = tableId();
     const row = this.scroll.create(TableRow.blotName);
-    body.children.head.children.forEach(() => {
-      const cell = this.scroll.create(TableCell.blotName, id);
+    const maxNum = body.children.head.children.reduce((num: number, child: any) => {
+      const colspan = ~~child.domNode.getAttribute('colspan') || 1;
+      return num += colspan;
+    }, 0);
+    for (let i = 0; i < maxNum; i++) {
+      const cell = this.scroll.create(TableCell.blotName, { 'data-row': id });
+      const cellBlock = this.scroll.create(TableCellBlock.blotName, i + 1);
+      const empty = this.scroll.create(Break.blotName);
+      cellBlock.appendChild(empty);
+      cell.appendChild(cellBlock);
       row.appendChild(cell);
-    });
+    }
     const ref = body.children.at(index);
     body.insertBefore(row, ref);
+  }
+
+  deleteTable() {
+    this.remove();
   }
 }
 TableContainer.blotName = 'table-container';
