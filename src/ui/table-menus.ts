@@ -1,13 +1,13 @@
 import Quill from 'quill';
 import merge from 'lodash.merge';
-import { setElementProperty, getCorrectBounds } from '../utils';
+import {
+  setElementProperty,
+  getCorrectBounds,
+  getComputeBounds,
+  getComputeSelectedTds
+} from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import downIcon from '../assets/icon/down.svg';
-
-interface Params {
-  clientX: number;
-  clientY: number;
-}
 
 interface Children {
   [propName: string]: {
@@ -33,15 +33,29 @@ const MENUS_DEFAULTS: MenusDefaults = {
     children: {
       left: {
         content: 'Insert column left',
-        handler: () => {}
+        handler() {
+          const td = this.tableBetter.cellSelection.selectedTds[0];
+          this.insertColumn(td, 0);
+        }
       },
       right: {
         content: 'Insert column right',
-        handler: () => {}
+        handler() {
+          const td = this.tableBetter.cellSelection.endTd;
+          this.insertColumn(td, 1);
+        }
       },
       delete: {
         content: 'Delete column',
-        handler: () => {}
+        handler() {
+          const { selectedTds, endTd } = this.tableBetter.cellSelection;
+          const startCorrectBounds = getCorrectBounds(selectedTds[0], this.quill.container);
+          const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
+          const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
+          const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+          const tableBlot = Quill.find(selectedTds[0]).table();
+          tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this));
+        }
       }
     }
   },
@@ -53,7 +67,6 @@ const MENUS_DEFAULTS: MenusDefaults = {
       above: {
         content: 'Insert row above',
         handler() {
-          // const tableBetterModule = this.quill.getModule('table-better');
           const td = this.tableBetter.cellSelection.selectedTds[0];
           this.insertRow(td, 0);
         }
@@ -193,11 +206,29 @@ class TableMenus {
     const tdBlot = Quill.find(td);
     const index = tdBlot.rowOffset();
     const tableBlot = tdBlot.table();
-    tableBlot.insertRow(index + offset);
+    if (offset > 0) {
+      const rowspan = ~~td.getAttribute('rowspan') || 1;
+      tableBlot.insertRow(index + offset + rowspan - 1, offset);
+    } else {
+      tableBlot.insertRow(index + offset, offset);
+    }
   }
 
-  updateMenus(params: Params) {
-    
+  insertColumn(td: HTMLTableColElement, offset: number) {
+    const { left, right } = td.getBoundingClientRect();
+    const tdBlot = Quill.find(td);
+    const tableBlot = tdBlot.table();
+    if (offset > 0) {
+      const isLast = td.parentElement.lastChild.isEqualNode(td);
+      if (isLast) {
+        tableBlot.insertColumn(right, isLast);
+      } else {
+        tableBlot.insertColumn(right);
+      }
+    } else {
+      tableBlot.insertColumn(left);
+    }
+    this.quill.update(Quill.sources.USER);
   }
 
   hideMenus() {

@@ -205,26 +205,50 @@ class TableContainer extends Container {
     });
   }
 
-  deleteColumn(index: number) {
+  deleteColumn(cells: Element[], hideMenus: () => void) {
+    const [body] = this.descendant(TableBody);
+    const tableCells = this.descendants(TableCell); 
+    if (body == null || body.children.head == null) return;
+    if (cells.length === tableCells.length) {
+      this.deleteTable();
+      hideMenus();
+    } else {
+      for (const td of cells) {
+        td.remove();
+      }
+    }
+  }
+
+  insertColumn(position: number, isLast?: boolean) {
     const [body] = this.descendant(TableBody);
     if (body == null || body.children.head == null) return;
-    body.children.forEach((row: any) => {
-      const cell = row.children.at(index);
-      if (cell != null) {
-        cell.remove();
+    body.children.forEach((row: TableRow) => {
+      if (isLast) {
+        const id = row.children.tail.domNode.getAttribute('data-row');
+        this.insertColumnCell(row, id, null);
+        return;
+      } else {
+        row.children.forEach((ref: TableCell) => {
+          const { left, right } = ref.domNode.getBoundingClientRect();
+          const id = ref.domNode.getAttribute('data-row');
+          if (Math.abs(left - position) <= 2) {
+            this.insertColumnCell(row, id, ref);
+            return;
+          } else if (Math.abs(right - position) <= 2 && !ref.next) {
+            this.insertColumnCell(row, id, null);
+            return;
+          }
+        });
       }
     });
   }
 
-  insertColumn(index: number) {
-    const [body] = this.descendant(TableBody);
-    if (body == null || body.children.head == null) return;
-    body.children.forEach((row: any) => {
-      const ref = row.children.at(index);
-      const value = TableCell.formats(row.children.head.domNode);
-      const cell = this.scroll.create(TableCell.blotName, value);
-      row.insertBefore(cell, ref);
-    });
+  insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
+    const cell = this.scroll.create(TableCell.blotName, { 'data-row': id, width: '72' });
+    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
+    cell.appendChild(cellBlock);
+    row.insertBefore(cell, ref);
+    cellBlock.optimize();
   }
 
   deleteRow(rows: TableRow[], hideMenus: () => void) {
@@ -234,31 +258,88 @@ class TableContainer extends Container {
       this.deleteTable();
       hideMenus();
     } else {
+      const maxColumns = this.getMaxColumns(body.children.head.children);
       for (const row of rows) {
+        const prev = this.getCorrectRow(row, maxColumns);
+        prev && prev.children.forEach((child: TableCell) => {
+          const rowspan = ~~child.domNode.getAttribute('rowspan');
+          if (rowspan > 1) {
+            child.domNode.setAttribute('rowspan', rowspan - 1);
+          }
+        });
         row.remove();
       }
     }
   }
 
-  insertRow(index: number) {
+  insertRow(index: number, offset: number) {
+    const [body] = this.descendant(TableBody);
+    if (body == null || body.children.head == null) return;
+    const ref = body.children.at(index);
+    const prev = ref ? ref : body.children.at(index - 1);
+    const correctRow = this.getInsertRow(prev, offset);
+    body.insertBefore(correctRow, ref);
+  }
+
+  getInsertRow(prev: TableRow, offset: number) {
     const [body] = this.descendant(TableBody);
     if (body == null || body.children.head == null) return;
     const id = tableId();
     const row = this.scroll.create(TableRow.blotName);
-    const maxNum = body.children.head.children.reduce((num: number, child: any) => {
+    const maxColumns = this.getMaxColumns(body.children.head.children);
+    const nextMaxColumns = this.getMaxColumns(prev.children);
+    if (nextMaxColumns === maxColumns) {
+      prev.children.forEach((child: TableCell) => {
+        const formats = { height: '24', 'data-row': id };
+        const colspan = ~~child.domNode.getAttribute('colspan');
+        this.insertTableCell(colspan, formats, row);
+      });
+      return row;
+    } else {
+      prev = this.getCorrectRow(prev.prev, maxColumns);
+      prev.children.forEach((child: TableCell) => {
+        const formats = { height: '24', 'data-row': id };
+        const colspan = ~~child.domNode.getAttribute('colspan');
+        const rowspan = ~~child.domNode.getAttribute('rowspan');
+        if (rowspan > 1) {
+          child.domNode.setAttribute('rowspan', rowspan + 1);
+        } else {
+          this.insertTableCell(colspan, formats, row);
+        }
+      });
+      return row;
+    }
+  }
+
+  getCorrectRow(prev: TableRow, maxColumns: number) {
+    let isCorrect = false;
+    while (prev && !isCorrect) {
+      const prevMaxColumns = this.getMaxColumns(prev.children);
+      if (maxColumns === prevMaxColumns) {
+        isCorrect = true;
+        return prev;
+      }
+      prev = prev.prev;
+    }
+    return prev;
+  }
+
+  insertTableCell(colspan: number, formats: { [propName: string]: string }, row: TableRow) {
+    if (colspan > 1) {
+      Object.assign(formats, { colspan });
+    }
+    const cell = this.scroll.create(TableCell.blotName, formats);
+    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
+    cell.appendChild(cellBlock);
+    row.appendChild(cell);
+    cellBlock.optimize();
+  }
+
+  getMaxColumns(children: TableCell[]) {
+    return children.reduce((num: number, child: TableCell) => {
       const colspan = ~~child.domNode.getAttribute('colspan') || 1;
       return num += colspan;
     }, 0);
-    for (let i = 0; i < maxNum; i++) {
-      const cell = this.scroll.create(TableCell.blotName, { 'data-row': id });
-      const cellBlock = this.scroll.create(TableCellBlock.blotName, i + 1);
-      const empty = this.scroll.create(Break.blotName);
-      cellBlock.appendChild(empty);
-      cell.appendChild(cellBlock);
-      row.appendChild(cell);
-    }
-    const ref = body.children.at(index);
-    body.insertBefore(row, ref);
   }
 
   deleteTable() {
