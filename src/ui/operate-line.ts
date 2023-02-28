@@ -174,6 +174,7 @@ class OperateLine {
         if (nums === cols) {
           const { width } = cell.getBoundingClientRect();
           const nextCell = cell.nextElementSibling;
+          if (!nextCell) continue;
           const { width: nextWidth } = nextCell.getBoundingClientRect();
           preNodes.push([cell, `${~~(width + change)}`], [nextCell, `${~~(nextWidth - change)}`]);
         }
