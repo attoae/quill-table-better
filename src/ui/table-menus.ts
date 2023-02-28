@@ -8,6 +8,7 @@ import {
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import downIcon from '../assets/icon/down.svg';
+import { TableCell } from '../formats/table';
 
 interface Children {
   [propName: string]: {
@@ -97,6 +98,66 @@ const MENUS_DEFAULTS: MenusDefaults = {
       }
     }
   },
+  merge: {
+    content: 'Merge cells',
+    icon: columnIcon,
+    handler: () => {},
+    children: {
+      merge: {
+        content: 'Merge cells',
+        handler() {
+          const { selectedTds, endTd, updateSelected } = this.tableBetter.cellSelection;
+          const startTd = selectedTds.shift();
+          const startCorrectBounds = getCorrectBounds(startTd, this.quill.container);
+          const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
+          const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
+          const tableBlot = Quill.find(startTd).table();
+          const rows = tableBlot.children.head.children;
+          const row = rows.head.children;
+          const colspan = row.reduce((colspan: number, td: TableCell) => {
+            const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
+            if (
+              tdCorrectBounds.left >= computeBounds.left &&
+              tdCorrectBounds.right <= computeBounds.right
+            ) {
+              colspan += ~~td.domNode.getAttribute('colspan') || 1;
+            }
+            return colspan;
+          }, 0);
+          const rowspan = rows.reduce((rowspan: number, row: TableCell) => {
+            const rowCorrectBounds = getCorrectBounds(row.domNode, this.quill.container);
+            if (
+              rowCorrectBounds.top >= computeBounds.top &&
+              rowCorrectBounds.bottom <= computeBounds.bottom
+            ) {
+              let minRowspan = Number.MAX_VALUE;
+              row.children.forEach((td: TableCell) => {
+                const rowspan = ~~td.domNode.getAttribute('rowspan') || 1;
+                minRowspan = Math.min(minRowspan, rowspan);
+              });
+              rowspan += minRowspan;
+            }
+            return rowspan;
+          }, 0);
+          const startBlot = Quill.find(startTd);
+          for (const td of selectedTds) {
+            const blot = Quill.find(td);
+            blot.moveChildren(startBlot);
+            blot.remove();
+          }
+          startBlot.domNode.setAttribute('colspan', colspan);
+          startBlot.domNode.setAttribute('rowspan', rowspan);
+          this.tableBetter.cellSelection.selectedTds = [startBlot.domNode];
+        }
+      },
+      split: {
+        content: 'Split cell',
+        handler() {
+          
+        }
+      }
+    }
+  }
 }
 
 class TableMenus {
