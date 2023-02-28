@@ -29,7 +29,6 @@ class TableCellBlock extends Block {
 
   format(name: string, value: string | any) {
     if (name === TableCell.blotName && value) {
-      // this.domNode.setAttribute('data-row', value);
       this.wrap(name, value);
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
@@ -44,7 +43,7 @@ TableCellBlock.tagName = 'P';
 
 class TableCell extends Container {
   checkMerge() {
-    if (super.checkMerge()) {
+    if (super.checkMerge() && this.next.children.head != null) {
       const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
       const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
@@ -89,7 +88,8 @@ class TableCell extends Container {
   }
 
   formats() {
-    return this.statics.formats(this.domNode, this.scroll);
+    const formats = this.statics.formats(this.domNode, this.scroll);
+    return { [this.statics.blotName]: formats };
   }
 
   static getEmptyRowspan(domNode: Element) {
@@ -104,7 +104,7 @@ class TableCell extends Container {
 
   format(name: string, value: string) {
     if (name === TableCell.blotName && value) {
-      this.domNode.setAttribute('data-row', value);
+      this.wrap(name, value);
     } else {
       super.format(name, value);
     }
@@ -134,11 +134,15 @@ TableCell.tagName = 'TD';
 
 class TableRow extends Container {
   checkMerge() {
-    if (super.checkMerge()) {
-      const thisHead = this.children.head.formats();
-      const thisTail = this.children.tail.formats();
-      const nextHead = this.next.children.head.formats();
-      const nextTail = this.next.children.tail.formats();
+    if (super.checkMerge() && this.next.children.head != null) {
+      // const thisHead = this.children.head.formats();
+      // const thisTail = this.children.tail.formats();
+      // const nextHead = this.next.children.head.formats();
+      // const nextTail = this.next.children.tail.formats();
+      const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
+      const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
+      const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
+      const nextTail = this.next.children.tail.formats()[this.next.children.tail.statics.blotName];
       return (
         thisHead['data-row'] === thisTail['data-row'] &&
         thisHead['data-row'] === nextHead['data-row'] &&
