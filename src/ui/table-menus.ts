@@ -35,26 +35,23 @@ const MENUS_DEFAULTS: MenusDefaults = {
       left: {
         content: 'Insert column left',
         handler() {
-          const td = this.tableBetter.cellSelection.selectedTds[0];
-          this.insertColumn(td, 0);
+          const { leftTd } = this.getSelectedTdsInfo();
+          this.insertColumn(leftTd, 0);
         }
       },
       right: {
         content: 'Insert column right',
         handler() {
-          const td = this.tableBetter.cellSelection.endTd;
-          this.insertColumn(td, 1);
+          const { rightTd } = this.getSelectedTdsInfo();
+          this.insertColumn(rightTd, 1);
         }
       },
       delete: {
         content: 'Delete column',
         handler() {
-          const { selectedTds, endTd } = this.tableBetter.cellSelection;
-          const startCorrectBounds = getCorrectBounds(selectedTds[0], this.quill.container);
-          const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
-          const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
+          const { computeBounds, leftTd } = this.getSelectedTdsInfo();
           const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
-          const tableBlot = Quill.find(selectedTds[0]).table();
+          const tableBlot = Quill.find(leftTd).table();
           tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this));
         }
       }
@@ -68,16 +65,15 @@ const MENUS_DEFAULTS: MenusDefaults = {
       above: {
         content: 'Insert row above',
         handler() {
-          const td = this.tableBetter.cellSelection.selectedTds[0];
-          this.insertRow(td, 0);
+          const { leftTd } = this.getSelectedTdsInfo();
+          this.insertRow(leftTd, 0);
         }
       },
       below: {
         content: 'Insert row below',
         handler() {
-          const selectedTds = this.tableBetter.cellSelection.selectedTds;
-          const td = selectedTds[selectedTds.length - 1];
-          this.insertRow(td, 1);
+          const { rightTd } = this.getSelectedTdsInfo();
+          this.insertRow(rightTd, 1);
         }
       },
       delete: {
@@ -106,15 +102,13 @@ const MENUS_DEFAULTS: MenusDefaults = {
       merge: {
         content: 'Merge cells',
         handler() {
-          const { selectedTds, endTd, updateSelected } = this.tableBetter.cellSelection;
-          const startTd = selectedTds.shift();
-          const startCorrectBounds = getCorrectBounds(startTd, this.quill.container);
-          const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
-          const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
-          const tableBlot = Quill.find(startTd).table();
+          const { selectedTds } = this.tableBetter.cellSelection;
+          const { computeBounds, leftTd } = this.getSelectedTdsInfo();
+          const leftTdBlot = Quill.find(leftTd);
+          const tableBlot = leftTdBlot.table();
           const rows = tableBlot.children.head.children;
-          const row = rows.head.children;
-          const colspan = row.reduce((colspan: number, td: TableCell) => {
+          const row = leftTdBlot.row();
+          const colspan = row.children.reduce((colspan: number, td: TableCell) => {
             const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
             if (
               tdCorrectBounds.left >= computeBounds.left &&
@@ -139,15 +133,15 @@ const MENUS_DEFAULTS: MenusDefaults = {
             }
             return rowspan;
           }, 0);
-          const startBlot = Quill.find(startTd);
           for (const td of selectedTds) {
+            if (leftTd.isEqualNode(td)) continue;
             const blot = Quill.find(td);
-            blot.moveChildren(startBlot);
+            blot.moveChildren(leftTdBlot);
             blot.remove();
           }
-          startBlot.domNode.setAttribute('colspan', colspan);
-          startBlot.domNode.setAttribute('rowspan', rowspan);
-          this.tableBetter.cellSelection.selectedTds = [startBlot.domNode];
+          leftTdBlot.domNode.setAttribute('colspan', colspan);
+          leftTdBlot.domNode.setAttribute('rowspan', rowspan);
+          this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
         }
       },
       split: {
@@ -290,6 +284,28 @@ class TableMenus {
       tableBlot.insertColumn(left);
     }
     this.quill.update(Quill.sources.USER);
+  }
+
+  getSelectedTdsInfo() {
+    const { startTd, endTd } = this.tableBetter.cellSelection;
+    const startCorrectBounds = getCorrectBounds(startTd, this.quill.container);
+    const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
+    const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
+    if (
+      startCorrectBounds.left > endCorrectBounds.left &&
+      startCorrectBounds.top > endCorrectBounds.top
+    ) {
+      return {
+        computeBounds,
+        leftTd: endTd,
+        rightTd: startTd
+      };
+    }
+    return {
+      computeBounds,
+      leftTd: startTd,
+      rightTd: endTd
+    };
   }
 
   hideMenus() {

@@ -9,10 +9,12 @@ import { Blot } from 'parchment/dist/typings/blot/abstract/blot';
 class CellSelection {
   quill: any;
   selectedTds: Element[];
+  startTd: Element;
   endTd: Element;
   constructor(quill: any) {
     this.quill = quill;
     this.selectedTds = [];
+    this.startTd = null;
     this.endTd = null;
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
   }
@@ -22,6 +24,7 @@ class CellSelection {
     const table = (e.target as Element).closest('table');
     if (!table) return;
     const startTd = (e.target as Element).closest('td');
+    this.startTd = startTd;
     this.endTd = startTd;
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
