@@ -8,7 +8,7 @@ import {
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import downIcon from '../assets/icon/down.svg';
-import { TableCell } from '../formats/table';
+import { TableCell, TableRow } from '../formats/table';
 
 interface Children {
   [propName: string]: {
@@ -147,7 +147,46 @@ const MENUS_DEFAULTS: MenusDefaults = {
       split: {
         content: 'Split cell',
         handler() {
-          
+          const { selectedTds } = this.tableBetter.cellSelection;
+          for (const td of selectedTds) {
+            const colspan = ~~td.getAttribute('colspan') || 1;
+            const rowspan = ~~td.getAttribute('rowspan') || 1;
+            const { width, height, right } = td.getBoundingClientRect();
+            const blot = Quill.find(td);
+            const tableBlot = blot.table();
+            const nextBlot = blot.next;
+            const rowBlot = blot.row();
+            if (rowspan > 1) {
+              if (colspan > 1) {
+                let nextRowBlot = rowBlot.next;
+                for (let i = 1; i < rowspan; i++) {
+                  const ref = this.getRef(nextRowBlot, right);
+                  for (let j = 0; j < colspan; j++) {
+                    const id = ref.domNode.getAttribute('data-row');
+                    tableBlot.insertColumnCell(nextRowBlot, id, ref);
+                  }
+                  nextRowBlot = nextRowBlot.next;
+                }
+              } else {
+                let nextRowBlot = rowBlot.next;
+                for (let i = 1; i < rowspan; i++) {
+                  const ref = this.getRef(nextRowBlot, right);
+                  const id = ref.domNode.getAttribute('data-row');
+                  tableBlot.insertColumnCell(nextRowBlot, id, ref);
+                  nextRowBlot = nextRowBlot.next;
+                }
+              }
+            }
+            if (colspan > 1) {
+              const id = td.getAttribute('data-row');
+              for (let i = 1; i < colspan; i++) {
+                tableBlot.insertColumnCell(rowBlot, id, nextBlot);
+              }
+            }
+            td.setAttribute('width', ~~(width / colspan));
+            td.removeAttribute('colspan');
+            td.removeAttribute('rowspan');
+          }
         }
       }
     }
@@ -306,6 +345,18 @@ class TableMenus {
       leftTd: startTd,
       rightTd: endTd
     };
+  }
+
+  getRef(row: TableRow, right: number): TableCell {
+    let ref = null;
+    row.children.forEach((td: TableCell) => {
+      const { left } = td.domNode.getBoundingClientRect();
+      if (Math.abs(left - right) <= 2) {
+        ref = td;
+        return;
+      }
+    });
+    return ref;
   }
 
   hideMenus() {
