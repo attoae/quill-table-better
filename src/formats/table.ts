@@ -5,9 +5,13 @@ const Block = Quill.import('blots/block');
 const Break = Quill.import('blots/break');
 const Container = Quill.import('blots/container');
 
-// const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
-const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan'];
+const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
+// const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan'];
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
+
+interface BlotValue {
+  [propName: string]: any
+}
 
 class TableCellBlock extends Block {
   static create(value: string) {
@@ -20,15 +24,13 @@ class TableCellBlock extends Block {
     return node;
   }
 
-  static formats(domNode: Element) {
-    if (domNode.hasAttribute('data-cell')) {
-      return domNode.getAttribute('data-cell');
-    }
-    // return undefined;
+  formats() {
+    return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
   }
 
   format(name: string, value: string | any) {
     if (name === TableCell.blotName && value) {
+      this.wrap(TableRow.blotName);
       this.wrap(name, value);
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
@@ -57,29 +59,25 @@ class TableCell extends Container {
     return false;
   }
   
-  static create(value: Object) {
+  static create(value: BlotValue) {
     const node = super.create();
     const keys = Object.keys(value);
     for (const key of keys) {
-      // @ts-ignore
-      node.setAttribute(key, value[key]);
+      value[key] && node.setAttribute(key, value[key]);
     }
     return node;
   }
 
   static formats(domNode: HTMLElement) {
     const rowspan = this.getEmptyRowspan(domNode);
-    return CELL_ATTRIBUTE.reduce((formats, attr) => {
+    return CELL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
-          // @ts-ignore
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
         } else if (attr === 'style') {
           removeElementProperty(domNode, ['width', 'height']);
-          // @ts-ignore
           formats[attr] = domNode.getAttribute(attr);
         } else {
-          // @ts-ignore
           formats[attr] = domNode.getAttribute(attr);
         }
       }
@@ -135,10 +133,6 @@ TableCell.tagName = 'TD';
 class TableRow extends Container {
   checkMerge() {
     if (super.checkMerge() && this.next.children.head != null) {
-      // const thisHead = this.children.head.formats();
-      // const thisTail = this.children.tail.formats();
-      // const nextHead = this.next.children.head.formats();
-      // const nextTail = this.next.children.tail.formats();
       const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
       const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
