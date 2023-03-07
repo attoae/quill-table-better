@@ -92,6 +92,12 @@ function getComputeSelectedTds(
   }, []);
 }
 
+function removeElementProperty(node: HTMLElement, properties: string[]) {
+  for (const property of properties) {
+    node.style.removeProperty(property);
+  }
+}
+
 function setElementProperty(node: HTMLElement, properties: Properties) {
   const style = node.style;
   if (!style) {
@@ -103,9 +109,9 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
   }
 }
 
-function removeElementProperty(node: HTMLElement, properties: string[]) {
-  for (const property of properties) {
-    node.style.removeProperty(property);
+function setElementAttribute(node: Element, attributes: Properties) {
+  for (const attribute in attributes) {
+    node.setAttribute(attribute, attributes[attribute]);
   }
 }
 
@@ -114,6 +120,7 @@ export {
   getCorrectBounds,
   getComputeBounds,
   getComputeSelectedTds,
+  removeElementProperty,
   setElementProperty,
-  removeElementProperty
+  setElementAttribute
 };

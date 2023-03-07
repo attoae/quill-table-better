@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { setElementProperty } from '../utils';
+import { setElementProperty, setElementAttribute } from '../utils';
 
 interface Options {
   tableNode: Element
@@ -181,7 +181,8 @@ class OperateLine {
       }
     }
     for (const [node, width] of preNodes) {
-      node.setAttribute('width', width);
+      setElementAttribute(node, { width });
+      setElementProperty(node as HTMLElement, { width: `${width}px` });
     }
   }
 
@@ -202,7 +203,9 @@ class OperateLine {
     const cells = rowspan > 1 ? this.getVerticalCells(cell, rowspan) : cell.parentElement.children;
     for (const cell of cells) {
       const { top } = cell.getBoundingClientRect();
-      cell.setAttribute('height', `${~~(clientY - top)}`);
+      const height = `${~~(clientY - top)}`;
+      setElementAttribute(cell, { height });
+      setElementProperty(cell as HTMLElement, { height: `${height}px` });
     }
   }
 
@@ -254,8 +257,11 @@ class OperateLine {
     }
 
     for (const [node, width, height] of preNodes) {
-      node.setAttribute('width', width);
-      node.setAttribute('height', height);
+      setElementAttribute(node, { width, height });
+      setElementProperty(node as HTMLElement, {
+        width: `${width}px`,
+        height: `${height}px`
+      });
     }
   }
 
