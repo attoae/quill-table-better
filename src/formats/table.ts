@@ -74,9 +74,6 @@ class TableCell extends Container {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
-        } else if (attr === 'style') {
-          removeElementProperty(domNode, ['width', 'height']);
-          formats[attr] = domNode.getAttribute(attr);
         } else {
           formats[attr] = domNode.getAttribute(attr);
         }
@@ -98,14 +95,6 @@ class TableCell extends Container {
       nextNode = nextNode.nextElementSibling;
     }
     return rowspan;
-  }
-
-  format(name: string, value: string) {
-    if (name === TableCell.blotName && value) {
-      this.wrap(name, value);
-    } else {
-      super.format(name, value);
-    }
   }
 
   row() {
@@ -345,6 +334,7 @@ class TableContainer extends Container {
   }
 }
 TableContainer.blotName = 'table-container';
+TableContainer.className = 'ql-table-better';
 TableContainer.tagName = 'TABLE';
 
 TableContainer.allowedChildren = [TableBody];
