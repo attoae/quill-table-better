@@ -208,33 +208,31 @@ class TableMenus {
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
   }
 
-  handleClick(e: MouseEvent) {
-    const table = (e.target as Element).closest('table');
-    this.prevList && this.prevList.classList.add('ql-hidden');
-    this.prevList = null;
-    if (!table && !this.tableBetter.cellSelection.selectedTds.length) {
-      this.hideMenus();
-      return;
-    } else {
-      // const cell = (e.target as Element).closest('td');
-      // const { left, right, top } = getCorrectBounds(cell, this.quill.container);
-      // this.root.classList.remove('ql-hidden');
-      // const { height } = this.root.getBoundingClientRect();
-      // setElementProperty(this.root, {
-      //   left: `${left}px`,
-      //   top: `${top - height - 10}px`
-      // });
-      this.showMenus();
-      if (!table.isEqualNode(this.table)) {
-        const { left, right, top } = getCorrectBounds(table, this.quill.container);
-        const { height, width } = this.root.getBoundingClientRect();
-        setElementProperty(this.root, {
-          left: `${(left + right - width) >> 1}px`,
-          top: `${top - height - 10}px`
-        });
-      }
-      this.table = table;
+  createList(children: Children) {
+    const container = document.createElement('ul');
+    for (const [, child] of Object.entries(children)) {
+      const { content, handler } = child;
+      const list = document.createElement('li');
+      list.innerText = content;
+      list.addEventListener('click', handler.bind(this));
+      container.appendChild(list);
     }
+    container.classList.add('ql-table-dropdown-list', 'ql-hidden');
+    return container;
+  }
+
+  createMenu(left: string, right: string, isDropDown: boolean) {
+    const container = document.createElement('div');
+    const dropDown = document.createElement('span');
+    if (isDropDown) {
+      dropDown.innerHTML = left + right;
+    } else {
+      dropDown.innerHTML = left;
+    }
+    container.classList.add('ql-table-dropdown');
+    dropDown.classList.add('ql-table-dropdown-icon');
+    container.appendChild(dropDown);
+    return container;
   }
 
   createMenus() {
@@ -254,33 +252,6 @@ class TableMenus {
     return container;
   }
 
-  createMenu(left: string, right: string, isDropDown: boolean) {
-    const container = document.createElement('div');
-    const dropDown = document.createElement('span');
-    if (isDropDown) {
-      dropDown.innerHTML = left + right;
-    } else {
-      dropDown.innerHTML = left;
-    }
-    container.classList.add('ql-table-dropdown');
-    dropDown.classList.add('ql-table-dropdown-icon');
-    container.appendChild(dropDown);
-    return container;
-  }
-
-  createList(children: Children) {
-    const container = document.createElement('ul');
-    for (const [, child] of Object.entries(children)) {
-      const { content, handler } = child;
-      const list = document.createElement('li');
-      list.innerText = content;
-      list.addEventListener('click', handler.bind(this));
-      container.appendChild(list);
-    }
-    container.classList.add('ql-table-dropdown-list', 'ql-hidden');
-    return container;
-  }
-
   createTooltip(content: string) {
     const element = document.createElement('div');
     element.innerText = content;
@@ -288,41 +259,16 @@ class TableMenus {
     return element;
   }
 
-  toggleAttribute(list: HTMLUListElement) {
-    if (this.prevList && !this.prevList.isEqualNode(list)) {
-      this.prevList.classList.add('ql-hidden');
-    }
-    list.classList.toggle('ql-hidden');
-    this.prevList = list;
-  }
-
-  insertRow(td: HTMLTableColElement, offset: number) {
-    const tdBlot = Quill.find(td);
-    const index = tdBlot.rowOffset();
-    const tableBlot = tdBlot.table();
-    if (offset > 0) {
-      const rowspan = ~~td.getAttribute('rowspan') || 1;
-      tableBlot.insertRow(index + offset + rowspan - 1, offset);
-    } else {
-      tableBlot.insertRow(index + offset, offset);
-    }
-  }
-
-  insertColumn(td: HTMLTableColElement, offset: number) {
-    const { left, right } = td.getBoundingClientRect();
-    const tdBlot = Quill.find(td);
-    const tableBlot = tdBlot.table();
-    if (offset > 0) {
-      const isLast = td.parentElement.lastChild.isEqualNode(td);
-      if (isLast) {
-        tableBlot.insertColumn(right, isLast);
-      } else {
-        tableBlot.insertColumn(right);
+  getRef(row: TableRow, right: number): TableCell {
+    let ref = null;
+    row.children.forEach((td: TableCell) => {
+      const { left } = td.domNode.getBoundingClientRect();
+      if (Math.abs(left - right) <= 2) {
+        ref = td;
+        return;
       }
-    } else {
-      tableBlot.insertColumn(left);
-    }
-    this.quill.update(Quill.sources.USER);
+    });
+    return ref;
   }
 
   getSelectedTdsInfo() {
@@ -347,20 +293,74 @@ class TableMenus {
     };
   }
 
-  getRef(row: TableRow, right: number): TableCell {
-    let ref = null;
-    row.children.forEach((td: TableCell) => {
-      const { left } = td.domNode.getBoundingClientRect();
-      if (Math.abs(left - right) <= 2) {
-        ref = td;
-        return;
+  handleClick(e: MouseEvent) {
+    const table = (e.target as Element).closest('table');
+    this.prevList && this.prevList.classList.add('ql-hidden');
+    this.prevList = null;
+    if (!table && !this.tableBetter.cellSelection.selectedTds.length) {
+      this.hideMenus();
+      return;
+    } else {
+      // const cell = (e.target as Element).closest('td');
+      // const { left, right, top } = getCorrectBounds(cell, this.quill.container);
+      // this.root.classList.remove('ql-hidden');
+      // const { height } = this.root.getBoundingClientRect();
+      // setElementProperty(this.root, {
+      //   left: `${left}px`,
+      //   top: `${top - height - 10}px`
+      // });
+      this.showMenus();
+      if (table && !table.isEqualNode(this.table)) {
+        const { left, right, top } = getCorrectBounds(table, this.quill.container);
+        const { height, width } = this.root.getBoundingClientRect();
+        setElementProperty(this.root, {
+          left: `${(left + right - width) >> 1}px`,
+          top: `${top - height - 10}px`
+        });
       }
-    });
-    return ref;
+      this.table = table;
+    }
   }
 
   hideMenus() {
     this.root.classList.add('ql-hidden');
+  }
+
+  insertColumn(td: HTMLTableColElement, offset: number) {
+    const { left, right } = td.getBoundingClientRect();
+    const tdBlot = Quill.find(td);
+    const tableBlot = tdBlot.table();
+    if (offset > 0) {
+      const isLast = td.parentElement.lastChild.isEqualNode(td);
+      if (isLast) {
+        tableBlot.insertColumn(right, isLast);
+      } else {
+        tableBlot.insertColumn(right);
+      }
+    } else {
+      tableBlot.insertColumn(left);
+    }
+    this.quill.update(Quill.sources.USER);
+  }
+
+  insertRow(td: HTMLTableColElement, offset: number) {
+    const tdBlot = Quill.find(td);
+    const index = tdBlot.rowOffset();
+    const tableBlot = tdBlot.table();
+    if (offset > 0) {
+      const rowspan = ~~td.getAttribute('rowspan') || 1;
+      tableBlot.insertRow(index + offset + rowspan - 1, offset);
+    } else {
+      tableBlot.insertRow(index + offset, offset);
+    }
+  }
+
+  toggleAttribute(list: HTMLUListElement) {
+    if (this.prevList && !this.prevList.isEqualNode(list)) {
+      this.prevList.classList.add('ql-hidden');
+    }
+    list.classList.toggle('ql-hidden');
+    this.prevList = list;
   }
 
   showMenus() {

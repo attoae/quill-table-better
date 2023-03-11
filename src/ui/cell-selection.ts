@@ -19,6 +19,13 @@ class CellSelection {
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
   }
 
+  clearSelected() {
+    for (const td of this.selectedTds) {
+      td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
+    }
+    this.selectedTds = [];
+  }
+
   handleMousedown(e: MouseEvent) {
     this.clearSelected();
     const table = (e.target as Element).closest('table');
@@ -53,13 +60,6 @@ class CellSelection {
 
     this.quill.root.addEventListener('mousemove', handleMouseMove);
     this.quill.root.addEventListener('mouseup', handleMouseup);
-  }
-
-  clearSelected() {
-    for (const td of this.selectedTds) {
-      td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
-    }
-    this.selectedTds = [];
   }
 }
 

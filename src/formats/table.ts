@@ -24,10 +24,6 @@ class TableCellBlock extends Block {
     return node;
   }
 
-  formats() {
-    return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
-  }
-
   format(name: string, value: string | any) {
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
@@ -37,6 +33,10 @@ class TableCellBlock extends Block {
     } else {
       super.format(name, value);
     }
+  }
+
+  formats() {
+    return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
   }
 }
 TableCellBlock.blotName = 'table-cell-block';
@@ -206,38 +206,6 @@ class TableContainer extends Container {
     }
   }
 
-  insertColumn(position: number, isLast?: boolean) {
-    const [body] = this.descendant(TableBody);
-    if (body == null || body.children.head == null) return;
-    body.children.forEach((row: TableRow) => {
-      if (isLast) {
-        const id = row.children.tail.domNode.getAttribute('data-row');
-        this.insertColumnCell(row, id, null);
-        return;
-      } else {
-        row.children.forEach((ref: TableCell) => {
-          const { left, right } = ref.domNode.getBoundingClientRect();
-          const id = ref.domNode.getAttribute('data-row');
-          if (Math.abs(left - position) <= 2) {
-            this.insertColumnCell(row, id, ref);
-            return;
-          } else if (Math.abs(right - position) <= 2 && !ref.next) {
-            this.insertColumnCell(row, id, null);
-            return;
-          }
-        });
-      }
-    });
-  }
-
-  insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
-    const cell = this.scroll.create(TableCell.blotName, { 'data-row': id, width: '72' });
-    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
-    cell.appendChild(cellBlock);
-    row.insertBefore(cell, ref);
-    cellBlock.optimize();
-  }
-
   deleteRow(rows: TableRow[], hideMenus: () => void) {
     const [body] = this.descendant(TableBody);
     if (body == null || body.children.head == null) return;
@@ -259,13 +227,21 @@ class TableContainer extends Container {
     }
   }
 
-  insertRow(index: number, offset: number) {
-    const [body] = this.descendant(TableBody);
-    if (body == null || body.children.head == null) return;
-    const ref = body.children.at(index);
-    const prev = ref ? ref : body.children.at(index - 1);
-    const correctRow = this.getInsertRow(prev, offset);
-    body.insertBefore(correctRow, ref);
+  deleteTable() {
+    this.remove();
+  }
+
+  getCorrectRow(prev: TableRow, maxColumns: number) {
+    let isCorrect = false;
+    while (prev && !isCorrect) {
+      const prevMaxColumns = this.getMaxColumns(prev.children);
+      if (maxColumns === prevMaxColumns) {
+        isCorrect = true;
+        return prev;
+      }
+      prev = prev.prev;
+    }
+    return prev;
   }
 
   getInsertRow(prev: TableRow, offset: number) {
@@ -298,17 +274,52 @@ class TableContainer extends Container {
     }
   }
 
-  getCorrectRow(prev: TableRow, maxColumns: number) {
-    let isCorrect = false;
-    while (prev && !isCorrect) {
-      const prevMaxColumns = this.getMaxColumns(prev.children);
-      if (maxColumns === prevMaxColumns) {
-        isCorrect = true;
-        return prev;
+  getMaxColumns(children: TableCell[]) {
+    return children.reduce((num: number, child: TableCell) => {
+      const colspan = ~~child.domNode.getAttribute('colspan') || 1;
+      return num += colspan;
+    }, 0);
+  }
+
+  insertColumn(position: number, isLast?: boolean) {
+    const [body] = this.descendant(TableBody);
+    if (body == null || body.children.head == null) return;
+    body.children.forEach((row: TableRow) => {
+      if (isLast) {
+        const id = row.children.tail.domNode.getAttribute('data-row');
+        this.insertColumnCell(row, id, null);
+        return;
+      } else {
+        row.children.forEach((ref: TableCell) => {
+          const { left, right } = ref.domNode.getBoundingClientRect();
+          const id = ref.domNode.getAttribute('data-row');
+          if (Math.abs(left - position) <= 2) {
+            this.insertColumnCell(row, id, ref);
+            return;
+          } else if (Math.abs(right - position) <= 2 && !ref.next) {
+            this.insertColumnCell(row, id, null);
+            return;
+          }
+        });
       }
-      prev = prev.prev;
-    }
-    return prev;
+    });
+  }
+
+  insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
+    const cell = this.scroll.create(TableCell.blotName, { 'data-row': id, width: '72' });
+    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
+    cell.appendChild(cellBlock);
+    row.insertBefore(cell, ref);
+    cellBlock.optimize();
+  }
+
+  insertRow(index: number, offset: number) {
+    const [body] = this.descendant(TableBody);
+    if (body == null || body.children.head == null) return;
+    const ref = body.children.at(index);
+    const prev = ref ? ref : body.children.at(index - 1);
+    const correctRow = this.getInsertRow(prev, offset);
+    body.insertBefore(correctRow, ref);
   }
 
   insertTableCell(colspan: number, formats: { [propName: string]: string }, row: TableRow) {
@@ -320,17 +331,6 @@ class TableContainer extends Container {
     cell.appendChild(cellBlock);
     row.appendChild(cell);
     cellBlock.optimize();
-  }
-
-  getMaxColumns(children: TableCell[]) {
-    return children.reduce((num: number, child: TableCell) => {
-      const colspan = ~~child.domNode.getAttribute('colspan') || 1;
-      return num += colspan;
-    }, 0);
-  }
-
-  deleteTable() {
-    this.remove();
   }
 }
 TableContainer.blotName = 'table-container';
@@ -349,18 +349,18 @@ TableCell.requiredContainer = TableRow;
 TableCell.allowedChildren = [TableCellBlock, TableContainer];
 TableCellBlock.requiredContainer = TableCell;
 
-function tableId() {
-  const id = Math.random()
-    .toString(36)
-    .slice(2, 6);
-  return `row-${id}`;
-}
-
 function cellId() {
   const id = Math.random()
     .toString(36)
     .slice(2, 6);
   return `cell-${id}`;
+}
+
+function tableId() {
+  const id = Math.random()
+    .toString(36)
+    .slice(2, 6);
+  return `row-${id}`;
 }
 
 export {
