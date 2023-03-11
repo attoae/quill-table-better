@@ -10,10 +10,10 @@ interface Options {
   }
 }
 
-const LINE_CONTAINER_WIDTH = 5;
-const LINE_CONTAINER_HEIGHT = 5;
-const BOX_WIDTH = 8;
 const BOX_HEIGHT = 8;
+const BOX_WIDTH = 8;
+const LINE_CONTAINER_HEIGHT = 5;
+const LINE_CONTAINER_WIDTH = 5;
 
 class OperateLine {
   quill: any;
@@ -35,6 +35,16 @@ class OperateLine {
     this.createOperateBox();
   }
 
+  createOperateBox() {
+    const box = document.createElement('div');
+    box.classList.add('ql-operate-box');
+    const { boxProps } = this.getProperty(this.options);
+    setElementProperty(box, boxProps);
+    this.box = box;
+    this.quill.container.appendChild(box);
+    this.updateCell(box);
+  }
+
   createOperateLine() {
     const container = document.createElement('div');
     const line = document.createElement('div');
@@ -48,16 +58,6 @@ class OperateLine {
     this.updateCell(container);
   }
 
-  createOperateBox() {
-    const box = document.createElement('div');
-    box.classList.add('ql-operate-box');
-    const { boxProps } = this.getProperty(this.options);
-    setElementProperty(box, boxProps);
-    this.box = box;
-    this.quill.container.appendChild(box);
-    this.updateCell(box);
-  }
-
   createDragTable(table: Element) {
     const dragTable = document.createElement('div');
     const properties = this.getDragTableProperty(table);
@@ -65,6 +65,56 @@ class OperateLine {
     setElementProperty(dragTable, properties);
     this.dragTable = dragTable;
     this.quill.container.appendChild(dragTable);
+  }
+
+  hideBox() {
+    this.box && setElementProperty(this.box, { display: 'none' });
+  }
+
+  hideLine() {
+    this.line && setElementProperty(this.line, { display: 'none' });
+  }
+
+  hideDragTable() {
+    this.dragTable && setElementProperty(this.dragTable, { display: 'none' });
+  }
+
+  isLine(node: Element) {
+    return node.classList.contains('ql-operate-line-container');
+  }
+
+  getDragTableProperty(table: Element) {
+    const { left, top, width, height } = table.getBoundingClientRect();
+    const containerRect = this.quill.container.getBoundingClientRect();
+    return {
+      left: `${left - containerRect.left}px`,
+      top: `${top - containerRect.top}px`,
+      width: `${width}px`,
+      height: `${height}px`,
+      display: 'block'
+    }
+  }
+
+  getLevelColNum(cell: Element) {
+    let previousNode = cell;
+    let nums = 0;
+    while (previousNode) {
+      const colspan = ~~previousNode.getAttribute('colspan') || 1;
+      nums += colspan;
+      // @ts-ignore
+      previousNode = previousNode.previousSibling;
+    }
+    return nums;
+  }
+
+  getMaxColNum(cell: Element) {
+    const cells = cell.parentElement.children;
+    let nums = 0;
+    for (const cell of cells) {
+      const colspan = ~~cell.getAttribute('colspan') || 1;
+      nums += colspan;
+    }
+    return nums;
   }
 
   getProperty(options: Options) {
@@ -122,33 +172,14 @@ class OperateLine {
     return { boxProps };
   }
 
-  getDragTableProperty(table: Element) {
-    const { left, top, width, height } = table.getBoundingClientRect();
-    const containerRect = this.quill.container.getBoundingClientRect();
-    return {
-      left: `${left - containerRect.left}px`,
-      top: `${top - containerRect.top}px`,
-      width: `${width}px`,
-      height: `${height}px`,
-      display: 'block'
+  getVerticalCells(cell: Element, rowspan: number) {
+    let row = cell.parentElement;
+    while (rowspan > 1 && row) {
+      // @ts-ignore
+      row = row.nextSibling;
+      rowspan--;
     }
-  }
-
-  updateProperty(options: Options) {
-    const { containerProps, lineProps, boxProps } = this.getProperty(options);
-    if (!containerProps || !lineProps) return;
-    this.options = options;
-    setElementProperty(this.line, containerProps);
-    setElementProperty(this.line.firstChild as HTMLElement, lineProps);
-    setElementProperty(this.box, boxProps);
-  }
-
-  setCellRect(cell: Element, clientX: number, clientY: number) {
-    if (this.direction === 'level') {
-      this.setCellLevelRect(cell, clientX);
-    } else if (this.direction === 'vertical') {
-      this.setCellVerticalRect(cell, clientY);
-    }
+    return row.children;
   }
 
   setCellLevelRect(cell: Element, clientX: number) {
@@ -186,59 +217,12 @@ class OperateLine {
     }
   }
 
-  getLevelColNum(cell: Element) {
-    let previousNode = cell;
-    let nums = 0;
-    while (previousNode) {
-      const colspan = ~~previousNode.getAttribute('colspan') || 1;
-      nums += colspan;
-      // @ts-ignore
-      previousNode = previousNode.previousSibling;
-    }
-    return nums;
-  }
-
-  setCellVerticalRect(cell: Element, clientY: number) {
-    const rowspan = ~~cell.getAttribute('rowspan') || 1;
-    const cells = rowspan > 1 ? this.getVerticalCells(cell, rowspan) : cell.parentElement.children;
-    for (const cell of cells) {
-      const { top } = cell.getBoundingClientRect();
-      const height = `${~~(clientY - top)}`;
-      setElementAttribute(cell, { height });
-      setElementProperty(cell as HTMLElement, { height: `${height}px` });
-    }
-  }
-
-  updateDragLine(clientX: number, clientY: number) {
-    const containerRect = this.quill.container.getBoundingClientRect();
+  setCellRect(cell: Element, clientX: number, clientY: number) {
     if (this.direction === 'level') {
-      setElementProperty(this.line, { left: `${~~(clientX - containerRect.left - LINE_CONTAINER_WIDTH / 2)}px` });
+      this.setCellLevelRect(cell, clientX);
     } else if (this.direction === 'vertical') {
-      setElementProperty(this.line, { top: `${(~~clientY - containerRect.top - LINE_CONTAINER_HEIGHT / 2)}px` });
+      this.setCellVerticalRect(cell, clientY);
     }
-  }
-
-  getVerticalCells(cell: Element, rowspan: number) {
-    let row = cell.parentElement;
-    while (rowspan > 1 && row) {
-      // @ts-ignore
-      row = row.nextSibling;
-      rowspan--;
-    }
-    return row.children;
-  }
-
-  toggleLineChildClass(isAdd: boolean) {
-    const node = this.line.firstElementChild;
-    if (isAdd) {
-      node.classList.add('ql-operate-line');
-    } else {
-      node.classList.remove('ql-operate-line');
-    }
-  }
-
-  isLine(node: Element) {
-    return node.classList.contains('ql-operate-line-container');
   }
 
   setCellsRect(cell: Element, changeX: number, changeY: number) {
@@ -265,35 +249,24 @@ class OperateLine {
     }
   }
 
-  getMaxColNum(cell: Element) {
-    const cells = cell.parentElement.children;
-    let nums = 0;
+  setCellVerticalRect(cell: Element, clientY: number) {
+    const rowspan = ~~cell.getAttribute('rowspan') || 1;
+    const cells = rowspan > 1 ? this.getVerticalCells(cell, rowspan) : cell.parentElement.children;
     for (const cell of cells) {
-      const colspan = ~~cell.getAttribute('colspan') || 1;
-      nums += colspan;
+      const { top } = cell.getBoundingClientRect();
+      const height = `${~~(clientY - top)}`;
+      setElementAttribute(cell, { height });
+      setElementProperty(cell as HTMLElement, { height: `${height}px` });
     }
-    return nums;
   }
 
-  updateDragBox(clientX: number, clientY: number) {
-    const containerRect = this.quill.container.getBoundingClientRect();
-    this.box.classList.add('ql-operate-box-move');
-    setElementProperty(this.box, {
-      top: `${~~(clientY - containerRect.top - BOX_HEIGHT / 2)}px`,
-      left: `${~~(clientX - containerRect.left - BOX_WIDTH / 2)}px`
-    });
-    this.updateDragTable(clientX, clientY);
-  }
-
-  updateDragTable(clientX: number, clientY: number) {
-    const { top, left } = this.dragTable.getBoundingClientRect();
-    const width = clientX - left;
-    const height = clientY - top;
-    setElementProperty(this.dragTable, {
-      width: `${width}px`,
-      height: `${height}px`,
-      display: 'block'
-    });
+  toggleLineChildClass(isAdd: boolean) {
+    const node = this.line.firstElementChild;
+    if (isAdd) {
+      node.classList.add('ql-operate-line');
+    } else {
+      node.classList.remove('ql-operate-line');
+    }
   }
 
   updateCell(node: Element) {
@@ -352,16 +325,43 @@ class OperateLine {
     node.addEventListener('mousedown', handleMousedown);
   }
 
-  hideLine() {
-    this.line && setElementProperty(this.line, { display: 'none' });
+  updateDragBox(clientX: number, clientY: number) {
+    const containerRect = this.quill.container.getBoundingClientRect();
+    this.box.classList.add('ql-operate-box-move');
+    setElementProperty(this.box, {
+      top: `${~~(clientY - containerRect.top - BOX_HEIGHT / 2)}px`,
+      left: `${~~(clientX - containerRect.left - BOX_WIDTH / 2)}px`
+    });
+    this.updateDragTable(clientX, clientY);
   }
 
-  hideBox() {
-    this.box && setElementProperty(this.box, { display: 'none' });
+  updateDragLine(clientX: number, clientY: number) {
+    const containerRect = this.quill.container.getBoundingClientRect();
+    if (this.direction === 'level') {
+      setElementProperty(this.line, { left: `${~~(clientX - containerRect.left - LINE_CONTAINER_WIDTH / 2)}px` });
+    } else if (this.direction === 'vertical') {
+      setElementProperty(this.line, { top: `${(~~clientY - containerRect.top - LINE_CONTAINER_HEIGHT / 2)}px` });
+    }
   }
 
-  hideDragTable() {
-    this.dragTable && setElementProperty(this.dragTable, { display: 'none' });
+  updateDragTable(clientX: number, clientY: number) {
+    const { top, left } = this.dragTable.getBoundingClientRect();
+    const width = clientX - left;
+    const height = clientY - top;
+    setElementProperty(this.dragTable, {
+      width: `${width}px`,
+      height: `${height}px`,
+      display: 'block'
+    });
+  }
+
+  updateProperty(options: Options) {
+    const { containerProps, lineProps, boxProps } = this.getProperty(options);
+    if (!containerProps || !lineProps) return;
+    this.options = options;
+    setElementProperty(this.line, containerProps);
+    setElementProperty(this.line.firstChild as HTMLElement, lineProps);
+    setElementProperty(this.box, boxProps);
   }
 }
 
