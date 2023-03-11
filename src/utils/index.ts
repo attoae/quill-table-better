@@ -16,17 +16,12 @@ interface CorrectBound {
 
 const DEVIATION = 2;
 
-function getEventComposedPath(e: any) {
-  const path = e.path || (e.composedPath && e.composedPath()) || [];
-  if (path.length) return path;
-  let target = e.target;
-  path.push(target);
-
-  while (target && target.parentNode) {
-    target = target.parentNode;
-    path.push(target);
-  }
-  return path;
+function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: CorrectBound) {
+  const left = Math.min(startCorrectBounds.left, endCorrectBounds.left);
+  const right = Math.max(startCorrectBounds.right, endCorrectBounds.right);
+  const top = Math.min(startCorrectBounds.top, endCorrectBounds.top);
+  const bottom = Math.max(startCorrectBounds.bottom, endCorrectBounds.bottom);
+  return { left, right, top, bottom }
 }
 
 function getCorrectBounds(target: Element, container: Element) {
@@ -46,12 +41,17 @@ function getCorrectBounds(target: Element, container: Element) {
   }
 }
 
-function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: CorrectBound) {
-  const left = Math.min(startCorrectBounds.left, endCorrectBounds.left);
-  const right = Math.max(startCorrectBounds.right, endCorrectBounds.right);
-  const top = Math.min(startCorrectBounds.top, endCorrectBounds.top);
-  const bottom = Math.max(startCorrectBounds.bottom, endCorrectBounds.bottom);
-  return { left, right, top, bottom }
+function getEventComposedPath(e: any) {
+  const path = e.path || (e.composedPath && e.composedPath()) || [];
+  if (path.length) return path;
+  let target = e.target;
+  path.push(target);
+
+  while (target && target.parentNode) {
+    target = target.parentNode;
+    path.push(target);
+  }
+  return path;
 }
 
 function getComputeSelectedTds(
@@ -98,6 +98,12 @@ function removeElementProperty(node: HTMLElement, properties: string[]) {
   }
 }
 
+function setElementAttribute(node: Element, attributes: Properties) {
+  for (const attribute in attributes) {
+    node.setAttribute(attribute, attributes[attribute]);
+  }
+}
+
 function setElementProperty(node: HTMLElement, properties: Properties) {
   const style = node.style;
   if (!style) {
@@ -109,18 +115,12 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
   }
 }
 
-function setElementAttribute(node: Element, attributes: Properties) {
-  for (const attribute in attributes) {
-    node.setAttribute(attribute, attributes[attribute]);
-  }
-}
-
 export {
-  getEventComposedPath,
-  getCorrectBounds,
   getComputeBounds,
+  getCorrectBounds,
+  getEventComposedPath,
   getComputeSelectedTds,
   removeElementProperty,
-  setElementProperty,
-  setElementAttribute
+  setElementAttribute,
+  setElementProperty
 };
