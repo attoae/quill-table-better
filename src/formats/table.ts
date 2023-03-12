@@ -1,5 +1,7 @@
 import Quill from 'quill';
 import { removeElementProperty } from '../utils';
+import TableHeader from './header';
+import { ListContainer } from './list';
 
 const Block = Quill.import('blots/block');
 const Break = Quill.import('blots/break');
@@ -30,6 +32,10 @@ class TableCellBlock extends Block {
       this.wrap(name, value);
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
+    } else if (name === 'header') {
+      super.format('table-header', value);
+    } else if (name === 'list') {
+      super.format('table-list', value);
     } else {
       super.format(name, value);
     }
@@ -346,8 +352,10 @@ TableRow.requiredContainer = TableBody;
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
 
-TableCell.allowedChildren = [TableCellBlock, TableContainer];
+TableCell.allowedChildren = [TableCellBlock, TableContainer, TableHeader];
 TableCellBlock.requiredContainer = TableCell;
+TableHeader.requiredContainer = TableCell;
+// ListContainer.requiredContainer = TableCell;
 
 function cellId() {
   const id = Math.random()
