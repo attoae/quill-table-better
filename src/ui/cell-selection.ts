@@ -1,10 +1,8 @@
 import {
-  setElementProperty,
   getCorrectBounds,
   getComputeBounds,
   getComputeSelectedTds
 } from '../utils';
-import { Blot } from 'parchment/dist/typings/blot/abstract/blot';
 
 class CellSelection {
   quill: any;
