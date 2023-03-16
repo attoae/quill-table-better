@@ -49,7 +49,7 @@ function matchTable(node: any, delta: Delta) {
   const rows = Array.from(table.querySelectorAll('tr'));
   const row = rows.indexOf(node) + 1;
   if (!node.innerHTML.replace(/\s/g, '')) return new Delta();
-  return applyFormat(delta, 'table', row);
+  return applyFormat(delta, 'table-cell', row);
 }
 
 function matchTableCell(node: any, delta: Delta) {
@@ -63,8 +63,8 @@ function matchTableCell(node: any, delta: Delta) {
   const cell = cells.indexOf(node) + 1;
   if (!delta.length()) delta.insert('\n', { table: { 'data-row': row } });
   delta.ops.forEach(op => {
-    if (op.attributes && op.attributes.table) {
-      op.attributes.table = { ...op.attributes.table, 'data-row': row };
+    if (op.attributes && op.attributes['table-cell']) {
+      op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
     }
   })
   return applyFormat(delta, 'table-cell-block', cell);
