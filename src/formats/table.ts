@@ -122,7 +122,7 @@ class TableCell extends Container {
     return cur;
   }
 }
-TableCell.blotName = 'table';
+TableCell.blotName = 'table-cell';
 TableCell.tagName = 'TD';
 
 class TableRow extends Container {
