@@ -1,5 +1,4 @@
 const path = require('path');
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const { merge } = require('webpack-merge');
 
 const commonConfig = require('./webpack.common');
@@ -28,11 +27,6 @@ module.exports = merge(commonConfig, {
     }
   },
   optimization: {
-    minimize: true,
-    minimizer: [
-      new CssMinimizerPlugin({
-        parallel: 4
-      })
-    ]
+    minimize: true
   }
 });
