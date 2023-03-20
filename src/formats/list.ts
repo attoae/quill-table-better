@@ -4,15 +4,15 @@ import { TableCellBlock } from './table';
 const List = Quill.import('formats/list');
 const Container = Quill.import('blots/container');
 
-class ListContainer extends Container {}
-ListContainer.blotName = 'ql-list-container';
-ListContainer.className = 'ql-list-container'
+class ListContainer extends Container {
+  formats() {
+    return { [this.statics.blotName]: {} };
+  }
+}
+ListContainer.blotName = 'table-list-container';
 ListContainer.tagName = 'OL';
 
 class TableList extends List {
-  static blotName = 'table-list';
-  static className = 'ql-table-list';
-
   format(name: string, value: string) {
     if (name === 'list' && !value) {
       this.replaceWith(TableCellBlock.blotName);
@@ -25,6 +25,7 @@ class TableList extends List {
     Quill.register(ListContainer);
   }
 }
+TableList.blotName = 'table-list';
 
 Quill.register({
   'formats/table-list': TableList

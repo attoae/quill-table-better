@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { removeElementProperty } from '../utils';
+import { getElementStyle } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
 
@@ -8,8 +8,8 @@ const Break = Quill.import('blots/break');
 const Container = Quill.import('blots/container');
 
 const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
-// const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan'];
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
+const STYLE_RULES = ['color', 'border', 'width', 'height'];
 
 interface BlotValue {
   [propName: string]: any
@@ -352,10 +352,10 @@ TableRow.requiredContainer = TableBody;
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
 
-TableCell.allowedChildren = [TableCellBlock, TableContainer, TableHeader];
+TableCell.allowedChildren = [TableCellBlock, TableContainer, TableHeader, ListContainer];
 TableCellBlock.requiredContainer = TableCell;
 TableHeader.requiredContainer = TableCell;
-// ListContainer.requiredContainer = TableCell;
+ListContainer.requiredContainer = TableCell;
 
 function cellId() {
   const id = Math.random()

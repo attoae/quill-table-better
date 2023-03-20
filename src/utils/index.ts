@@ -24,36 +24,6 @@ function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: Co
   return { left, right, top, bottom }
 }
 
-function getCorrectBounds(target: Element, container: Element) {
-  const targetBounds = target.getBoundingClientRect();
-  const containerBounds = container.getBoundingClientRect();
-  const left = targetBounds.left - containerBounds.left - container.scrollLeft;
-  const top = targetBounds.top - containerBounds.top - container.scrollTop;
-  const width = targetBounds.width;
-  const height = targetBounds.height;
-  return {
-    left,
-    top,
-    width,
-    height,
-    right: left + width,
-    bottom: top + height
-  }
-}
-
-function getEventComposedPath(e: any) {
-  const path = e.path || (e.composedPath && e.composedPath()) || [];
-  if (path.length) return path;
-  let target = e.target;
-  path.push(target);
-
-  while (target && target.parentNode) {
-    target = target.parentNode;
-    path.push(target);
-  }
-  return path;
-}
-
 function getComputeSelectedTds(
   computeBounds: CorrectBound,
   table: Element,
@@ -92,6 +62,44 @@ function getComputeSelectedTds(
   }, []);
 }
 
+function getCorrectBounds(target: Element, container: Element) {
+  const targetBounds = target.getBoundingClientRect();
+  const containerBounds = container.getBoundingClientRect();
+  const left = targetBounds.left - containerBounds.left - container.scrollLeft;
+  const top = targetBounds.top - containerBounds.top - container.scrollTop;
+  const width = targetBounds.width;
+  const height = targetBounds.height;
+  return {
+    left,
+    top,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height
+  }
+}
+
+function getElementStyle(node: Element, rules: string[]) {
+  const computedStyle = getComputedStyle(node);
+  return rules.reduce((styles: Properties, rule: string) => {
+    styles[rule] = computedStyle.getPropertyValue(rule);
+    return styles;
+  }, {});
+}
+
+function getEventComposedPath(e: any) {
+  const path = e.path || (e.composedPath && e.composedPath()) || [];
+  if (path.length) return path;
+  let target = e.target;
+  path.push(target);
+
+  while (target && target.parentNode) {
+    target = target.parentNode;
+    path.push(target);
+  }
+  return path;
+}
+
 function removeElementProperty(node: HTMLElement, properties: string[]) {
   for (const property of properties) {
     node.style.removeProperty(property);
@@ -117,9 +125,10 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
 
 export {
   getComputeBounds,
-  getCorrectBounds,
-  getEventComposedPath,
   getComputeSelectedTds,
+  getCorrectBounds,
+  getElementStyle,
+  getEventComposedPath,
   removeElementProperty,
   setElementAttribute,
   setElementProperty
