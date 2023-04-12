@@ -8,7 +8,7 @@ import {
   TableContainer,
   tableId,
 } from './formats/table';
-import { matchTableCell, matchTableCol, matchTable } from './utils/clipboard-matchers';
+import { matchTableCell, matchTable } from './utils/clipboard-matchers';
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
@@ -27,12 +27,10 @@ class Table extends Module {
 
   constructor(quill: any, options: any) {
     super(quill, options);
-    this.listenBalanceCells();
     quill.clipboard.addMatcher('td', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
-    // quill.clipboard.addMatcher('table', matchTableCol);
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
       const path = getEventComposedPath(e);
       if (!path || !path.length) return;
@@ -70,21 +68,6 @@ class Table extends Module {
     });
   }
 
-  deleteColumn() {
-    const [table, row, cell] = this.getTable();
-    if (cell == null) return;
-    const column = row.children.indexOf(cell);
-    table.deleteColumn(column);
-    this.quill.update(Quill.sources.USER);
-  }
-
-  deleteRow() {
-    const [, row] = this.getTable();
-    if (row == null) return;
-    row.remove();
-    this.quill.update(Quill.sources.USER);
-  }
-
   deleteTable() {
     const [table] = this.getTable();
     if (table == null) return;
@@ -105,58 +88,6 @@ class Table extends Module {
     return [table, row, cell, offset];
   }
 
-  insertColumn(offset: number) {
-    const range = this.quill.getSelection();
-    const [table, row, cell] = this.getTable(range);
-    if (cell == null) return;
-    const column = row.children.offset(cell);
-    table.insertColumn(column + offset);
-    this.quill.update(Quill.sources.USER);
-    let shift = row.parent.children.indexOf(row);
-    if (offset === 0) {
-      shift += 1;
-    }
-    this.quill.setSelection(
-      range.index + shift,
-      range.length,
-      Quill.sources.SILENT,
-    );
-  }
-
-  insertColumnLeft() {
-    this.insertColumn(0);
-  }
-
-  insertColumnRight() {
-    this.insertColumn(1);
-  }
-
-  insertRow(offset: number) {
-    const range = this.quill.getSelection();
-    const [table, row, cell] = this.getTable(range);
-    if (cell == null) return;
-    const index = row.parent.children.indexOf(row);
-    table.insertRow(index + offset);
-    this.quill.update(Quill.sources.USER);
-    if (offset > 0) {
-      this.quill.setSelection(range, Quill.sources.SILENT);
-    } else {
-      this.quill.setSelection(
-        range.index + row.children.length,
-        range.length,
-        Quill.sources.SILENT,
-      );
-    }
-  }
-
-  insertRowAbove() {
-    this.insertRow(0);
-  }
-
-  insertRowBelow() {
-    this.insertRow(1);
-  }
-
   insertTable(rows: number, columns: number) {
     const range = this.quill.getSelection();
     if (range == null) return;
@@ -166,23 +97,6 @@ class Table extends Module {
     }, new Delta().retain(range.index));
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(range.index, Quill.sources.SILENT);
-  }
-
-  listenBalanceCells() {
-    this.quill.on(Quill.events.SCROLL_OPTIMIZE, (mutations: any) => {
-      mutations.some((mutation: any) => {
-        if (mutation.target.tagName === 'TABLE') {
-          this.quill.once(Quill.events.TEXT_CHANGE, (delta: Delta, old: Delta, source: string) => {
-            if (source !== Quill.sources.USER) return;
-            this.quill.scroll.descendants(TableContainer).forEach((table: any) => {
-              table.balanceCells();
-            });
-          });
-          return true;
-        }
-        return false;
-      });
-    });
   }
 }
 
