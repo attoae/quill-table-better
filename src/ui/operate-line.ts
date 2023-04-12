@@ -67,22 +67,6 @@ class OperateLine {
     this.quill.container.appendChild(dragTable);
   }
 
-  hideBox() {
-    this.box && setElementProperty(this.box, { display: 'none' });
-  }
-
-  hideLine() {
-    this.line && setElementProperty(this.line, { display: 'none' });
-  }
-
-  hideDragTable() {
-    this.dragTable && setElementProperty(this.dragTable, { display: 'none' });
-  }
-
-  isLine(node: Element) {
-    return node.classList.contains('ql-operate-line-container');
-  }
-
   getDragTableProperty(table: Element) {
     const { left, top, width, height } = table.getBoundingClientRect();
     const containerRect = this.quill.container.getBoundingClientRect();
@@ -180,6 +164,22 @@ class OperateLine {
       rowspan--;
     }
     return row.children;
+  }
+
+  hideBox() {
+    this.box && setElementProperty(this.box, { display: 'none' });
+  }
+
+  hideLine() {
+    this.line && setElementProperty(this.line, { display: 'none' });
+  }
+
+  hideDragTable() {
+    this.dragTable && setElementProperty(this.dragTable, { display: 'none' });
+  }
+
+  isLine(node: Element) {
+    return node.classList.contains('ql-operate-line-container');
   }
 
   setCellLevelRect(cell: Element, clientX: number) {

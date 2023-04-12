@@ -1,11 +1,11 @@
 import Delta from 'quill-delta';
 import extend from 'extend';
 
-interface Format {
+interface Formats {
   [propName: string]: string
 }
 
-function applyFormat(delta: Delta, format: Format | string, value?: any): Delta {
+function applyFormat(delta: Delta, format: Formats | string, value?: any): Delta {
   if (typeof format === 'object') {
     return Object.keys(format).reduce((newDelta, key) => {
       return applyFormat(newDelta, key, format[key]);
@@ -20,25 +20,6 @@ function applyFormat(delta: Delta, format: Format | string, value?: any): Delta 
       extend({}, { [format]: value }, op.attributes)
     );
   }, new Delta());
-}
-
-function matchTableCol(node: Element, delta: Delta) {
-  const newDelta = new Delta();
-  const row = node.querySelector('tr');
-  if (!row) return newDelta;
-  const cells = Array.from(row.querySelectorAll('td'));
-  const maxCellsLength = cells.reduce((sum: number, cell: Element) => {
-    const colspan = ~~cell.getAttribute('colspan') || 1;
-    return sum += colspan;
-  }, 0);
-  const colsLength = node.querySelectorAll('col').length;
-  if (maxCellsLength !== colsLength) {
-    for (let i = colsLength; i < maxCellsLength; i++) {
-      newDelta.insert('\n', { 'table-col': true });
-    }
-    return newDelta.concat(delta);
-  }
-  return delta;
 }
 
 function matchTable(node: any, delta: Delta) {
@@ -61,7 +42,7 @@ function matchTableCell(node: any, delta: Delta) {
   const cells = Array.from(node.parentNode.querySelectorAll('td'));
   const row = node.parentNode.getAttribute('data-row') || rows.indexOf(node.parentNode) + 1;
   const cell = cells.indexOf(node) + 1;
-  if (!delta.length()) delta.insert('\n', { table: { 'data-row': row } });
+  if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
   delta.ops.forEach(op => {
     if (op.attributes && op.attributes['table-cell']) {
       op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
@@ -72,6 +53,5 @@ function matchTableCell(node: any, delta: Delta) {
 
 export {
   matchTable,
-  matchTableCell,
-  matchTableCol
+  matchTableCell
 }

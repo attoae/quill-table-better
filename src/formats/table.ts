@@ -157,8 +157,9 @@ TableBody.tagName = 'TBODY';
 
 class TableContainer extends Container {
   // static create(value: Object) {
-  //   const node = super.create();
-  //   const keys = Object.keys(value);
+  //   const node = super.create(value);
+  //   console.log(value)
+  //   const keys = Object.keys(value || {});
   //   for (const key of keys) {
   //     // @ts-ignore
   //     node.setAttribute(key, value[key]);
@@ -177,26 +178,9 @@ class TableContainer extends Container {
   // }
 
   // formats() {
-  //   return this.statics.formats(this.domNode, this.scroll);
+  //   const formats = this.statics.formats(this.domNode, this.scroll);
+  //   return { [this.statics.blotName]: formats };
   // }
-
-  balanceCells() {
-    const rows = this.descendants(TableRow);
-    const maxColumns = rows.reduce((max: number, row: any) => {
-      return Math.max(row.children.length, max);
-    }, 0);
-    rows.forEach((row: any) => {
-      new Array(maxColumns - row.children.length).fill(0).forEach(() => {
-        let value;
-        if (row.children.head != null) {
-          value = TableCell.formats(row.children.head.domNode);
-        }
-        const blot = this.scroll.create(TableCell.blotName, value);
-        row.appendChild(blot);
-        blot.optimize(); // Add break blot
-      });
-    });
-  }
 
   deleteColumn(cells: Element[], hideMenus: () => void) {
     const [body] = this.descendant(TableBody);
