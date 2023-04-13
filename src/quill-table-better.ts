@@ -5,10 +5,11 @@ import {
   TableCell,
   TableRow,
   TableBody,
+  TableTemporary,
   TableContainer,
   tableId,
 } from './formats/table';
-import { matchTableCell, matchTable } from './utils/clipboard-matchers';
+import { matchTableCell, matchTable, matchTableTemporary } from './utils/clipboard-matchers';
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
@@ -22,6 +23,7 @@ class Table extends Module {
     Quill.register(TableCell, true);
     Quill.register(TableRow, true);
     Quill.register(TableBody, true);
+    Quill.register(TableTemporary, true);
     Quill.register(TableContainer, true);
   }
 
@@ -29,6 +31,7 @@ class Table extends Module {
     super(quill, options);
     quill.clipboard.addMatcher('td', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
+    quill.clipboard.addMatcher('table', matchTableTemporary);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
     this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {

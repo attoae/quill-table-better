@@ -155,32 +155,54 @@ class TableBody extends Container {}
 TableBody.blotName = 'table-body';
 TableBody.tagName = 'TBODY';
 
+class TableTemporary extends Block {
+  static create(value: BlotValue) {
+    const node = super.create();
+    const keys = Object.keys(value);
+    for (const key of keys) {
+      node.setAttribute(key, value[key]);
+    }
+    return node;
+  }
+
+  static formats(domNode: Element) {
+    return TABLE_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+      if (domNode.hasAttribute(attr)) {
+        formats[attr] = domNode.getAttribute(attr);
+      }
+      return formats;
+    }, {});
+  }
+
+  formats() {
+    const formats = this.statics.formats(this.domNode, this.scroll);
+    return { [this.statics.blotName]: formats };
+  }
+}
+TableTemporary.blotName = 'table-temporary';
+TableTemporary.tagName = 'temporary';
+
 class TableContainer extends Container {
-  // static create(value: Object) {
-  //   const node = super.create(value);
-  //   console.log(value)
-  //   const keys = Object.keys(value || {});
-  //   for (const key of keys) {
-  //     // @ts-ignore
-  //     node.setAttribute(key, value[key]);
-  //   }
-  //   return node;
-  // }
-
-  // static formats(domNode: Element) {
-  //   return TABLE_ATTRIBUTE.reduce((formats, attr) => {
-  //     if (domNode.hasAttribute(attr)) {
-  //       // @ts-ignore
-  //       formats[attr] = domNode.getAttribute(attr);
-  //     }
-  //     return formats;
-  //   }, {});
-  // }
-
-  // formats() {
-  //   const formats = this.statics.formats(this.domNode, this.scroll);
-  //   return { [this.statics.blotName]: formats };
-  // }
+  constructor(scroll: any, domNode: HTMLElement) {
+    super(scroll, domNode);
+    const observerOptions = {
+      childList: true,
+      attributes: true
+    }
+    const observer = new MutationObserver(() => {
+      const temporary = this.children.head;
+      if (!temporary) return;
+      if (temporary.domNode.tagName === 'TEMPORARY') {
+        const formats = temporary.formats(temporary.domNode)[temporary.statics.blotName];
+        const keys = Object.keys(formats);
+        for (const key of keys) {
+          domNode.setAttribute(key, formats[key]);
+        }
+        temporary.remove();
+      }
+    });
+    observer.observe(domNode, observerOptions);
+  }
 
   deleteColumn(cells: Element[], hideMenus: () => void) {
     const [body] = this.descendant(TableBody);
@@ -327,8 +349,9 @@ TableContainer.blotName = 'table-container';
 TableContainer.className = 'ql-table-better';
 TableContainer.tagName = 'TABLE';
 
-TableContainer.allowedChildren = [TableBody];
+TableContainer.allowedChildren = [TableBody, TableTemporary];
 TableBody.requiredContainer = TableContainer;
+TableTemporary.requiredContainer = TableContainer;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
@@ -360,6 +383,7 @@ export {
   TableCell,
   TableRow,
   TableBody,
+  TableTemporary,
   TableContainer,
   tableId
 };
