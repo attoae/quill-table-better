@@ -5,6 +5,8 @@ interface Formats {
   [propName: string]: string
 }
 
+const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
+
 function applyFormat(delta: Delta, format: Formats | string, value?: any): Delta {
   if (typeof format === 'object') {
     return Object.keys(format).reduce((newDelta, key) => {
@@ -51,7 +53,20 @@ function matchTableCell(node: any, delta: Delta) {
   return applyFormat(delta, 'table-cell-block', cell);
 }
 
+function matchTableTemporary(node: HTMLElement, delta: Delta) {
+  const formats = TABLE_ATTRIBUTE.reduce((formats: Formats, attr) => {
+    if (node.hasAttribute(attr)) {
+      formats[attr] = node.getAttribute(attr);
+    }
+    return formats;
+  }, {});
+  return new Delta()
+    .insert('\n', { 'table-temporary': formats })
+    .concat(delta);
+}
+
 export {
   matchTable,
-  matchTableCell
+  matchTableCell,
+  matchTableTemporary
 }
