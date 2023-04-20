@@ -296,25 +296,29 @@ class TableContainer extends Container {
   insertColumn(position: number, isLast?: boolean) {
     const [body] = this.descendant(TableBody);
     if (body == null || body.children.head == null) return;
+    const columnCells: [TableRow, string, TableCell | null][] = [];
     body.children.forEach((row: TableRow) => {
       if (isLast) {
         const id = row.children.tail.domNode.getAttribute('data-row');
-        this.insertColumnCell(row, id, null);
+        columnCells.push([row, id, null]);
         return;
       } else {
         row.children.forEach((ref: TableCell) => {
           const { left, right } = ref.domNode.getBoundingClientRect();
           const id = ref.domNode.getAttribute('data-row');
           if (Math.abs(left - position) <= 2) {
-            this.insertColumnCell(row, id, ref);
+            columnCells.push([row, id, ref]);
             return;
           } else if (Math.abs(right - position) <= 2 && !ref.next) {
-            this.insertColumnCell(row, id, null);
+            columnCells.push([row, id, null]);
             return;
           }
         });
       }
     });
+    for (const [row, id, ref] of columnCells) {
+      this.insertColumnCell(row, id, ref);
+    }
   }
 
   insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
