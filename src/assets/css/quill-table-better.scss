@@ -1,5 +1,5 @@
 $line-color: #0589f3;
-$focused-cell-background: #9ec9fa4d;
+$focused-cell-background: rgba(158, 207, 250, .3);
 $focused-border-color: #3779eb;
 
 table {
@@ -32,19 +32,15 @@ table {
 .ql-cell-focused {
   position: relative;
   &::after {
-    content: "";
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: $focused-cell-background;
+    @extend .ql-cell-selected-after;
     border: 1px solid $focused-border-color;
   }
 }
 .ql-cell-selected {
-  background-color: $focused-cell-background;
+  position: relative;
+  &::after {
+    @extend .ql-cell-selected-after;
+  }
 }
 .ql-table-menus-container {
   position: absolute;
@@ -122,7 +118,6 @@ table {
     }
   }
 }
-
 .ql-table-triangle-common {
   position: absolute;
   left: 50%;
@@ -135,4 +130,14 @@ table {
   border: 1px solid #ccced1;
   background: #fff;
   box-shadow: 0 1px 2px 1px #00000026;
+}
+.ql-cell-selected-after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: $focused-cell-background;
 }
