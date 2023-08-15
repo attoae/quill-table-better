@@ -58,7 +58,7 @@ class Table extends Module {
       if (!tableNode) {
         if (this.operateLine && !this.operateLine.drag) {
           this.operateLine.hideLine();
-          this.operateLine.hideBox();
+          this.operateLine.hideDragBlock();
         }
         return;
       }
