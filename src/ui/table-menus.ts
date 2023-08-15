@@ -7,6 +7,10 @@ import {
   getComputeSelectedTds
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
+import rowIcon from '../assets/icon/row.svg';
+import mergeIcon from '../assets/icon/merge.svg';
+import tableIcon from '../assets/icon/table.svg';
+import cellIcon from '../assets/icon/cell.svg';
 import downIcon from '../assets/icon/down.svg';
 import { TableCell, TableRow } from '../formats/table';
 
@@ -59,7 +63,7 @@ const MENUS_DEFAULTS: MenusDefaults = {
   },
   row: {
     content: 'Row',
-    icon: columnIcon,
+    icon: rowIcon,
     handler: () => {},
     children: {
       above: {
@@ -96,7 +100,7 @@ const MENUS_DEFAULTS: MenusDefaults = {
   },
   merge: {
     content: 'Merge cells',
-    icon: columnIcon,
+    icon: mergeIcon,
     handler: () => {},
     children: {
       merge: {
@@ -198,12 +202,14 @@ class TableMenus {
   table: Element | null;
   root: HTMLElement;
   prevList: HTMLUListElement | null;
+  prevTooltip: HTMLDivElement | null;
   tableBetter: any;
   constructor(quill: any, tableBetter?: any) {
     this.quill = quill;
     this.table = null;
     this.root = this.createMenus();
     this.prevList = null;
+    this.prevTooltip = null;
     this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
   }
@@ -246,7 +252,7 @@ class TableMenus {
       menu.appendChild(tooltip);
       menu.appendChild(list);
       container.appendChild(menu);
-      menu.addEventListener('click', this.toggleAttribute.bind(this, list));
+      menu.addEventListener('click', this.toggleAttribute.bind(this, list, tooltip));
     }
     this.quill.container.appendChild(container);
     return container;
@@ -296,7 +302,9 @@ class TableMenus {
   handleClick(e: MouseEvent) {
     const table = (e.target as Element).closest('table');
     this.prevList && this.prevList.classList.add('ql-hidden');
+    this.prevTooltip && this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
     this.prevList = null;
+    this.prevTooltip = null;
     if (!table && !this.tableBetter.cellSelection.selectedTds.length) {
       this.hideMenus();
       return;
@@ -355,12 +363,15 @@ class TableMenus {
     }
   }
 
-  toggleAttribute(list: HTMLUListElement) {
+  toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement) {
     if (this.prevList && !this.prevList.isEqualNode(list)) {
       this.prevList.classList.add('ql-hidden');
+      this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
     }
     list.classList.toggle('ql-hidden');
+    tooltip.classList.toggle('ql-table-tooltip-hidden');
     this.prevList = list;
+    this.prevTooltip = tooltip;
   }
 
   showMenus() {

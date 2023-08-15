@@ -10,8 +10,8 @@ interface Options {
   }
 }
 
-const BOX_HEIGHT = 8;
-const BOX_WIDTH = 8;
+const DRAG_BLOCK_HEIGHT = 8;
+const DRAG_BLOCK_WIDTH = 8;
 const LINE_CONTAINER_HEIGHT = 5;
 const LINE_CONTAINER_WIDTH = 5;
 
@@ -20,7 +20,7 @@ class OperateLine {
   options: Options;
   drag: boolean;
   line: HTMLElement | null;
-  box: HTMLElement | null;
+  dragBlock: HTMLElement | null;
   dragTable: HTMLElement | null;
   direction: string | null;
   constructor(quill: any, options: Options) {
@@ -28,21 +28,30 @@ class OperateLine {
     this.options = options;
     this.drag = false;
     this.line = null;
-    this.box = null;
+    this.dragBlock = null;
     this.dragTable = null;
     this.direction = null; // 1.level 2.vertical
     this.createOperateLine();
-    this.createOperateBox();
+    this.createDragBlock();
   }
 
-  createOperateBox() {
-    const box = document.createElement('div');
-    box.classList.add('ql-operate-box');
-    const { boxProps } = this.getProperty(this.options);
-    setElementProperty(box, boxProps);
-    this.box = box;
-    this.quill.container.appendChild(box);
-    this.updateCell(box);
+  createDragBlock() {
+    const dragBlock = document.createElement('div');
+    dragBlock.classList.add('ql-operate-block');
+    const { dragBlockProps } = this.getProperty(this.options);
+    setElementProperty(dragBlock, dragBlockProps);
+    this.dragBlock = dragBlock;
+    this.quill.container.appendChild(dragBlock);
+    this.updateCell(dragBlock);
+  }
+
+  createDragTable(table: Element) {
+    const dragTable = document.createElement('div');
+    const properties = this.getDragTableProperty(table);
+    dragTable.classList.add('ql-operate-drag-table');
+    setElementProperty(dragTable, properties);
+    this.dragTable = dragTable;
+    this.quill.container.appendChild(dragTable);
   }
 
   createOperateLine() {
@@ -56,15 +65,6 @@ class OperateLine {
     this.quill.container.appendChild(container);
     this.line = container;
     this.updateCell(container);
-  }
-
-  createDragTable(table: Element) {
-    const dragTable = document.createElement('div');
-    const properties = this.getDragTableProperty(table);
-    dragTable.classList.add('ql-operate-drag-table');
-    setElementProperty(dragTable, properties);
-    this.dragTable = dragTable;
-    this.quill.container.appendChild(dragTable);
   }
 
   getDragTableProperty(table: Element) {
@@ -109,9 +109,9 @@ class OperateLine {
     const cellRect = cellNode.getBoundingClientRect();
     const x = cellRect.left + cellRect.width;
     const y = cellRect.top + cellRect.height;
-    const boxProps = {
-      width: `${BOX_WIDTH}px`,
-      height: `${BOX_HEIGHT}px`,
+    const dragBlockProps = {
+      width: `${DRAG_BLOCK_WIDTH}px`,
+      height: `${DRAG_BLOCK_HEIGHT}px`,
       top: `${tableRect.bottom - containerRect.top}px`,
       left: `${tableRect.right - containerRect.left}px`,
       display: 'block'
@@ -119,7 +119,7 @@ class OperateLine {
     if (Math.abs(x - clientX) <= 5) {
       this.direction = 'level';
       return {
-        boxProps,
+        dragBlockProps,
         containerProps: {
           width: `${LINE_CONTAINER_WIDTH}px`,
           height: `${containerRect.height}px`,
@@ -136,7 +136,7 @@ class OperateLine {
     } else if (Math.abs(y - clientY) <= 5) {
       this.direction = 'vertical';
       return {
-        boxProps,
+        dragBlockProps,
         containerProps: {
           width: `${containerRect.width}px`,
           height: `${LINE_CONTAINER_HEIGHT}px`,
@@ -153,7 +153,7 @@ class OperateLine {
     } else {
       this.hideLine();
     }
-    return { boxProps };
+    return { dragBlockProps };
   }
 
   getVerticalCells(cell: Element, rowspan: number) {
@@ -166,16 +166,16 @@ class OperateLine {
     return row.children;
   }
 
-  hideBox() {
-    this.box && setElementProperty(this.box, { display: 'none' });
-  }
-
-  hideLine() {
-    this.line && setElementProperty(this.line, { display: 'none' });
+  hideDragBlock() {
+    this.dragBlock && setElementProperty(this.dragBlock, { display: 'none' });
   }
 
   hideDragTable() {
     this.dragTable && setElementProperty(this.dragTable, { display: 'none' });
+  }
+
+  hideLine() {
+    this.line && setElementProperty(this.line, { display: 'none' });
   }
 
   isLine(node: Element) {
@@ -277,9 +277,9 @@ class OperateLine {
       if (this.drag) {
         if (isLine) {
           this.updateDragLine(e.clientX, e.clientY);
-          this.hideBox();
+          this.hideDragBlock();
         } else {
-          this.updateDragBox(e.clientX, e.clientY);
+          this.updateDragBlock(e.clientX, e.clientY);
           this.hideLine();
         }
       }
@@ -296,8 +296,8 @@ class OperateLine {
         const changeX = e.clientX - right;
         const changeY = e.clientY - bottom;
         this.setCellsRect(cellNode, changeX, changeY);
-        this.box.classList.remove('ql-operate-box-move');
-        this.hideBox();
+        this.dragBlock.classList.remove('ql-operate-block-move');
+        this.hideDragBlock();
         this.hideDragTable();
       }
       this.drag = false;
@@ -325,12 +325,12 @@ class OperateLine {
     node.addEventListener('mousedown', handleMousedown);
   }
 
-  updateDragBox(clientX: number, clientY: number) {
+  updateDragBlock(clientX: number, clientY: number) {
     const containerRect = this.quill.container.getBoundingClientRect();
-    this.box.classList.add('ql-operate-box-move');
-    setElementProperty(this.box, {
-      top: `${~~(clientY - containerRect.top - BOX_HEIGHT / 2)}px`,
-      left: `${~~(clientX - containerRect.left - BOX_WIDTH / 2)}px`
+    this.dragBlock.classList.add('ql-operate-block-move');
+    setElementProperty(this.dragBlock, {
+      top: `${~~(clientY - containerRect.top - DRAG_BLOCK_HEIGHT / 2)}px`,
+      left: `${~~(clientX - containerRect.left - DRAG_BLOCK_WIDTH / 2)}px`
     });
     this.updateDragTable(clientX, clientY);
   }
@@ -356,12 +356,12 @@ class OperateLine {
   }
 
   updateProperty(options: Options) {
-    const { containerProps, lineProps, boxProps } = this.getProperty(options);
+    const { containerProps, lineProps, dragBlockProps } = this.getProperty(options);
     if (!containerProps || !lineProps) return;
     this.options = options;
     setElementProperty(this.line, containerProps);
     setElementProperty(this.line.firstChild as HTMLElement, lineProps);
-    setElementProperty(this.box, boxProps);
+    setElementProperty(this.dragBlock, dragBlockProps);
   }
 }
 
