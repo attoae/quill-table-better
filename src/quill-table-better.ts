@@ -8,8 +8,15 @@ import {
   TableTemporary,
   TableContainer,
   tableId,
+  TableCol,
+  TableColgroup
 } from './formats/table';
-import { matchTableCell, matchTable, matchTableTemporary } from './utils/clipboard-matchers';
+import { 
+  matchTable,
+  matchTableCell,
+  matchTableCol,
+  matchTableTemporary
+} from './utils/clipboard-matchers';
 import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
@@ -25,12 +32,15 @@ class Table extends Module {
     Quill.register(TableBody, true);
     Quill.register(TableTemporary, true);
     Quill.register(TableContainer, true);
+    Quill.register(TableCol, true);
+    Quill.register(TableColgroup, true);
   }
 
   constructor(quill: any, options: any) {
     super(quill, options);
     quill.clipboard.addMatcher('td', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
+    quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
