@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { getElementStyle } from '../utils';
+import { getElementStyle, filterWordStyle } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
 
@@ -82,7 +82,7 @@ class TableCell extends Container {
         if (attr === 'rowspan' && rowspan) {
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
         } else {
-          formats[attr] = domNode.getAttribute(attr);
+          formats[attr] = filterWordStyle(domNode.getAttribute(attr));
         }
       }
       return formats;
@@ -90,7 +90,7 @@ class TableCell extends Container {
     if (this.hasColgroup(domNode)){
       delete formats['width'];
       if (formats['style']) {
-        (formats['style'] = formats['style'].replace(/width.*;$/, ''));
+        (formats['style'] = formats['style'].replace(/width.*?;/g, ''));
       }
     }
     return formats;

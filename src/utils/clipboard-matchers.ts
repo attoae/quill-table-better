@@ -1,5 +1,6 @@
 import Delta from 'quill-delta';
 import extend from 'extend';
+import { filterWordStyle } from './';
 
 interface Formats {
   [propName: string]: string
@@ -69,7 +70,7 @@ function matchTableCol(node: HTMLElement, delta: Delta) {
 function matchTableTemporary(node: HTMLElement, delta: Delta) {
   const formats = TABLE_ATTRIBUTE.reduce((formats: Formats, attr) => {
     if (node.hasAttribute(attr)) {
-      formats[attr] = node.getAttribute(attr);
+      formats[attr] = filterWordStyle(node.getAttribute(attr));
     }
     return formats;
   }, {});
