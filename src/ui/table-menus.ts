@@ -4,6 +4,7 @@ import {
   setElementProperty,
   getCorrectBounds,
   getComputeBounds,
+  getComputeSelectedCols,
   getComputeSelectedTds
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
@@ -55,8 +56,9 @@ const MENUS_DEFAULTS: MenusDefaults = {
         handler() {
           const { computeBounds, leftTd } = this.getSelectedTdsInfo();
           const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+          const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
           const tableBlot = Quill.find(leftTd).table();
-          tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this));
+          tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this), deleteCols);
         }
       }
     }
@@ -265,16 +267,16 @@ class TableMenus {
     return element;
   }
 
-  getRef(row: TableRow, right: number): TableCell {
-    let ref = null;
-    row.children.forEach((td: TableCell) => {
+  getRef(row: TableRow, right: number): TableCell | null {
+    let td = row.children.head;
+    while (td) {
       const { left } = td.domNode.getBoundingClientRect();
       if (Math.abs(left - right) <= 2) {
-        ref = td;
-        return;
+        return td;
       }
-    });
-    return ref;
+      td = td.next;
+    }
+    return null;
   }
 
   getSelectedTdsInfo() {
