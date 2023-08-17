@@ -10,6 +10,7 @@ const Container = Quill.import('blots/container');
 const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
 const STYLE_RULES = ['color', 'border', 'width', 'height'];
+const COL_ATTRIBUTE = ['width'];
 
 interface BlotValue {
   [propName: string]: any
@@ -76,7 +77,7 @@ class TableCell extends Container {
 
   static formats(domNode: HTMLElement) {
     const rowspan = this.getEmptyRowspan(domNode);
-    return CELL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+    const formats = CELL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
@@ -86,6 +87,13 @@ class TableCell extends Container {
       }
       return formats;
     }, {});
+    if (this.hasColgroup(domNode)){
+      delete formats['width'];
+      if (formats['style']) {
+        (formats['style'] = formats['style'].replace(/width.*;$/, ''));
+      }
+    }
+    return formats;
   }
 
   formats() {
@@ -101,6 +109,19 @@ class TableCell extends Container {
       nextNode = nextNode.nextElementSibling;
     }
     return rowspan;
+  }
+
+  static hasColgroup(domNode: Element) {
+    while (domNode.tagName !== 'TBODY') {
+      domNode = domNode.parentElement;
+    }
+    while (domNode) {
+      if (domNode.tagName === 'COLGROUP') {
+        return true;
+      }
+      domNode = domNode.previousElementSibling;
+    }
+    return false;
   }
 
   row() {
@@ -182,6 +203,37 @@ class TableTemporary extends Block {
 TableTemporary.blotName = 'table-temporary';
 TableTemporary.tagName = 'temporary';
 
+class TableCol extends Block {
+  static create(value: BlotValue) {
+    const node = super.create();
+    const keys = Object.keys(value);
+    for (const key of keys) {
+      node.setAttribute(key, value[key]);
+    }
+    return node;
+  }
+
+  static formats(domNode: Element) {
+    return COL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+      if (domNode.hasAttribute(attr)) {
+        formats[attr] = domNode.getAttribute(attr);
+      }
+      return formats;
+    }, {});
+  }
+
+  formats() {
+    const formats = this.statics.formats(this.domNode, this.scroll);
+    return { [this.statics.blotName]: formats };
+  }
+}
+TableCol.blotName = 'table-col';
+TableCol.tagName = 'COL';
+
+class TableColgroup extends Container {}
+TableColgroup.blotName = 'table-colgroup';
+TableColgroup.tagName = 'COLGROUP';
+
 class TableContainer extends Container {
   constructor(scroll: any, domNode: HTMLElement) {
     super(scroll, domNode);
@@ -204,22 +256,27 @@ class TableContainer extends Container {
     observer.observe(domNode, observerOptions);
   }
 
-  deleteColumn(cells: Element[], hideMenus: () => void) {
-    const [body] = this.descendant(TableBody);
-    const tableCells = this.descendants(TableCell); 
+  colgroup() {
+    const [colgroup] = this.descendant(TableColgroup);
+    return colgroup;
+  }
+
+  deleteColumn(cells: Element[], hideMenus: () => void, cols: Element[] = []) {
+    const body = this.tbody();
+    const tableCells = this.descendants(TableCell);
     if (body == null || body.children.head == null) return;
     if (cells.length === tableCells.length) {
       this.deleteTable();
       hideMenus();
     } else {
-      for (const td of cells) {
+      for (const td of [...cells, ...cols]) {
         td.remove();
       }
     }
   }
 
   deleteRow(rows: TableRow[], hideMenus: () => void) {
-    const [body] = this.descendant(TableBody);
+    const body = this.tbody();
     if (body == null || body.children.head == null) return;
     if (rows.length === body.children.length) {
       this.deleteTable();
@@ -257,7 +314,7 @@ class TableContainer extends Container {
   }
 
   getInsertRow(prev: TableRow, offset: number) {
-    const [body] = this.descendant(TableBody);
+    const body = this.tbody();
     if (body == null || body.children.head == null) return;
     const id = tableId();
     const row = this.scroll.create(TableRow.blotName);
@@ -294,35 +351,73 @@ class TableContainer extends Container {
   }
 
   insertColumn(position: number, isLast?: boolean) {
-    const [body] = this.descendant(TableBody);
+    const colgroup = this.colgroup();
+    const body = this.tbody();
     if (body == null || body.children.head == null) return;
     const columnCells: [TableRow, string, TableCell | null][] = [];
-    body.children.forEach((row: TableRow) => {
+    const cols: [TableColgroup, TableCol | null][] = [];
+    let row = body.children.head;
+    while (row) {
       if (isLast) {
         const id = row.children.tail.domNode.getAttribute('data-row');
         columnCells.push([row, id, null]);
-        return;
       } else {
-        row.children.forEach((ref: TableCell) => {
+        let ref = row.children.head;
+        while (ref) {
           const { left, right } = ref.domNode.getBoundingClientRect();
           const id = ref.domNode.getAttribute('data-row');
           if (Math.abs(left - position) <= 2) {
             columnCells.push([row, id, ref]);
-            return;
+            break;
           } else if (Math.abs(right - position) <= 2 && !ref.next) {
             columnCells.push([row, id, null]);
-            return;
+            break;
           }
-        });
+          ref = ref.next;
+        }
       }
-    });
+      row = row.next;
+    }
+    if (colgroup) {
+      if (isLast) {
+        cols.push([colgroup, null]);
+      } else {
+        let correctLeft = 0;
+        let correctRight = 0;
+        let col = colgroup.children.head;
+        while (col) {
+          const { left, width } = col.domNode.getBoundingClientRect();
+          correctLeft = correctLeft ? correctLeft : left;
+          correctRight = correctLeft + width;
+          if (Math.abs(correctLeft - position) <= 2) {
+            cols.push([colgroup, col]);
+            break;
+          } else if (Math.abs(correctRight - position) <= 2 && !col.next) {
+            cols.push([colgroup, null]);
+            break;
+          }
+          correctLeft += width;
+          col = col.next;
+        }
+      }
+    }
     for (const [row, id, ref] of columnCells) {
       this.insertColumnCell(row, id, ref);
     }
+    for (const [colgroup, ref] of cols) {
+      this.insertCol(colgroup, ref);
+    }
+  }
+
+  insertCol(colgroup: TableColgroup, ref: TableCol | null) {
+    const col = this.scroll.create(TableCol.blotName, { width: '72' });
+    colgroup.insertBefore(col, ref);
   }
 
   insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
-    const cell = this.scroll.create(TableCell.blotName, { 'data-row': id, width: '72' });
+    const colgroup = this.colgroup();
+    const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: '72' };
+    const cell = this.scroll.create(TableCell.blotName, formats);
     const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
     cell.appendChild(cellBlock);
     row.insertBefore(cell, ref);
@@ -330,7 +425,7 @@ class TableContainer extends Container {
   }
 
   insertRow(index: number, offset: number) {
-    const [body] = this.descendant(TableBody);
+    const body = this.tbody();
     if (body == null || body.children.head == null) return;
     const ref = body.children.at(index);
     const prev = ref ? ref : body.children.at(index - 1);
@@ -348,17 +443,33 @@ class TableContainer extends Container {
     row.appendChild(cell);
     cellBlock.optimize();
   }
+
+  tbody() {
+    const [body] = this.descendant(TableBody);
+    if(body) return body;
+    let child = this.children.head;
+    while (child) {
+      if (child.statics.blotName === 'table-body') {
+        return child;
+      }
+      child = child.next;
+    }
+  }
 }
 TableContainer.blotName = 'table-container';
 TableContainer.className = 'ql-table-better';
 TableContainer.tagName = 'TABLE';
 
-TableContainer.allowedChildren = [TableBody, TableTemporary];
+TableContainer.allowedChildren = [TableBody, TableTemporary, TableColgroup];
 TableBody.requiredContainer = TableContainer;
 TableTemporary.requiredContainer = TableContainer;
+TableColgroup.requiredContainer = TableContainer;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
+
+TableColgroup.allowedChildren = [TableCol];
+TableCol.requiredContainer = TableColgroup;
 
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
@@ -389,5 +500,7 @@ export {
   TableBody,
   TableTemporary,
   TableContainer,
-  tableId
+  tableId,
+  TableCol,
+  TableColgroup
 };

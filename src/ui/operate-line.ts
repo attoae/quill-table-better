@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import { setElementProperty, setElementAttribute } from '../utils';
+import { TableColgroup } from '../formats/table';
 
 interface Options {
   tableNode: Element
@@ -67,6 +68,14 @@ class OperateLine {
     this.updateCell(container);
   }
 
+  getCorrectCol(colgroup: TableColgroup, sum: number) {
+    let child = colgroup.children.head;
+    while (child && --sum) {
+      child = child.next;
+    }
+    return child;
+  }
+
   getDragTableProperty(table: Element) {
     const { left, top, width, height } = table.getBoundingClientRect();
     const containerRect = this.quill.container.getBoundingClientRect();
@@ -79,16 +88,16 @@ class OperateLine {
     }
   }
 
-  getLevelColNum(cell: Element) {
+  getLevelColSum(cell: Element) {
     let previousNode = cell;
-    let nums = 0;
+    let sum = 0;
     while (previousNode) {
       const colspan = ~~previousNode.getAttribute('colspan') || 1;
-      nums += colspan;
+      sum += colspan;
       // @ts-ignore
       previousNode = previousNode.previousSibling;
     }
-    return nums;
+    return sum;
   }
 
   getMaxColNum(cell: Element) {
@@ -185,35 +194,47 @@ class OperateLine {
   setCellLevelRect(cell: Element, clientX: number) {
     const { right } = cell.getBoundingClientRect();
     const change = ~~(clientX - right);
-    const cols = this.getLevelColNum(cell);
-    const rows = cell.parentElement.parentElement.children;
-    const isLastCell = cell.nextElementSibling == null;
-    const preNodes: [Element, string][] = [];
-    for (const row of rows) {
-      const cells = row.children;
-      if (isLastCell) {
-        const cell = cells[cells.length - 1];
-        const { width } = cell.getBoundingClientRect();
-        preNodes.push([cell, `${~~(width + change)}`]);
-        continue;
+    const colSum = this.getLevelColSum(cell);
+    const colgroup = Quill.find(cell).table().colgroup();
+    if (colgroup) {
+      const col = this.getCorrectCol(colgroup, colSum);
+      const nextCol = col.next;
+      const formats = col.formats()[col.statics.blotName];
+      col.domNode.setAttribute('width', `${parseFloat(formats['width']) + change}`);
+      if (nextCol) {
+        const nextFormats = nextCol.formats()[nextCol.statics.blotName];
+        nextCol.domNode.setAttribute('width', `${parseFloat(nextFormats['width']) - change}`);
       }
-      let nums = 0;
-      for (const cell of cells) {
-        const colspan = ~~cell.getAttribute('colspan') || 1;
-        nums += colspan;
-        if (nums > cols) break;
-        if (nums === cols) {
+    } else {
+      const isLastCell = cell.nextElementSibling == null;
+      const rows = cell.parentElement.parentElement.children;
+      const preNodes: [Element, string][] = [];
+      for (const row of rows) {
+        const cells = row.children;
+        if (isLastCell) {
+          const cell = cells[cells.length - 1];
           const { width } = cell.getBoundingClientRect();
-          const nextCell = cell.nextElementSibling;
-          if (!nextCell) continue;
-          const { width: nextWidth } = nextCell.getBoundingClientRect();
-          preNodes.push([cell, `${~~(width + change)}`], [nextCell, `${~~(nextWidth - change)}`]);
+          preNodes.push([cell, `${~~(width + change)}`]);
+          continue;
+        }
+        let sum = 0;
+        for (const cell of cells) {
+          const colspan = ~~cell.getAttribute('colspan') || 1;
+          sum += colspan;
+          if (sum > colSum) break;
+          if (sum === colSum) {
+            const { width } = cell.getBoundingClientRect();
+            const nextCell = cell.nextElementSibling;
+            if (!nextCell) continue;
+            const { width: nextWidth } = nextCell.getBoundingClientRect();
+            preNodes.push([cell, `${~~(width + change)}`], [nextCell, `${~~(nextWidth - change)}`]);
+          }
         }
       }
-    }
-    for (const [node, width] of preNodes) {
-      setElementAttribute(node, { width });
-      setElementProperty(node as HTMLElement, { width: `${width}px` });
+      for (const [node, width] of preNodes) {
+        setElementAttribute(node, { width });
+        setElementProperty(node as HTMLElement, { width: `${width}px` });
+      }
     }
   }
 
@@ -231,6 +252,7 @@ class OperateLine {
     const averageX = changeX / maxColNum;
     const averageY = changeY / rows.length;
     const preNodes: [Element, string, string][] = [];
+    const colgroup = Quill.find(cell).table().colgroup();
     for (const row of rows) {
       const cells = row.children;
       for (const cell of cells) {
@@ -239,13 +261,24 @@ class OperateLine {
         preNodes.push([cell, `${Math.ceil(width + averageX * colspan)}`, `${Math.ceil(height + averageY)}`]);
       }
     }
-
-    for (const [node, width, height] of preNodes) {
-      setElementAttribute(node, { width, height });
-      setElementProperty(node as HTMLElement, {
-        width: `${width}px`,
-        height: `${height}px`
-      });
+    if (colgroup) {
+      let col = colgroup.children.head;
+      for (const [node, width, height] of preNodes) {
+        setElementAttribute(node, { height });
+        setElementProperty(node as HTMLElement, { height: `${height}px` });
+        if (col) {
+          setElementAttribute(col.domNode, { width });
+          col = col.next;
+        }
+      }
+    } else {
+      for (const [node, width, height] of preNodes) {
+        setElementAttribute(node, { width, height });
+        setElementProperty(node as HTMLElement, {
+          width: `${width}px`,
+          height: `${height}px`
+        });
+      }
     }
   }
 

@@ -24,9 +24,9 @@ function applyFormat(delta: Delta, format: Formats | string, value?: any): Delta
   }, new Delta());
 }
 
-function matchTable(node: any, delta: Delta) {
+function matchTable(node: HTMLTableRowElement, delta: Delta) {
   const table =
-    node.parentNode.tagName === 'TABLE'
+    (node.parentNode as HTMLElement).tagName === 'TABLE'
       ? node.parentNode
       : node.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
@@ -35,14 +35,16 @@ function matchTable(node: any, delta: Delta) {
   return applyFormat(delta, 'table-cell', row);
 }
 
-function matchTableCell(node: any, delta: Delta) {
+function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
   const table =
-    node.parentNode.parentNode.tagName === 'TABLE'
+    (node.parentNode.parentNode as HTMLElement).tagName === 'TABLE'
       ? node.parentNode.parentNode
       : node.parentNode.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
   const cells = Array.from(node.parentNode.querySelectorAll('td'));
-  const row = node.parentNode.getAttribute('data-row') || rows.indexOf(node.parentNode) + 1;
+  const row =
+    (node.parentNode as HTMLTableRowElement).getAttribute('data-row') ||
+    rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
   const cell = cells.indexOf(node) + 1;
   if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
   delta.ops.forEach(op => {
@@ -51,6 +53,17 @@ function matchTableCell(node: any, delta: Delta) {
     }
   })
   return applyFormat(delta, 'table-cell-block', cell);
+}
+
+function matchTableCol(node: HTMLElement, delta: Delta) {
+  let span = ~~node.getAttribute('span') || 1;
+  const width = node.getAttribute('width');
+  const newDelta = new Delta();
+  while (span > 1) {
+    newDelta.insert('\n', { 'table-col': { width } });
+    span--;
+  }
+  return newDelta.concat(delta);
 }
 
 function matchTableTemporary(node: HTMLElement, delta: Delta) {
@@ -68,5 +81,6 @@ function matchTableTemporary(node: HTMLElement, delta: Delta) {
 export {
   matchTable,
   matchTableCell,
+  matchTableCol,
   matchTableTemporary
 }

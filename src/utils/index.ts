@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { TableCell } from '../formats/table';
+import { TableCell, TableCol } from '../formats/table';
 
 interface Properties {
   [propertyName: string]: string
@@ -24,6 +24,28 @@ function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: Co
   return { left, right, top, bottom }
 }
 
+function getComputeSelectedCols(
+  computeBounds: CorrectBound,
+  table: Element,
+  container: Element
+) {
+  const tableParchment = Quill.find(table);
+  const cols = tableParchment.descendants(TableCol);
+  let correctLeft = 0;
+  return cols.reduce((selectedCols: Element[], col: TableCol) => {
+    const { left, width } = getCorrectBounds(col.domNode, container);
+    correctLeft = correctLeft ? correctLeft : left;
+    if (
+      correctLeft + DEVIATION >= computeBounds.left &&
+      correctLeft - DEVIATION + width <= computeBounds.right
+    ) {
+      selectedCols.push(col.domNode);
+    }
+    correctLeft += width;
+    return selectedCols;
+  }, []);
+}
+
 function getComputeSelectedTds(
   computeBounds: CorrectBound,
   table: Element,
@@ -31,7 +53,7 @@ function getComputeSelectedTds(
   type?: string
 ): Element[] {
   const tableParchment = Quill.find(table);
-  const tableCells = tableParchment.descendants(TableCell); 
+  const tableCells = tableParchment.descendants(TableCell);
   return tableCells.reduce((selectedTds: Element[], tableCell: TableCell) => {
     const { left, top, width, height } = getCorrectBounds(tableCell.domNode, container);
     switch (type) {
@@ -44,9 +66,7 @@ function getComputeSelectedTds(
         }
         break;
       case 'row':
-        
         break;
-    
       default:
         if (
           left + DEVIATION >= computeBounds.left &&
@@ -125,6 +145,7 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
 
 export {
   getComputeBounds,
+  getComputeSelectedCols,
   getComputeSelectedTds,
   getCorrectBounds,
   getElementStyle,
