@@ -12,6 +12,7 @@ import rowIcon from '../assets/icon/row.svg';
 import mergeIcon from '../assets/icon/merge.svg';
 import tableIcon from '../assets/icon/table.svg';
 import cellIcon from '../assets/icon/cell.svg';
+import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
 import { TableCell, TableRow } from '../formats/table';
 
@@ -26,7 +27,7 @@ interface MenusDefaults {
   [propName: string]: {
     content: string
     icon: string
-    handler: () => void
+    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void
     children?: Children
   }
 }
@@ -35,7 +36,9 @@ const MENUS_DEFAULTS: MenusDefaults = {
   column: {
     content: 'Column',
     icon: columnIcon,
-    handler: () => {},
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    },
     children: {
       left: {
         content: 'Insert column left',
@@ -66,7 +69,9 @@ const MENUS_DEFAULTS: MenusDefaults = {
   row: {
     content: 'Row',
     icon: rowIcon,
-    handler: () => {},
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    },
     children: {
       above: {
         content: 'Insert row above',
@@ -103,7 +108,9 @@ const MENUS_DEFAULTS: MenusDefaults = {
   merge: {
     content: 'Merge cells',
     icon: mergeIcon,
-    handler: () => {},
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    },
     children: {
       merge: {
         content: 'Merge cells',
@@ -196,6 +203,27 @@ const MENUS_DEFAULTS: MenusDefaults = {
         }
       }
     }
+  },
+  table: {
+    content: 'Table properties',
+    icon: tableIcon,
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    }
+  },
+  cell: {
+    content: 'Cell properties',
+    icon: cellIcon,
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    }
+  },
+  wrap: {
+    content: 'Insert paragraph outside the table',
+    icon: wrapIcon,
+    handler(list, tooltip) {
+      this.toggleAttribute(list, tooltip);
+    }
   }
 }
 
@@ -217,6 +245,7 @@ class TableMenus {
   }
 
   createList(children: Children) {
+    if (!children) return null;
     const container = document.createElement('ul');
     for (const [, child] of Object.entries(children)) {
       const { content, handler } = child;
@@ -247,14 +276,14 @@ class TableMenus {
     const container = document.createElement('div');
     container.classList.add('ql-table-menus-container', 'ql-hidden');
     for (const [, val] of Object.entries(MENUS_DEFAULTS)) {
-      const { content, icon, children } = val;
+      const { content, icon, children, handler } = val;
       const list = this.createList(children);
       const tooltip = this.createTooltip(content);
       const menu = this.createMenu(icon, downIcon, !!children);
       menu.appendChild(tooltip);
-      menu.appendChild(list);
+      list && menu.appendChild(list);
       container.appendChild(menu);
-      menu.addEventListener('click', this.toggleAttribute.bind(this, list, tooltip));
+      menu.addEventListener('click', handler.bind(this, list, tooltip));
     }
     this.quill.container.appendChild(container);
     return container;
@@ -370,6 +399,7 @@ class TableMenus {
       this.prevList.classList.add('ql-hidden');
       this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
     }
+    if (!list) return;
     list.classList.toggle('ql-hidden');
     tooltip.classList.toggle('ql-table-tooltip-hidden');
     this.prevList = list;
