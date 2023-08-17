@@ -16,6 +16,10 @@ interface CorrectBound {
 
 const DEVIATION = 2;
 
+function filterWordStyle(s: string) {
+  return s.replace(/mso.*?;/g, '');
+}
+
 function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: CorrectBound) {
   const left = Math.min(startCorrectBounds.left, endCorrectBounds.left);
   const right = Math.max(startCorrectBounds.right, endCorrectBounds.right);
@@ -144,6 +148,7 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
 }
 
 export {
+  filterWordStyle,
   getComputeBounds,
   getComputeSelectedCols,
   getComputeSelectedTds,
