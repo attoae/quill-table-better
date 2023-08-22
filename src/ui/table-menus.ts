@@ -116,95 +116,13 @@ const MENUS_DEFAULTS: MenusDefaults = {
       merge: {
         content: 'Merge cells',
         handler() {
-          const { selectedTds } = this.tableBetter.cellSelection;
-          const { computeBounds, leftTd } = this.getSelectedTdsInfo();
-          const leftTdBlot = Quill.find(leftTd);
-          const tableBlot = leftTdBlot.table();
-          const rows = tableBlot.children.head.children;
-          const row = leftTdBlot.row();
-          const colspan = row.children.reduce((colspan: number, td: TableCell) => {
-            const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
-            if (
-              tdCorrectBounds.left >= computeBounds.left &&
-              tdCorrectBounds.right <= computeBounds.right
-            ) {
-              colspan += ~~td.domNode.getAttribute('colspan') || 1;
-            }
-            return colspan;
-          }, 0);
-          const rowspan = rows.reduce((rowspan: number, row: TableCell) => {
-            const rowCorrectBounds = getCorrectBounds(row.domNode, this.quill.container);
-            if (
-              rowCorrectBounds.top >= computeBounds.top &&
-              rowCorrectBounds.bottom <= computeBounds.bottom
-            ) {
-              let minRowspan = Number.MAX_VALUE;
-              row.children.forEach((td: TableCell) => {
-                const rowspan = ~~td.domNode.getAttribute('rowspan') || 1;
-                minRowspan = Math.min(minRowspan, rowspan);
-              });
-              rowspan += minRowspan;
-            }
-            return rowspan;
-          }, 0);
-          for (const td of selectedTds) {
-            if (leftTd.isEqualNode(td)) continue;
-            const blot = Quill.find(td);
-            blot.moveChildren(leftTdBlot);
-            blot.remove();
-          }
-          leftTdBlot.domNode.setAttribute('colspan', colspan);
-          leftTdBlot.domNode.setAttribute('rowspan', rowspan);
-          this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
-          this.quill.update(Quill.sources.USER);
-          this.quill.scrollIntoView();
+          this.mergeCells();
         }
       },
       split: {
         content: 'Split cell',
         handler() {
-          const { selectedTds } = this.tableBetter.cellSelection;
-          for (const td of selectedTds) {
-            const colspan = ~~td.getAttribute('colspan') || 1;
-            const rowspan = ~~td.getAttribute('rowspan') || 1;
-            const { width, height, right } = td.getBoundingClientRect();
-            const blot = Quill.find(td);
-            const tableBlot = blot.table();
-            const nextBlot = blot.next;
-            const rowBlot = blot.row();
-            if (rowspan > 1) {
-              if (colspan > 1) {
-                let nextRowBlot = rowBlot.next;
-                for (let i = 1; i < rowspan; i++) {
-                  const ref = this.getRef(nextRowBlot, right);
-                  for (let j = 0; j < colspan; j++) {
-                    const id = ref.domNode.getAttribute('data-row');
-                    tableBlot.insertColumnCell(nextRowBlot, id, ref);
-                  }
-                  nextRowBlot = nextRowBlot.next;
-                }
-              } else {
-                let nextRowBlot = rowBlot.next;
-                for (let i = 1; i < rowspan; i++) {
-                  const ref = this.getRef(nextRowBlot, right);
-                  const id = ref.domNode.getAttribute('data-row');
-                  tableBlot.insertColumnCell(nextRowBlot, id, ref);
-                  nextRowBlot = nextRowBlot.next;
-                }
-              }
-            }
-            if (colspan > 1) {
-              const id = td.getAttribute('data-row');
-              for (let i = 1; i < colspan; i++) {
-                tableBlot.insertColumnCell(rowBlot, id, nextBlot);
-              }
-            }
-            td.setAttribute('width', ~~(width / colspan));
-            td.removeAttribute('colspan');
-            td.removeAttribute('rowspan');
-          }
-          this.quill.update(Quill.sources.USER);
-          this.quill.scrollIntoView();
+          this.splitCell();
         }
       }
     }
@@ -315,16 +233,17 @@ class TableMenus {
     return element;
   }
 
-  getRef(row: TableRow, right: number): TableCell | null {
+  getRefInfo(row: TableRow, right: number) {
     let td = row.children.head;
+    const id = td.domNode.getAttribute('data-row');
     while (td) {
       const { left } = td.domNode.getBoundingClientRect();
       if (Math.abs(left - right) <= 2) {
-        return td;
+        return { id, ref: td };
       }
       td = td.next;
     }
-    return null;
+    return { id, ref: null };
   }
 
   getSelectedTdsInfo() {
@@ -428,6 +347,94 @@ class TableMenus {
       tableBlot.insertRow(index + offset + rowspan - 1, offset);
     } else {
       tableBlot.insertRow(index + offset, offset);
+    }
+    this.quill.update(Quill.sources.USER);
+    this.quill.scrollIntoView();
+  }
+
+  mergeCells() {
+    const { selectedTds } = this.tableBetter.cellSelection;
+    const { computeBounds, leftTd } = this.getSelectedTdsInfo();
+    const leftTdBlot = Quill.find(leftTd);
+    const tableBlot = leftTdBlot.table();
+    const rows = tableBlot.tbody().children;
+    const row = leftTdBlot.row();
+    const colspan = row.children.reduce((colspan: number, td: TableCell) => {
+      const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
+      if (
+        tdCorrectBounds.left >= computeBounds.left &&
+        tdCorrectBounds.right <= computeBounds.right
+      ) {
+        colspan += ~~td.domNode.getAttribute('colspan') || 1;
+      }
+      return colspan;
+    }, 0);
+    const rowspan = rows.reduce((rowspan: number, row: TableRow) => {
+      const rowCorrectBounds = getCorrectBounds(row.domNode, this.quill.container);
+      if (
+        rowCorrectBounds.top >= computeBounds.top &&
+        rowCorrectBounds.bottom <= computeBounds.bottom
+      ) {
+        let minRowspan = Number.MAX_VALUE;
+        row.children.forEach((td: TableCell) => {
+          const rowspan = ~~td.domNode.getAttribute('rowspan') || 1;
+          minRowspan = Math.min(minRowspan, rowspan);
+        });
+        rowspan += minRowspan;
+      }
+      return rowspan;
+    }, 0);
+    for (const td of selectedTds) {
+      if (leftTd.isEqualNode(td)) continue;
+      const blot = Quill.find(td);
+      blot.moveChildren(leftTdBlot);
+      blot.remove();
+    }
+    leftTdBlot.domNode.setAttribute('colspan', colspan);
+    leftTdBlot.domNode.setAttribute('rowspan', rowspan);
+    this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
+    this.quill.update(Quill.sources.USER);
+    this.quill.scrollIntoView();
+  }
+
+  splitCell() {
+    const { selectedTds } = this.tableBetter.cellSelection;
+    for (const td of selectedTds) {
+      const colspan = ~~td.getAttribute('colspan') || 1;
+      const rowspan = ~~td.getAttribute('rowspan') || 1;
+      const { width, right } = td.getBoundingClientRect();
+      const blot = Quill.find(td);
+      const tableBlot = blot.table();
+      const nextBlot = blot.next;
+      const rowBlot = blot.row();
+      if (rowspan > 1) {
+        if (colspan > 1) {
+          let nextRowBlot = rowBlot.next;
+          for (let i = 1; i < rowspan; i++) {
+            const { ref, id } = this.getRefInfo(nextRowBlot, right);
+            for (let j = 0; j < colspan; j++) {
+              tableBlot.insertColumnCell(nextRowBlot, id, ref);
+            }
+            nextRowBlot = nextRowBlot.next;
+          }
+        } else {
+          let nextRowBlot = rowBlot.next;
+          for (let i = 1; i < rowspan; i++) {
+            const { ref, id } = this.getRefInfo(nextRowBlot, right);
+            tableBlot.insertColumnCell(nextRowBlot, id, ref);
+            nextRowBlot = nextRowBlot.next;
+          }
+        }
+      }
+      if (colspan > 1) {
+        const id = td.getAttribute('data-row');
+        for (let i = 1; i < colspan; i++) {
+          tableBlot.insertColumnCell(rowBlot, id, nextBlot);
+        }
+      }
+      td.setAttribute('width', ~~(width / colspan));
+      td.removeAttribute('colspan');
+      td.removeAttribute('rowspan');
     }
     this.quill.update(Quill.sources.USER);
     this.quill.scrollIntoView();
