@@ -17,7 +17,6 @@ import {
   matchTableCol,
   matchTableTemporary
 } from './utils/clipboard-matchers';
-import { getEventComposedPath } from './utils';
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
 import TableMenus from './ui/table-menus';
@@ -44,41 +43,7 @@ class Table extends Module {
     quill.clipboard.addMatcher('table', matchTableTemporary);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
-    this.quill.root.addEventListener('mousemove', (e: MouseEvent) => {
-      const path = getEventComposedPath(e);
-      if (!path || !path.length) return;
-      let cellNode, tableNode;
-      const mousePosition = {
-        clientX: 0,
-        clientY: 0
-      }
-      for (const node of path) {
-        if (cellNode && tableNode) break;
-        if (node.tagName && node.tagName.toUpperCase() === 'TABLE') {
-          tableNode = node;
-        }
-        if (node.tagName && node.tagName.toUpperCase() === 'TD') {
-          cellNode = node;
-          Object.assign(mousePosition, {
-            clientX: e.clientX,
-            clientY: e.clientY
-          });
-        }
-      }
-      if (!tableNode) {
-        if (this.operateLine && !this.operateLine.drag) {
-          this.operateLine.hideLine();
-          this.operateLine.hideDragBlock();
-        }
-        return;
-      }
-      if (!this.operateLine) {
-        this.operateLine = new OperateLine(quill, { tableNode, cellNode, mousePosition });
-      } else {
-        if (this.operateLine.drag || !cellNode) return;
-        this.operateLine.updateProperty({ tableNode, cellNode, mousePosition });
-      }
-    });
+    this.operateLine = new OperateLine(quill);
   }
 
   deleteTable() {
