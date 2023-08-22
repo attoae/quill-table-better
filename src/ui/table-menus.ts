@@ -1,4 +1,5 @@
 import Quill from 'quill';
+import Delta from 'quill-delta';
 import merge from 'lodash.merge';
 import {
   setElementProperty,
@@ -155,6 +156,8 @@ const MENUS_DEFAULTS: MenusDefaults = {
           leftTdBlot.domNode.setAttribute('colspan', colspan);
           leftTdBlot.domNode.setAttribute('rowspan', rowspan);
           this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
+          this.quill.update(Quill.sources.USER);
+          this.quill.scrollIntoView();
         }
       },
       split: {
@@ -200,6 +203,8 @@ const MENUS_DEFAULTS: MenusDefaults = {
             td.removeAttribute('colspan');
             td.removeAttribute('rowspan');
           }
+          this.quill.update(Quill.sources.USER);
+          this.quill.scrollIntoView();
         }
       }
     }
@@ -223,6 +228,20 @@ const MENUS_DEFAULTS: MenusDefaults = {
     icon: wrapIcon,
     handler(list, tooltip) {
       this.toggleAttribute(list, tooltip);
+    },
+    children: {
+      before: {
+        content: 'Insert before',
+        handler() {
+          this.insertParagraph(-1);
+        }
+      },
+      after: {
+        content: 'Insert after',
+        handler() {
+          this.insertParagraph(1);
+        }
+      }
     }
   }
 }
@@ -380,6 +399,24 @@ class TableMenus {
       tableBlot.insertColumn(left);
     }
     this.quill.update(Quill.sources.USER);
+    this.quill.scrollIntoView();
+  }
+
+  insertParagraph(offset: number) {
+    const blot = Quill.find(this.table);
+    const index = this.quill.getIndex(blot);
+    const length = offset > 0 ? blot.length() : 0;
+    const delta = new Delta()
+      .retain(index + length)
+      .insert('\n');
+    this.quill.updateContents(delta, Quill.sources.USER);
+    this.quill.setSelection(
+      index + length,
+      Quill.sources.SILENT,
+    );
+    this.quill.scrollIntoView();
+    this.hideMenus();
+    this.tableBetter.cellSelection.clearSelected();
   }
 
   insertRow(td: HTMLTableColElement, offset: number) {
@@ -392,6 +429,8 @@ class TableMenus {
     } else {
       tableBlot.insertRow(index + offset, offset);
     }
+    this.quill.update(Quill.sources.USER);
+    this.quill.scrollIntoView();
   }
 
   toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement) {
