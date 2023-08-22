@@ -18,22 +18,21 @@ const LINE_CONTAINER_WIDTH = 5;
 
 class OperateLine {
   quill: any;
-  options: Options;
+  options: Options | null;
   drag: boolean;
   line: HTMLElement | null;
   dragBlock: HTMLElement | null;
   dragTable: HTMLElement | null;
   direction: string | null;
-  constructor(quill: any, options: Options) {
+  constructor(quill: any) {
     this.quill = quill;
-    this.options = options;
+    this.options = null;
     this.drag = false;
     this.line = null;
     this.dragBlock = null;
     this.dragTable = null;
     this.direction = null; // 1.level 2.vertical
-    this.createOperateLine();
-    this.createDragBlock();
+    this.quill.root.addEventListener('mousemove', this.handleMouseMove.bind(this));
   }
 
   createDragBlock() {
@@ -173,6 +172,31 @@ class OperateLine {
       rowspan--;
     }
     return row.children;
+  }
+
+  handleMouseMove(e: MouseEvent) {
+    const tableNode = (e.target as Element).closest('table');
+    const cellNode = (e.target as Element).closest('td');
+    const mousePosition = {
+      clientX: e.clientX,
+      clientY: e.clientY
+    }
+    if (!tableNode) {
+      if (this.line && !this.drag) {
+        this.hideLine();
+        this.hideDragBlock();
+      }
+      return;
+    }
+    const options = { tableNode, cellNode, mousePosition };
+    if (!this.line) {
+      this.options = options;
+      this.createOperateLine();
+      this.createDragBlock();
+    } else {
+      if (this.drag || !cellNode) return;
+      this.updateProperty(options);
+    }
   }
 
   hideDragBlock() {

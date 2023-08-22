@@ -111,19 +111,6 @@ function getElementStyle(node: Element, rules: string[]) {
   }, {});
 }
 
-function getEventComposedPath(e: any) {
-  const path = e.path || (e.composedPath && e.composedPath()) || [];
-  if (path.length) return path;
-  let target = e.target;
-  path.push(target);
-
-  while (target && target.parentNode) {
-    target = target.parentNode;
-    path.push(target);
-  }
-  return path;
-}
-
 function removeElementProperty(node: HTMLElement, properties: string[]) {
   for (const property of properties) {
     node.style.removeProperty(property);
@@ -154,7 +141,6 @@ export {
   getComputeSelectedTds,
   getCorrectBounds,
   getElementStyle,
-  getEventComposedPath,
   removeElementProperty,
   setElementAttribute,
   setElementProperty
