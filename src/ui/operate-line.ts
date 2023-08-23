@@ -287,13 +287,14 @@ class OperateLine {
     }
     if (colgroup) {
       let col = colgroup.children.head;
-      for (const [node, width, height] of preNodes) {
+      for (const [node, , height] of preNodes) {
         setElementAttribute(node, { height });
         setElementProperty(node as HTMLElement, { height: `${height}px` });
-        if (col) {
-          setElementAttribute(col.domNode, { width });
-          col = col.next;
-        }
+      }
+      while (col) {
+        const { width } = col.domNode.getBoundingClientRect();
+        setElementAttribute(col.domNode, { width: `${Math.ceil(width + averageX)}` });
+        col = col.next;
       }
     } else {
       for (const [node, width, height] of preNodes) {
