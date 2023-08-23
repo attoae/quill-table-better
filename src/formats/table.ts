@@ -226,6 +226,10 @@ class TableCol extends Block {
     const formats = this.statics.formats(this.domNode, this.scroll);
     return { [this.statics.blotName]: formats };
   }
+
+  html() {
+    return this.domNode.outerHTML;
+  }
 }
 TableCol.blotName = 'table-col';
 TableCol.tagName = 'COL';
