@@ -58,66 +58,7 @@ $focused-border-color: #3779eb;
     bottom: -19px;
     border-top-color: #fff !important;
   }
-  .ql-table-dropdown {
-    display: flex;
-    height: 100%;
-    align-items: center;
-    position: relative;
-    padding: 0 4px;
-    &:hover {
-      background: #f0f0f0;
-    }
-    &-icon {
-      &:hover + .ql-table-tooltip {
-        display: block;
-      }
-    }
-    .ql-table-tooltip {
-      min-width: 32px;
-      line-height: 20px;
-      padding: 6px 8px;
-      white-space: nowrap;
-      color: #fff;
-      text-align: center;
-      word-wrap: break-word;
-      background: #000000d9;
-      border-radius: 6px;
-      position: absolute;
-      z-index: 10;
-      left: 50%;
-      transform: translate(-50%, 100%);
-      &::before {
-        @extend .ql-table-triangle-common;
-        border-bottom-color: #000000d9 !important;
-        top: -20px;
-      }
-      &:hover {
-        display: block;
-      }
-      &-hidden {
-        display: none !important;
-      }
-    }
-    &-list {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      transform: translateY(100%);
-      margin: 0;
-      padding: 0;
-      width: 170px;
-      z-index: 9;
-      @extend .ql-table-border-shadow;
-      li {
-        list-style: none;
-        line-height: 40px;
-        padding-left: 10px;
-        &:hover {
-          background: #f0f0f0;
-        }
-      }
-    }
-  }
+  
 }
 .ql-table-triangle-common {
   position: absolute;
@@ -141,4 +82,95 @@ $focused-border-color: #3779eb;
   bottom: 0;
   left: 0;
   background-color: $focused-cell-background;
+}
+.ql-table-dropdown,.ql-table-dropdown-properties {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  position: relative;
+  padding: 0 4px;
+  &:hover {
+    background: #f0f0f0;
+  }
+  &-text {
+    flex: 1;
+    height: 100%;
+    margin-right: 7px;
+  }
+  &-icon {
+    &:hover + .ql-table-tooltip {
+      display: block;
+    }
+  }
+  .ql-table-tooltip {
+    min-width: 32px;
+    line-height: 20px;
+    padding: 6px 8px;
+    white-space: nowrap;
+    color: #fff;
+    text-align: center;
+    word-wrap: break-word;
+    background: #000000d9;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 10;
+    left: 50%;
+    transform: translate(-50%, 100%);
+    &::before {
+      @extend .ql-table-triangle-common;
+      border-bottom-color: #000000d9 !important;
+      top: -20px;
+    }
+    &:hover {
+      display: block;
+    }
+    &-hidden {
+      display: none !important;
+    }
+  }
+  &-list {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translateY(100%);
+    margin: 0;
+    padding: 0;
+    width: 170px;
+    z-index: 9;
+    @extend .ql-table-border-shadow;
+    li {
+      list-style: none;
+      line-height: 40px;
+      padding-left: 10px;
+      &:hover {
+        background: #f0f0f0;
+      }
+    }
+  }
+}
+.ql-table-dropdown-properties {
+  width: 80px;
+  height: 30px;
+  border: 1px solid #ccced1;
+  box-sizing: border-box;
+  &:hover {
+    background: none;
+  }
+}
+.ql-table-properties-form {
+  width: 360px;
+  height: 360px;
+  position: absolute;
+  left: 50%;
+  box-shadow: 0 1px 2px 1px #ccced1;
+  .properties-form-header {
+    height: 40px;
+    line-height: 40px;
+    padding: 0 12px;
+    border-bottom: 1px solid #ccced1;
+    margin: 0;
+    box-sizing: border-box;
+    color: #333;
+    font-size: 14px;
+  }
 }
