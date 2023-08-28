@@ -20,6 +20,7 @@ import {
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
 import TableMenus from './ui/table-menus';
+import TablePropertiesForm from './ui//table-properties-form';
 
 const Module = Quill.import('core/module');
 
@@ -44,6 +45,7 @@ class Table extends Module {
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
     this.operateLine = new OperateLine(quill);
+    new TablePropertiesForm(quill);
   }
 
   deleteTable() {
