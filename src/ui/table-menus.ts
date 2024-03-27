@@ -16,6 +16,7 @@ import cellIcon from '../assets/icon/cell.svg';
 import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
 import { TableCell, TableRow } from '../formats/table';
+import { createTooltip } from '../utils';
 
 interface Children {
   [propName: string]: {
@@ -215,7 +216,7 @@ class TableMenus {
     for (const [, val] of Object.entries(MENUS_DEFAULTS)) {
       const { content, icon, children, handler } = val;
       const list = this.createList(children);
-      const tooltip = this.createTooltip(content);
+      const tooltip = createTooltip(content);
       const menu = this.createMenu(icon, downIcon, !!children);
       menu.appendChild(tooltip);
       list && menu.appendChild(list);
@@ -224,13 +225,6 @@ class TableMenus {
     }
     this.quill.container.appendChild(container);
     return container;
-  }
-
-  createTooltip(content: string) {
-    const element = document.createElement('div');
-    element.innerText = content;
-    element.classList.add('ql-table-tooltip', 'ql-hidden');
-    return element;
   }
 
   getRefInfo(row: TableRow, right: number) {
