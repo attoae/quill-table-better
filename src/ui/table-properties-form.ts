@@ -1,9 +1,21 @@
 import downIcon from '../assets/icon/down.svg';
+import eraseIcon from '../assets/icon/erase.svg';
+import platteIcon from '../assets/icon/platte.svg';
+import {
+  createTooltip,
+  setElementProperty,
+  setElementAttribute
+} from '../utils';
+
+interface Attribute {
+  [propName: string]: string
+}
 
 interface Child {
-  type: string
+  category: string
   propertyName: string
   value?: string
+  attribute?: Attribute
   options?: string[]
   tooltip?: string,
   handler?: () => void
@@ -19,6 +31,11 @@ interface Options {
   properties: Properties[]
 }
 
+interface ColorList {
+  value: string
+  title: string
+}
+
 const options = {
   title: 'Table properties',
   properties: [
@@ -26,16 +43,30 @@ const options = {
       content: 'Border',
       children: [
         {
-          type: 'dropdown',
+          category: 'dropdown',
           propertyName: 'border-style',
           value: '',
           options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
           handler: () => {}
         },
         {
-          type: 'color',
+          category: 'color',
           propertyName: 'border-color',
           value: '',
+          attribute: {
+            type: 'text',
+            placeholder: 'Color'
+          },
+          handler: () => {}
+        },
+        {
+          category: 'input',
+          propertyName: 'border-width',
+          value: '',
+          attribute: {
+            type: 'text',
+            placeholder: 'Width'
+          },
           handler: () => {}
         }
       ]
@@ -43,6 +74,24 @@ const options = {
     
   ]
 }
+
+const colorList: ColorList[] = [
+  { value: '#000000', title: 'Black' },
+  { value: '#4d4d4d', title: 'Dim grey' },
+  { value: '#808080', title: 'Grey' },
+  { value: '#e6e6e6', title: 'Light grey' },
+  { value: '#ffffff', title: 'White' },
+  { value: '#ff0000', title: 'Red' },
+  { value: '#ffa500', title: 'Orange' },
+  { value: '#ffff00', title: 'Yellow' },
+  { value: '#99e64d', title: 'Light green' },
+  { value: '#008000', title: 'Green' },
+  { value: '#7fffd4', title: 'Aquamarine' },
+  { value: '#40e0d0', title: 'Turquoise' },
+  { value: '#4d99e6', title: 'Light blue' },
+  { value: '#0000ff', title: 'Blue' },
+  { value: '#800080', title: 'Purple' }
+];
 
 class TablePropertiesForm {
   form: null;
@@ -55,28 +104,82 @@ class TablePropertiesForm {
     this.createPropertiesForm();
   }
 
-  createColorInput(value: string, type: string) {
+  createColorContainer(value: string, attribute: Attribute) {
     const container = document.createElement('div');
-    const input = document.createElement('input');
-    input.type = 'text';
-    const dropdown = this.createDropdown(value, type);
+    container.classList.add('ql-table-color-container');
+    const input = this.createColorInput(attribute);
     const colorPicker = this.createColorPicker();
-    dropdown.appendChild(colorPicker)
+    // const { dropdown } = this.createDropdown(value, category);
     container.appendChild(input);
-    container.appendChild(dropdown);
+    container.appendChild(colorPicker);
+    // dropdown.appendChild(colorPicker)
+    // container.appendChild(dropdown);
+    return container;
+  }
+
+  createColorInput(attribute: Attribute) {
+    const input = this.createInput(attribute);
+    input.classList.add('color-input');    
+    return input;
+  }
+
+  createColorList() {
+    const container = document.createElement('ul');
+    const fragment = document.createDocumentFragment();
+    container.classList.add('color-list');
+    for (const { value, title } of colorList) {
+      const li = document.createElement('li');
+      const tooltip = createTooltip(title);
+      li.setAttribute('data-color', value);
+      setElementProperty(li, { background: value });
+      li.appendChild(tooltip);
+      fragment.appendChild(li);
+    }
+    container.appendChild(fragment);
+    container.addEventListener('click', e => {
+      const value = (e.target as HTMLLIElement).getAttribute('data-color');
+    });
     return container;
   }
 
   createColorPicker() {
-    const container = document.createElement('div');
+    const container = document.createElement('span');
+    const colorButton = document.createElement('span');
+    container.classList.add('color-picker');
+    colorButton.classList.add('color-button');
+    colorButton.classList.add('color-unselected');
+    const select = this.createColorPickerSelect();
+    colorButton.addEventListener('click', () => {
+      this.toggleHidden(select);
+    });
+    container.appendChild(colorButton);
+    container.appendChild(select);
     return container;
   }
 
-  createDropdown(value: string, type?: string) {
+  createColorPickerSelect() {
+    const container = document.createElement('div');
+    const eraseContainer = document.createElement('div');
+    const icon = document.createElement('span');
+    const button = document.createElement('button');
+    const list = this.createColorList();
+    icon.innerHTML = eraseIcon;
+    button.innerHTML = 'Remove color';
+    container.classList.add('color-picker-select', 'ql-hidden');
+    eraseContainer.classList.add('erase-container');
+    eraseContainer.appendChild(icon);
+    eraseContainer.appendChild(button);
+    container.appendChild(eraseContainer);
+    container.appendChild(list);
+    // container.addEventListener('blur', () => this.toggleHidden(container));
+    return container;
+  }
+
+  createDropdown(value: string, category?: string) {
     const container = document.createElement('div');
     const dropText = document.createElement('span');
     const dropDown = document.createElement('span');
-    switch (type) {
+    switch (category) {
       case 'dropdown':
         dropDown.innerHTML = downIcon;
         dropDown.classList.add('ql-table-dropdown-icon');
@@ -90,20 +193,32 @@ class TablePropertiesForm {
     container.classList.add('ql-table-dropdown-properties');
     dropText.classList.add('ql-table-dropdown-text');
     container.appendChild(dropText);
-    if (type === 'dropdown') container.appendChild(dropDown);
-    return container;
+    if (category === 'dropdown') container.appendChild(dropDown);
+    return { dropdown: container, dropText };
   }
 
-  createList(contents: string[], handler: Function) {
+  createInput(attribute: Attribute) {
+    const input = document.createElement('input');
+    setElementAttribute(input, attribute);
+    input.classList.add('property-input');
+    input.addEventListener('input', e => {
+      
+    });
+    return input;
+  }
+
+  createList(contents: string[], dropText?: HTMLSpanElement) {
     if (!contents.length) return null;
     const container = document.createElement('ul');
     for (const content of contents) {
       const list = document.createElement('li');
       list.innerText = content;
-      list.addEventListener('click', handler.bind(this));
       container.appendChild(list);
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
+    container.addEventListener('click', e => {
+      dropText.innerText = (e.target as HTMLLIElement).innerText;
+    });
     return container;
   }
 
@@ -112,6 +227,8 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     const label = document.createElement('label');
     label.innerText = content;
+    label.classList.add('ql-table-dropdown-label');
+    container.classList.add('properties-form-row');
     container.appendChild(label);
     for (const child of children) {
       const node = this.createPropertyChild(child);
@@ -121,19 +238,23 @@ class TablePropertiesForm {
   }
 
   createPropertyChild(child: Child) {
-    const { type, propertyName, value, options, handler } = child;
-    switch (type) {
+    const { category, propertyName, value, attribute, options, handler } = child;
+    switch (category) {
       case 'dropdown':
-        const dropdown = this.createDropdown(value, type);
-        const list = this.createList(options, handler);
+        const { dropdown, dropText } = this.createDropdown(value, category);
+        const list = this.createList(options, dropText);
         dropdown.appendChild(list);
+        dropdown.addEventListener('click', () => this.toggleHidden(list));
         return dropdown;
       case 'color':
-        const colorInput = this.createColorInput(value, type);
-        return colorInput;
+        const colorContainer = this.createColorContainer(value, attribute);
+        return colorContainer;
       case 'menus':
       
         break;
+      case 'input':
+        const input = this.createInput(attribute);
+        return input;
       default:
         break;
     }
@@ -152,6 +273,10 @@ class TablePropertiesForm {
       container.appendChild(node);
     }
     this.quill.container.appendChild(container);
+  }
+
+  toggleHidden(container: HTMLElement) {
+    container.classList.toggle('ql-hidden');
   }
 
   updatePropertiesForm() {
