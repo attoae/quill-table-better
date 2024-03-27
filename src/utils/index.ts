@@ -16,6 +16,13 @@ interface CorrectBound {
 
 const DEVIATION = 2;
 
+function createTooltip(content: string) {
+  const element = document.createElement('div');
+  element.innerText = content;
+  element.classList.add('ql-table-tooltip', 'ql-hidden');
+  return element;
+}
+
 function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
 }
@@ -135,6 +142,7 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
 }
 
 export {
+  createTooltip,
   filterWordStyle,
   getComputeBounds,
   getComputeSelectedCols,

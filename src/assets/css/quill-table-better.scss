@@ -1,6 +1,8 @@
 $line-color: #0589f3;
 $focused-cell-background: rgba(158, 207, 250, .3);
 $focused-border-color: #3779eb;
+$border: 1px solid #ccced1;
+$box-shadow: 0 1px 2px 1px #ccced1;
 
 .ql-operate-line-container {
   position: absolute;
@@ -69,7 +71,7 @@ $focused-border-color: #3779eb;
 }
 .ql-table-border-shadow {
   border-radius: 2px;
-  border: 1px solid #ccced1;
+  border: $border;
   background: #fff;
   box-shadow: 0 1px 2px 1px #00000026;
 }
@@ -82,6 +84,12 @@ $focused-border-color: #3779eb;
   bottom: 0;
   left: 0;
   background-color: $focused-cell-background;
+}
+.ql-table-input {
+  width: 80px;
+  border: $border;
+  outline: none;
+  padding-left: 6px;
 }
 .ql-table-dropdown,.ql-table-dropdown-properties {
   display: flex;
@@ -96,36 +104,13 @@ $focused-border-color: #3779eb;
     flex: 1;
     height: 100%;
     margin-right: 7px;
+    display: flex;
+    align-items: center;
   }
   &-icon {
+    display: flex;
     &:hover + .ql-table-tooltip {
       display: block;
-    }
-  }
-  .ql-table-tooltip {
-    min-width: 32px;
-    line-height: 20px;
-    padding: 6px 8px;
-    white-space: nowrap;
-    color: #fff;
-    text-align: center;
-    word-wrap: break-word;
-    background: #000000d9;
-    border-radius: 6px;
-    position: absolute;
-    z-index: 10;
-    left: 50%;
-    transform: translate(-50%, 100%);
-    &::before {
-      @extend .ql-table-triangle-common;
-      border-bottom-color: #000000d9 !important;
-      top: -20px;
-    }
-    &:hover {
-      display: block;
-    }
-    &-hidden {
-      display: none !important;
     }
   }
   &-list {
@@ -147,30 +132,164 @@ $focused-border-color: #3779eb;
       }
     }
   }
+  &-label {
+    width: 100%;
+    min-width: 100%;
+    line-height: 24px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    display: block;
+  }
+}
+.ql-table-tooltip {
+  min-width: 32px;
+  line-height: 20px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  color: #fff;
+  text-align: center;
+  word-wrap: break-word;
+  background: #000000d9;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  &::before {
+    @extend .ql-table-triangle-common;
+    border-bottom-color: #000000d9 !important;
+    top: -20px;
+  }
+  &:hover {
+    display: block;
+  }
+  &-hidden {
+    display: none !important;
+  }
 }
 .ql-table-dropdown-properties {
   width: 80px;
   height: 30px;
-  border: 1px solid #ccced1;
+  border: $border;
   box-sizing: border-box;
   &:hover {
     background: none;
   }
 }
 .ql-table-properties-form {
-  width: 360px;
-  height: 360px;
+  width: 320px;
+  // height: 360px;
   position: absolute;
   left: 50%;
-  box-shadow: 0 1px 2px 1px #ccced1;
+  box-shadow: $box-shadow;
   .properties-form-header {
     height: 40px;
     line-height: 40px;
     padding: 0 12px;
-    border-bottom: 1px solid #ccced1;
+    border-bottom: $border;
     margin: 0;
     box-sizing: border-box;
     color: #333;
     font-size: 14px;
+  }
+  .properties-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 12px;
+    justify-content: space-between;
+  }
+  .property-input {
+    @extend .ql-table-input;
+  }
+}
+.ql-table-color-container {
+  border: $border;
+  height: 30px;
+  box-sizing: border-box;
+  display: flex;
+  .color-input {
+    @extend .ql-table-input;
+    border: none;
+    // width: auto;
+    // height: 100%;
+  }
+  .color-picker {
+    display: flex;
+    width: 30px;
+    border-left: $border;
+    box-sizing: border-box;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    .color-button {
+      width: 20px;
+      height: 20px;
+      border: $border;
+      box-sizing: border-box;
+      cursor: pointer;
+      position: relative;
+    }
+    .color-unselected {
+      position: relative;
+      &::after {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 26px;
+        background: red;
+        transform-origin: 50%;
+        transform: rotate(45deg);
+        left: 50%;
+        top: -4px;
+      }
+    }
+    .color-picker-select {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 156px;
+      transform: translateY(100%);
+      box-shadow: $box-shadow;
+      background: #fff;
+      .erase-container {
+        display: flex;
+        height: 30px;
+        align-items: center;
+        padding: 0 12px;
+        &:hover {
+          background: #f0f0f0;
+        }
+        cursor: pointer;
+        & > button {
+          border: none;
+          outline: none;
+          background: inherit;
+          height: 100%;
+          cursor: pointer;
+        }
+      }
+      .color-list {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0 12px;
+        margin: 0;
+        justify-content: space-between;
+        & > li {
+          list-style: none;
+          width: 24px;
+          height: 24px;
+          margin: 2px 0;
+          position: relative;
+          cursor: pointer;
+          &:hover .ql-table-tooltip {
+            display: block;
+          }
+          &[data-color="#ffffff"] {
+            border: $border;
+            box-sizing: border-box;
+          }
+        }
+      }
+    }
   }
 }
