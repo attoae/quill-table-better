@@ -1,6 +1,8 @@
-import downIcon from '../assets/icon/down.svg';
 import eraseIcon from '../assets/icon/erase.svg';
+import checkIcon from '../assets/icon/check.svg';
+import downIcon from '../assets/icon/down.svg';
 import platteIcon from '../assets/icon/platte.svg';
+import { CELLOPS, TABLEOPS } from '../config';
 import {
   createTooltip,
   setElementProperty,
@@ -17,8 +19,15 @@ interface Child {
   value?: string
   attribute?: Attribute
   options?: string[]
-  tooltip?: string,
+  tooltip?: string
+  menus?: Menus[]
   handler?: () => void
+}
+
+interface Menus {
+  icon: string
+  describe: string
+  align: string
 }
 
 interface Properties {
@@ -33,64 +42,25 @@ interface Options {
 
 interface ColorList {
   value: string
-  title: string
-}
-
-const options = {
-  title: 'Table properties',
-  properties: [
-    {
-      content: 'Border',
-      children: [
-        {
-          category: 'dropdown',
-          propertyName: 'border-style',
-          value: '',
-          options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
-          handler: () => {}
-        },
-        {
-          category: 'color',
-          propertyName: 'border-color',
-          value: '',
-          attribute: {
-            type: 'text',
-            placeholder: 'Color'
-          },
-          handler: () => {}
-        },
-        {
-          category: 'input',
-          propertyName: 'border-width',
-          value: '',
-          attribute: {
-            type: 'text',
-            placeholder: 'Width'
-          },
-          handler: () => {}
-        }
-      ]
-    }
-    
-  ]
+  describe: string
 }
 
 const colorList: ColorList[] = [
-  { value: '#000000', title: 'Black' },
-  { value: '#4d4d4d', title: 'Dim grey' },
-  { value: '#808080', title: 'Grey' },
-  { value: '#e6e6e6', title: 'Light grey' },
-  { value: '#ffffff', title: 'White' },
-  { value: '#ff0000', title: 'Red' },
-  { value: '#ffa500', title: 'Orange' },
-  { value: '#ffff00', title: 'Yellow' },
-  { value: '#99e64d', title: 'Light green' },
-  { value: '#008000', title: 'Green' },
-  { value: '#7fffd4', title: 'Aquamarine' },
-  { value: '#40e0d0', title: 'Turquoise' },
-  { value: '#4d99e6', title: 'Light blue' },
-  { value: '#0000ff', title: 'Blue' },
-  { value: '#800080', title: 'Purple' }
+  { value: '#000000', describe: 'Black' },
+  { value: '#4d4d4d', describe: 'Dim grey' },
+  { value: '#808080', describe: 'Grey' },
+  { value: '#e6e6e6', describe: 'Light grey' },
+  { value: '#ffffff', describe: 'White' },
+  { value: '#ff0000', describe: 'Red' },
+  { value: '#ffa500', describe: 'Orange' },
+  { value: '#ffff00', describe: 'Yellow' },
+  { value: '#99e64d', describe: 'Light green' },
+  { value: '#008000', describe: 'Green' },
+  { value: '#7fffd4', describe: 'Aquamarine' },
+  { value: '#40e0d0', describe: 'Turquoise' },
+  { value: '#4d99e6', describe: 'Light blue' },
+  { value: '#0000ff', describe: 'Blue' },
+  { value: '#800080', describe: 'Purple' }
 ];
 
 class TablePropertiesForm {
@@ -102,6 +72,27 @@ class TablePropertiesForm {
     this.quill = quill;
     this.options = options;
     this.createPropertiesForm();
+  }
+
+  createCheckBtns(menus: Menus[]) {
+    const container = document.createElement('div');
+    const fragment = document.createDocumentFragment();
+    for (const { icon, describe, align } of menus) {
+      const container = document.createElement('span');
+      container.innerHTML = icon;
+      container.setAttribute('data-align', align);
+      container.classList.add('ql-table-tooltip-hover');
+      const tooltip = createTooltip(describe);
+      container.appendChild(tooltip);
+      fragment.appendChild(container);
+    }
+    container.classList.add('ql-table-check-container');
+    container.appendChild(fragment);
+    container.addEventListener('click', e => {
+      const target = (e.target as HTMLElement).closest('span.ql-table-tooltip-hover');
+      const value = target.getAttribute('data-align');
+    });
+    return container;
   }
 
   createColorContainer(value: string, attribute: Attribute) {
@@ -127,10 +118,11 @@ class TablePropertiesForm {
     const container = document.createElement('ul');
     const fragment = document.createDocumentFragment();
     container.classList.add('color-list');
-    for (const { value, title } of colorList) {
+    for (const { value, describe } of colorList) {
       const li = document.createElement('li');
-      const tooltip = createTooltip(title);
+      const tooltip = createTooltip(describe);
       li.setAttribute('data-color', value);
+      li.classList.add('ql-table-tooltip-hover');
       setElementProperty(li, { background: value });
       li.appendChild(tooltip);
       fragment.appendChild(li);
@@ -238,7 +230,7 @@ class TablePropertiesForm {
   }
 
   createPropertyChild(child: Child) {
-    const { category, propertyName, value, attribute, options, handler } = child;
+    const { category, propertyName, value, attribute, options, menus, handler } = child;
     switch (category) {
       case 'dropdown':
         const { dropdown, dropText } = this.createDropdown(value, category);
@@ -250,8 +242,8 @@ class TablePropertiesForm {
         const colorContainer = this.createColorContainer(value, attribute);
         return colorContainer;
       case 'menus':
-      
-        break;
+        const checkBtns = this.createCheckBtns(menus);
+        return checkBtns;
       case 'input':
         const input = this.createInput(attribute);
         return input;
@@ -261,7 +253,7 @@ class TablePropertiesForm {
   }
 
   createPropertiesForm() {
-    const { title, properties } = options;
+    const { title, properties } = CELLOPS;
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
