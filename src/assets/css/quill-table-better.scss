@@ -87,6 +87,7 @@ $box-shadow: 0 1px 2px 1px #ccced1;
 }
 .ql-table-input {
   width: 80px;
+  height: 30px;
   border: $border;
   outline: none;
   padding-left: 6px;
@@ -106,12 +107,6 @@ $box-shadow: 0 1px 2px 1px #ccced1;
     margin-right: 7px;
     display: flex;
     align-items: center;
-  }
-  &-icon {
-    display: flex;
-    &:hover + .ql-table-tooltip {
-      display: block;
-    }
   }
   &-list {
     position: absolute;
@@ -138,6 +133,16 @@ $box-shadow: 0 1px 2px 1px #ccced1;
     line-height: 24px;
     font-weight: bold;
     margin-bottom: 6px;
+    display: block;
+  }
+}
+.ql-table-tooltip-hover {
+  display: flex;
+  position: relative;
+  &:hover .ql-table-tooltip {
+    display: block;
+  }
+  &:hover + .ql-table-tooltip {
     display: block;
   }
 }
@@ -178,7 +183,6 @@ $box-shadow: 0 1px 2px 1px #ccced1;
 }
 .ql-table-properties-form {
   width: 320px;
-  // height: 360px;
   position: absolute;
   left: 50%;
   box-shadow: $box-shadow;
@@ -197,6 +201,18 @@ $box-shadow: 0 1px 2px 1px #ccced1;
     flex-wrap: wrap;
     padding: 12px;
     justify-content: space-between;
+    .ql-table-check-container {
+      display: flex;
+      border: $border;
+      align-items: center;
+      & .ql-table-tooltip-hover {
+        padding: 6px 10px;
+        cursor: pointer;
+        &:hover {
+          background: #f0f0f0;
+        }
+      }
+    }
   }
   .property-input {
     @extend .ql-table-input;
@@ -211,7 +227,7 @@ $box-shadow: 0 1px 2px 1px #ccced1;
     @extend .ql-table-input;
     border: none;
     // width: auto;
-    // height: 100%;
+    height: 100%;
   }
   .color-picker {
     display: flex;
@@ -281,9 +297,6 @@ $box-shadow: 0 1px 2px 1px #ccced1;
           margin: 2px 0;
           position: relative;
           cursor: pointer;
-          &:hover .ql-table-tooltip {
-            display: block;
-          }
           &[data-color="#ffffff"] {
             border: $border;
             box-sizing: border-box;

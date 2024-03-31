@@ -205,7 +205,7 @@ class TableMenus {
       dropDown.innerHTML = left;
     }
     container.classList.add('ql-table-dropdown');
-    dropDown.classList.add('ql-table-dropdown-icon');
+    dropDown.classList.add('ql-table-tooltip-hover');
     container.appendChild(dropDown);
     return container;
   }
