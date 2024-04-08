@@ -109,9 +109,9 @@ class TablePropertiesForm {
   }
 
   createColorInput(attribute: Attribute) {
-    const input = this.createInput(attribute);
-    input.classList.add('color-input');    
-    return input;
+    const container = this.createInput(attribute);
+    container.classList.add('label-field-view-color');    
+    return container;
   }
 
   createColorList() {
@@ -190,13 +190,26 @@ class TablePropertiesForm {
   }
 
   createInput(attribute: Attribute) {
+    const { placeholder = '' } = attribute;
+    const container = document.createElement('div');
+    const wrapper = document.createElement('div');
+    const label = document.createElement('label');
     const input = document.createElement('input');
+    const status = document.createElement('div');
+    container.classList.add('label-field-view');
+    wrapper.classList.add('label-field-view-input-wrapper')
+    label.innerText = placeholder;
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
     input.addEventListener('input', e => {
       
     });
-    return input;
+    status.classList.add('label-field-view-status', 'ql-hidden');
+    wrapper.appendChild(input);
+    wrapper.appendChild(label);
+    container.appendChild(wrapper);
+    container.appendChild(status);
+    return container;
   }
 
   createList(contents: string[], dropText?: HTMLSpanElement) {
@@ -221,6 +234,9 @@ class TablePropertiesForm {
     label.innerText = content;
     label.classList.add('ql-table-dropdown-label');
     container.classList.add('properties-form-row');
+    if (children.length === 1) {
+      container.classList.add('properties-form-row-full');
+    }
     container.appendChild(label);
     for (const child of children) {
       const node = this.createPropertyChild(child);

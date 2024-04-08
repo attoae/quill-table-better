@@ -4,6 +4,42 @@ $focused-border-color: #3779eb;
 $border: 1px solid #ccced1;
 $box-shadow: 0 1px 2px 1px #ccced1;
 
+/*extend-style*/
+.ql-cell-selected-after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: $focused-cell-background;
+}
+.ql-table-border-shadow {
+  border-radius: 2px;
+  border: $border;
+  background: #fff;
+  box-shadow: 0 1px 2px 1px #00000026;
+}
+.ql-table-triangle-common {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  content: '';
+  border: 10px solid transparent;
+}
+.ql-table-input {
+  width: 80px;
+  height: 30px;
+  border: $border;
+  outline: none;
+  padding-left: 6px;
+  &:focus::placeholder {
+    color: transparent;
+  }
+}
+
+/*style*/
 .ql-operate-line-container {
   position: absolute;
   z-index: 100;
@@ -62,35 +98,28 @@ $box-shadow: 0 1px 2px 1px #ccced1;
   }
   
 }
-.ql-table-triangle-common {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  content: '';
-  border: 10px solid transparent;
-}
-.ql-table-border-shadow {
-  border-radius: 2px;
-  border: $border;
-  background: #fff;
-  box-shadow: 0 1px 2px 1px #00000026;
-}
-.ql-cell-selected-after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background-color: $focused-cell-background;
-}
-.ql-table-input {
-  width: 80px;
-  height: 30px;
-  border: $border;
-  outline: none;
-  padding-left: 6px;
+.label-field-view {
+  position: relative;
+  &-input-wrapper {
+    position: relative;
+    height: 100%;
+    & > label {
+      position: absolute;
+      left: 0;
+      top: -50%;
+      transform: translateY(50%) scale(0.75);
+      color: #999;
+      background: #fff;
+      display: none;
+    }
+    & > .property-input:focus + label {
+      display: block;
+    }
+  }
+  &-status {
+    bottom: 0;
+    @extend .ql-table-tooltip;
+  }
 }
 .ql-table-dropdown,.ql-table-dropdown-properties {
   display: flex;
@@ -214,6 +243,14 @@ $box-shadow: 0 1px 2px 1px #ccced1;
       }
     }
   }
+  .properties-form-row-full {
+    .ql-table-color-container {
+      width: 100%;
+      .property-input {
+        width: 100%;
+      }
+    }
+  }
   .property-input {
     @extend .ql-table-input;
   }
@@ -223,11 +260,14 @@ $box-shadow: 0 1px 2px 1px #ccced1;
   height: 30px;
   box-sizing: border-box;
   display: flex;
-  .color-input {
-    @extend .ql-table-input;
-    border: none;
-    // width: auto;
-    height: 100%;
+  .label-field-view-color {
+    flex: 1;
+    .property-input {
+      @extend .ql-table-input;
+      border: none;
+      // width: auto;
+      height: 100%;
+    }
   }
   .color-picker {
     display: flex;
@@ -267,6 +307,7 @@ $box-shadow: 0 1px 2px 1px #ccced1;
       transform: translateY(100%);
       box-shadow: $box-shadow;
       background: #fff;
+      z-index: 10;
       .erase-container {
         display: flex;
         height: 30px;
