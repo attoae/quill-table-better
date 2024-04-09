@@ -2,7 +2,7 @@ import eraseIcon from '../assets/icon/erase.svg';
 import checkIcon from '../assets/icon/check.svg';
 import downIcon from '../assets/icon/down.svg';
 import platteIcon from '../assets/icon/platte.svg';
-import { CELLOPS, TABLEOPS } from '../config';
+import { getProperties } from '../config';
 import {
   createTooltip,
   setElementProperty,
@@ -268,8 +268,8 @@ class TablePropertiesForm {
     }
   }
 
-  createPropertiesForm() {
-    const { title, properties } = CELLOPS;
+  createPropertiesForm(type: string = 'cell') {
+    const { title, properties } = getProperties(type);
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
