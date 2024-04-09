@@ -3,6 +3,8 @@ $focused-cell-background: rgba(158, 207, 250, .3);
 $focused-border-color: #3779eb;
 $border: 1px solid #ccced1;
 $box-shadow: 0 1px 2px 1px #ccced1;
+$tooltip-color-simple: #000000d9;
+$tooltip-color-error: #db3700;
 
 /*extend-style*/
 .ql-cell-selected-after {
@@ -36,6 +38,34 @@ $box-shadow: 0 1px 2px 1px #ccced1;
   padding-left: 6px;
   &:focus::placeholder {
     color: transparent;
+  }
+}
+
+/*mixin*/
+@mixin qlTableTooltip($color) {
+  min-width: 32px;
+  line-height: 20px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  color: #fff;
+  text-align: center;
+  word-wrap: break-word;
+  background: $color;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  &::before {
+    @extend .ql-table-triangle-common;
+    border-bottom-color: $color !important;
+    top: -20px;
+  }
+  &:hover {
+    display: block;
+  }
+  &-hidden {
+    display: none !important;
   }
 }
 
@@ -95,8 +125,7 @@ $box-shadow: 0 1px 2px 1px #ccced1;
     @extend .ql-table-triangle-common;
     bottom: -19px;
     border-top-color: #fff !important;
-  }
-  
+  } 
 }
 .label-field-view {
   position: relative;
@@ -176,29 +205,9 @@ $box-shadow: 0 1px 2px 1px #ccced1;
   }
 }
 .ql-table-tooltip {
-  min-width: 32px;
-  line-height: 20px;
-  padding: 6px 8px;
-  white-space: nowrap;
-  color: #fff;
-  text-align: center;
-  word-wrap: break-word;
-  background: #000000d9;
-  border-radius: 6px;
-  position: absolute;
-  z-index: 10;
-  left: 50%;
-  transform: translate(-50%, 100%);
-  &::before {
-    @extend .ql-table-triangle-common;
-    border-bottom-color: #000000d9 !important;
-    top: -20px;
-  }
-  &:hover {
-    display: block;
-  }
-  &-hidden {
-    display: none !important;
+  @include qlTableTooltip($tooltip-color-simple);
+  &-error {
+    @include qlTableTooltip($tooltip-color-error);
   }
 }
 .ql-table-dropdown-properties {
