@@ -5,6 +5,7 @@ $border: 1px solid #ccced1;
 $box-shadow: 0 1px 2px 1px #ccced1;
 $tooltip-color-simple: #000000d9;
 $tooltip-color-error: #db3700;
+$hover-background: #f0f0f0;
 
 /*extend-style*/
 .ql-cell-selected-after {
@@ -157,7 +158,7 @@ $tooltip-color-error: #db3700;
   position: relative;
   padding: 0 4px;
   &:hover {
-    background: #f0f0f0;
+    background: $hover-background;
   }
   &-text {
     flex: 1;
@@ -181,7 +182,7 @@ $tooltip-color-error: #db3700;
       line-height: 40px;
       padding-left: 10px;
       &:hover {
-        background: #f0f0f0;
+        background: $hover-background;
       }
     }
   }
@@ -224,6 +225,7 @@ $tooltip-color-error: #db3700;
   position: absolute;
   left: 50%;
   box-shadow: $box-shadow;
+  padding-bottom: 12px;
   .properties-form-header {
     height: 40px;
     line-height: 40px;
@@ -247,7 +249,7 @@ $tooltip-color-error: #db3700;
         padding: 6px 10px;
         cursor: pointer;
         &:hover {
-          background: #f0f0f0;
+          background: $hover-background;
         }
       }
     }
@@ -263,6 +265,28 @@ $tooltip-color-error: #db3700;
   .property-input {
     @extend .ql-table-input;
   }
+  .properties-form-action-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 0 12px;
+    & > button {
+      background: #fff;
+      outline: none;
+      border: none;
+      display: flex;
+      height: 30px;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+      & > span {
+        margin: 0 2px;
+      }
+      &:hover {
+        background: $hover-background;
+      }
+    }
+  }
 }
 .ql-table-color-container {
   border: $border;
@@ -274,7 +298,6 @@ $tooltip-color-error: #db3700;
     .property-input {
       @extend .ql-table-input;
       border: none;
-      // width: auto;
       height: 100%;
     }
   }

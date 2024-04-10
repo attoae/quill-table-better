@@ -2,6 +2,8 @@ import eraseIcon from '../assets/icon/erase.svg';
 import checkIcon from '../assets/icon/check.svg';
 import downIcon from '../assets/icon/down.svg';
 import platteIcon from '../assets/icon/platte.svg';
+import saveIcon from '../assets/icon/save.svg';
+import closeIcon from '../assets/icon/close.svg';
 import { getProperties } from '../config';
 import {
   createTooltip,
@@ -63,6 +65,11 @@ const colorList: ColorList[] = [
   { value: '#800080', describe: 'Purple' }
 ];
 
+const actionList = [
+  { icon: saveIcon, label: 'Save', action: '' },
+  { icon: closeIcon, label: 'Cancel', action: '' }
+];
+
 class TablePropertiesForm {
   form: null;
   quill: any;
@@ -72,6 +79,24 @@ class TablePropertiesForm {
     this.quill = quill;
     this.options = options;
     this.createPropertiesForm();
+  }
+
+  createActionBtns() {
+    const container = document.createElement('div');
+    const fragment = document.createDocumentFragment();
+    container.classList.add('properties-form-action-row');
+    for (const { icon, label } of actionList) {
+      const button = document.createElement('button');
+      const iconContainer = document.createElement('span');
+      const labelContainer = document.createElement('span');
+      iconContainer.innerHTML = icon;
+      labelContainer.innerText = label;
+      button.appendChild(iconContainer);
+      button.appendChild(labelContainer);
+      fragment.appendChild(button);
+    }
+    container.appendChild(fragment);
+    return container;
   }
 
   createCheckBtns(menus: Menus[]) {
@@ -197,7 +222,7 @@ class TablePropertiesForm {
     const input = document.createElement('input');
     const status = document.createElement('div');
     container.classList.add('label-field-view');
-    wrapper.classList.add('label-field-view-input-wrapper')
+    wrapper.classList.add('label-field-view-input-wrapper');
     label.innerText = placeholder;
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
@@ -268,11 +293,12 @@ class TablePropertiesForm {
     }
   }
 
-  createPropertiesForm(type: string = 'cell') {
+  createPropertiesForm(type: string = 'table') {
     const { title, properties } = getProperties(type);
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
+    const actions = this.createActionBtns();
     header.innerText = title;
     header.classList.add('properties-form-header');
     container.appendChild(header);
@@ -280,6 +306,7 @@ class TablePropertiesForm {
       const node = this.createProperty(property);
       container.appendChild(node);
     }
+    container.appendChild(actions);
     this.quill.container.appendChild(container);
   }
 
