@@ -16,6 +16,14 @@ interface CorrectBound {
 
 const DEVIATION = 2;
 
+function convertUnitToInteger(withUnit: string) {
+  if (typeof withUnit !== 'string') return withUnit;
+  const unit = withUnit.slice(-2); // 'px' or 'em'
+  const numberPart = withUnit.slice(0, -2);
+  const integerPart = Math.round(parseFloat(numberPart));
+  return `${integerPart}${unit}`;
+}
+
 function createTooltip(content: string) {
   const element = document.createElement('div');
   element.innerText = content;
@@ -113,7 +121,7 @@ function getCorrectBounds(target: Element, container: Element) {
 function getElementStyle(node: Element, rules: string[]) {
   const computedStyle = getComputedStyle(node);
   return rules.reduce((styles: Properties, rule: string) => {
-    styles[rule] = computedStyle.getPropertyValue(rule);
+    styles[rule] = rgbToHex(computedStyle.getPropertyValue(rule));
     return styles;
   }, {});
 }
@@ -122,6 +130,26 @@ function removeElementProperty(node: HTMLElement, properties: string[]) {
   for (const property of properties) {
     node.style.removeProperty(property);
   }
+}
+
+function rgbToHex(value: string) {
+  if (value.startsWith('rgba(')) return rgbaToHex(value);
+  if (!value.startsWith('rgb(')) return value;
+  value = value.replace(/^[^\d]+/, '').replace(/[^\d]+$/, '');
+  const hex = value
+    .split(',')
+    .map(component => `00${parseInt(component, 10).toString(16)}`.slice(-2))
+    .join('');
+  return `#${hex}`;
+}
+
+function rgbaToHex(value: string) {
+  value = value.replace(/^[^\d]+/, '').replace(/[^\d]+$/, '');
+  const r = Math.round(+value[0]);
+  const g = Math.round(+value[1]);
+  const b = Math.round(+value[2]);
+  const a = Math.round(+value[3] * 255).toString(16).toUpperCase().padStart(2, '0');
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1) + a;
 }
 
 function setElementAttribute(node: Element, attributes: Properties) {
@@ -142,6 +170,7 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
 }
 
 export {
+  convertUnitToInteger,
   createTooltip,
   filterWordStyle,
   getComputeBounds,
@@ -150,6 +179,8 @@ export {
   getCorrectBounds,
   getElementStyle,
   removeElementProperty,
+  rgbToHex,
+  rgbaToHex,
   setElementAttribute,
   setElementProperty
 };

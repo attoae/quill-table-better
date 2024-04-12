@@ -38,8 +38,8 @@ interface Properties {
 }
 
 interface Options {
-  title: string
-  properties: Properties[]
+  type: string
+  attribute: Attribute
 }
 
 interface ColorList {
@@ -71,14 +71,13 @@ const actionList = [
 ];
 
 class TablePropertiesForm {
-  form: null;
-  quill: any;
+  tableMenus: any;
   options: Options;
-  constructor(quill: any, options?: Options) {
-    this.form = null;
-    this.quill = quill;
+  form: HTMLDivElement;
+  constructor(tableMenus: any, options?: Options) {
+    this.tableMenus = tableMenus;
     this.options = options;
-    this.createPropertiesForm();
+    this.form = this.createPropertiesForm(options);
   }
 
   createActionBtns() {
@@ -120,21 +119,18 @@ class TablePropertiesForm {
     return container;
   }
 
-  createColorContainer(value: string, attribute: Attribute) {
+  createColorContainer(attribute: Attribute, value: string) {
     const container = document.createElement('div');
     container.classList.add('ql-table-color-container');
-    const input = this.createColorInput(attribute);
+    const input = this.createColorInput(attribute, value);
     const colorPicker = this.createColorPicker();
-    // const { dropdown } = this.createDropdown(value, category);
     container.appendChild(input);
     container.appendChild(colorPicker);
-    // dropdown.appendChild(colorPicker)
-    // container.appendChild(dropdown);
     return container;
   }
 
-  createColorInput(attribute: Attribute) {
-    const container = this.createInput(attribute);
+  createColorInput(attribute: Attribute, value: string) {
+    const container = this.createInput(attribute, value);
     container.classList.add('label-field-view-color');    
     return container;
   }
@@ -214,7 +210,7 @@ class TablePropertiesForm {
     return { dropdown: container, dropText };
   }
 
-  createInput(attribute: Attribute) {
+  createInput(attribute: Attribute, value: string) {
     const { placeholder = '' } = attribute;
     const container = document.createElement('div');
     const wrapper = document.createElement('div');
@@ -224,8 +220,10 @@ class TablePropertiesForm {
     container.classList.add('label-field-view');
     wrapper.classList.add('label-field-view-input-wrapper');
     label.innerText = placeholder;
+    // if (value) setElementProperty(label, { display: 'block' });
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
+    input.value = value;
     input.addEventListener('input', e => {
       
     });
@@ -280,21 +278,21 @@ class TablePropertiesForm {
         dropdown.addEventListener('click', () => this.toggleHidden(list));
         return dropdown;
       case 'color':
-        const colorContainer = this.createColorContainer(value, attribute);
+        const colorContainer = this.createColorContainer(attribute, value);
         return colorContainer;
       case 'menus':
         const checkBtns = this.createCheckBtns(menus);
         return checkBtns;
       case 'input':
-        const input = this.createInput(attribute);
+        const input = this.createInput(attribute, value);
         return input;
       default:
         break;
     }
   }
 
-  createPropertiesForm(type: string = 'table') {
-    const { title, properties } = getProperties(type);
+  createPropertiesForm(options: Options) {
+    const { title, properties } = getProperties(options);
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
@@ -307,7 +305,12 @@ class TablePropertiesForm {
       container.appendChild(node);
     }
     container.appendChild(actions);
-    this.quill.container.appendChild(container);
+    this.tableMenus.quill.container.appendChild(container);
+    return container;
+  }
+
+  removePropertiesForm() {
+    this.form.remove();
   }
 
   toggleHidden(container: HTMLElement) {

@@ -2,11 +2,13 @@ import Quill from 'quill';
 import Delta from 'quill-delta';
 import merge from 'lodash.merge';
 import {
-  setElementProperty,
+  createTooltip,
   getCorrectBounds,
   getComputeBounds,
   getComputeSelectedCols,
-  getComputeSelectedTds
+  getComputeSelectedTds,
+  setElementProperty,
+  getElementStyle
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import rowIcon from '../assets/icon/row.svg';
@@ -16,7 +18,8 @@ import cellIcon from '../assets/icon/cell.svg';
 import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
 import { TableCell, TableRow } from '../formats/table';
-import { createTooltip } from '../utils';
+import TablePropertiesForm from './table-properties-form';
+import { cellProperties, tableProperties } from '../config';
 
 interface Children {
   [propName: string]: {
@@ -132,14 +135,21 @@ const MENUS_DEFAULTS: MenusDefaults = {
     content: 'Table properties',
     icon: tableIcon,
     handler(list, tooltip) {
+      const attribute = getElementStyle(this.table, tableProperties);
       this.toggleAttribute(list, tooltip);
+      this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'table' });
+      this.hideMenus();
     }
   },
   cell: {
     content: 'Cell properties',
     icon: cellIcon,
     handler(list, tooltip) {
+      const { selectedTds } = this.tableBetter.cellSelection;
+      const attribute = selectedTds.length > 1 ? {} : getElementStyle(selectedTds[0], cellProperties);
       this.toggleAttribute(list, tooltip);
+      this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'cell' });
+      this.hideMenus();
     }
   },
   wrap: {
@@ -172,6 +182,7 @@ class TableMenus {
   prevList: HTMLUListElement | null;
   prevTooltip: HTMLDivElement | null;
   tableBetter: any;
+  tablePropertiesForm: any;
   constructor(quill: any, tableBetter?: any) {
     this.quill = quill;
     this.table = null;
@@ -179,6 +190,7 @@ class TableMenus {
     this.prevList = null;
     this.prevTooltip = null;
     this.tableBetter = tableBetter;
+    this.tablePropertiesForm = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
   }
 
@@ -225,6 +237,12 @@ class TableMenus {
     }
     this.quill.container.appendChild(container);
     return container;
+  }
+
+  destroyTablePropertiesForm() {
+    if (!this.tablePropertiesForm) return;
+    this.tablePropertiesForm.removePropertiesForm();
+    this.tablePropertiesForm = null;
   }
 
   getRefInfo(row: TableRow, right: number) {
