@@ -5,8 +5,40 @@ import alignMiddleIcon from '../assets/icon/align-middle.svg';
 import alignJustifyIcon from '../assets/icon/align-justify.svg';
 import alignRightIcon from '../assets/icon/align-right.svg';
 import alignTopIcon from '../assets/icon/align-top.svg';
+import { convertUnitToInteger } from '../utils';
 
-function getCellProperties() {
+interface Attribute {
+  [propName: string]: string
+}
+
+interface Options {
+  type: string
+  attribute: Attribute
+}
+
+const cellProperties = [
+  'border-style',
+  'border-color',
+  'border-width',
+  'background-color',
+  'width',
+  'height',
+  'padding',
+  'text-align',
+  'vertical-align'
+];
+
+const tableProperties = [
+  'border-style',
+  'border-color',
+  'border-width',
+  'background-color',
+  'width',
+  'height',
+  'align'
+];
+
+function getCellProperties(attribute: Attribute) {
   return {
     title: 'Cell properties',
     properties: [
@@ -16,14 +48,14 @@ function getCellProperties() {
           {
             category: 'dropdown',
             propertyName: 'border-style',
-            value: '',
+            value: attribute['border-style'] || 'none',
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
             handler: () => {}
           },
           {
             category: 'color',
             propertyName: 'border-color',
-            value: '',
+            value: attribute['border-color'] || '',
             attribute: {
               type: 'text',
               placeholder: 'Color'
@@ -33,7 +65,7 @@ function getCellProperties() {
           {
             category: 'input',
             propertyName: 'border-width',
-            value: '',
+            value: convertUnitToInteger(attribute['border-width']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Width'
@@ -47,8 +79,8 @@ function getCellProperties() {
         children: [
           {
             category: 'color',
-            propertyName: 'border-color',
-            value: '',
+            propertyName: 'background-color',
+            value: attribute['background-color'] || '',
             attribute: {
               type: 'text',
               placeholder: 'Color'
@@ -63,7 +95,7 @@ function getCellProperties() {
           {
             category: 'input',
             propertyName: 'width',
-            value: '',
+            value: convertUnitToInteger(attribute['width']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Width'
@@ -73,7 +105,7 @@ function getCellProperties() {
           {
             category: 'input',
             propertyName: 'height',
-            value: '',
+            value: convertUnitToInteger(attribute['height']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Height'
@@ -83,7 +115,7 @@ function getCellProperties() {
           {
             category: 'input',
             propertyName: 'padding',
-            value: '',
+            value: convertUnitToInteger(attribute['padding']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Padding'
@@ -98,7 +130,7 @@ function getCellProperties() {
           {
             category: 'menus',
             propertyName: 'text-align',
-            value: '',
+            value: attribute['text-align'] || 'center',
             menus: [
               { icon: alignLeftIcon, describe: 'Align cell text to the left', align: 'left' },
               { icon: alignCenterIcon, describe: 'Align cell text to the center', align: 'center' },
@@ -110,7 +142,7 @@ function getCellProperties() {
           {
             category: 'menus',
             propertyName: 'vertical-align',
-            value: '',
+            value: attribute['vertical-align'] || 'middle',
             menus: [
               { icon: alignTopIcon, describe: 'Align cell text to the top', align: 'top' },
               { icon: alignMiddleIcon, describe: 'Align cell text to the middle', align: 'middle' },
@@ -124,7 +156,7 @@ function getCellProperties() {
   };
 }
 
-function getTableProperties() {
+function getTableProperties(attribute: Attribute) {
   return {
     title: 'Table properties',
     properties: [
@@ -134,14 +166,14 @@ function getTableProperties() {
           {
             category: 'dropdown',
             propertyName: 'border-style',
-            value: '',
+            value: attribute['border-style'] || 'none',
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
             handler: () => {}
           },
           {
             category: 'color',
             propertyName: 'border-color',
-            value: '',
+            value: attribute['border-color'] || '',
             attribute: {
               type: 'text',
               placeholder: 'Color'
@@ -151,7 +183,7 @@ function getTableProperties() {
           {
             category: 'input',
             propertyName: 'border-width',
-            value: '',
+            value: convertUnitToInteger(attribute['border-width']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Width'
@@ -165,8 +197,8 @@ function getTableProperties() {
         children: [
           {
             category: 'color',
-            propertyName: 'border-color',
-            value: '',
+            propertyName: 'background-color',
+            value: attribute['background-color'] || '',
             attribute: {
               type: 'text',
               placeholder: 'Color'
@@ -181,7 +213,7 @@ function getTableProperties() {
           {
             category: 'input',
             propertyName: 'width',
-            value: '',
+            value: convertUnitToInteger(attribute['width']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Width'
@@ -191,7 +223,7 @@ function getTableProperties() {
           {
             category: 'input',
             propertyName: 'height',
-            value: '',
+            value: convertUnitToInteger(attribute['height']) || '',
             attribute: {
               type: 'text',
               placeholder: 'Height'
@@ -201,7 +233,7 @@ function getTableProperties() {
           {
             category: 'menus',
             propertyName: 'align',
-            value: '',
+            value: attribute['align'] || '',
             menus: [
               { icon: alignLeftIcon, describe: 'Align table to the left', align: 'left' },
               { icon: alignCenterIcon, describe: 'Center table', align: 'center' },
@@ -215,11 +247,13 @@ function getTableProperties() {
   };
 }
 
-function getProperties(type: string) {
-  if (type === 'table') return getTableProperties();
-  return getCellProperties();
+function getProperties({ type, attribute }: Options) {
+  if (type === 'table') return getTableProperties(attribute);
+  return getCellProperties(attribute);
 }
 
 export {
+  cellProperties,
+  tableProperties,
   getProperties
 };
