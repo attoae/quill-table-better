@@ -35,6 +35,10 @@ function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
 }
 
+function getClosestElement(element: HTMLElement, selector: string) {
+  return element.closest(selector);
+}
+
 function getComputeBounds(startCorrectBounds: CorrectBound, endCorrectBounds: CorrectBound) {
   const left = Math.min(startCorrectBounds.left, endCorrectBounds.left);
   const right = Math.max(startCorrectBounds.right, endCorrectBounds.right);
@@ -173,6 +177,7 @@ export {
   convertUnitToInteger,
   createTooltip,
   filterWordStyle,
+  getClosestElement,
   getComputeBounds,
   getComputeSelectedCols,
   getComputeSelectedTds,
