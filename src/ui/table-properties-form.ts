@@ -7,6 +7,7 @@ import closeIcon from '../assets/icon/close.svg';
 import { getProperties } from '../config';
 import {
   createTooltip,
+  getClosestElement,
   setElementProperty,
   setElementAttribute
 } from '../utils';
@@ -123,7 +124,7 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     container.classList.add('ql-table-color-container');
     const input = this.createColorInput(attribute, value);
-    const colorPicker = this.createColorPicker();
+    const colorPicker = this.createColorPicker(value);
     container.appendChild(input);
     container.appendChild(colorPicker);
     return container;
@@ -150,17 +151,27 @@ class TablePropertiesForm {
     }
     container.appendChild(fragment);
     container.addEventListener('click', e => {
-      const value = (e.target as HTMLLIElement).getAttribute('data-color');
+      const target = e.target as HTMLLIElement;
+      const value = (
+        target.tagName === 'DIV'
+          ? target.parentElement
+          : target
+      ).getAttribute('data-color');
+      this.updateSelectColor(this.getColorClosest(container), value);
     });
     return container;
   }
 
-  createColorPicker() {
+  createColorPicker(value: string) {
     const container = document.createElement('span');
     const colorButton = document.createElement('span');
     container.classList.add('color-picker');
     colorButton.classList.add('color-button');
-    colorButton.classList.add('color-unselected');
+    if (value) {
+      setElementProperty(colorButton, { 'background-color': value });
+    } else {
+      colorButton.classList.add('color-unselected');
+    }
     const select = this.createColorPickerSelect();
     colorButton.addEventListener('click', () => {
       this.toggleHidden(select);
@@ -184,6 +195,9 @@ class TablePropertiesForm {
     eraseContainer.appendChild(button);
     container.appendChild(eraseContainer);
     container.appendChild(list);
+    button.addEventListener('click', () => {
+      this.updateSelectColor(this.getColorClosest(container), '');
+    });
     // container.addEventListener('blur', () => this.toggleHidden(container));
     return container;
   }
@@ -307,6 +321,24 @@ class TablePropertiesForm {
     container.appendChild(actions);
     this.tableMenus.quill.container.appendChild(container);
     return container;
+  }
+
+  getColorClosest(container: HTMLElement) {
+    return getClosestElement(container, '.ql-table-color-container');
+  }
+
+  updateSelectColor(element: Element, value: string) {
+    const input: HTMLInputElement = element.querySelector('.property-input');
+    const colorButton: HTMLElement = element.querySelector('.color-button');
+    const colorPickerSelect: HTMLElement = element.querySelector('.color-picker-select');
+    if (!value) {
+      colorButton.classList.add('color-unselected');
+    } else {
+      colorButton.classList.remove('color-unselected');
+    }
+    input.value = value;
+    setElementProperty(colorButton, { 'background-color': value });
+    this.toggleHidden(colorPickerSelect);
   }
 
   removePropertiesForm() {
