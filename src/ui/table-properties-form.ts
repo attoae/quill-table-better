@@ -7,6 +7,7 @@ import closeIcon from '../assets/icon/close.svg';
 import { getProperties } from '../config';
 import {
   createTooltip,
+  debounce,
   getClosestElement,
   setElementProperty,
   setElementAttribute
@@ -75,10 +76,12 @@ class TablePropertiesForm {
   tableMenus: any;
   options: Options;
   form: HTMLDivElement;
+  attrs: Attribute;
   constructor(tableMenus: any, options?: Options) {
     this.tableMenus = tableMenus;
     this.options = options;
     this.form = this.createPropertiesForm(options);
+    this.attrs = { ...options.attribute };
   }
 
   createActionBtns() {
@@ -120,18 +123,18 @@ class TablePropertiesForm {
     return container;
   }
 
-  createColorContainer(attribute: Attribute, value: string) {
+  createColorContainer(attribute: Attribute, propertyName: string, value: string) {
     const container = document.createElement('div');
     container.classList.add('ql-table-color-container');
-    const input = this.createColorInput(attribute, value);
+    const input = this.createColorInput(attribute, propertyName, value);
     const colorPicker = this.createColorPicker(value);
     container.appendChild(input);
     container.appendChild(colorPicker);
     return container;
   }
 
-  createColorInput(attribute: Attribute, value: string) {
-    const container = this.createInput(attribute, value);
+  createColorInput(attribute: Attribute, propertyName: string, value: string) {
+    const container = this.createInput(attribute, propertyName, value);
     container.classList.add('label-field-view-color');    
     return container;
   }
@@ -224,7 +227,7 @@ class TablePropertiesForm {
     return { dropdown: container, dropText };
   }
 
-  createInput(attribute: Attribute, value: string) {
+  createInput(attribute: Attribute, propertyName: string, value: string) {
     const { placeholder = '' } = attribute;
     const container = document.createElement('div');
     const wrapper = document.createElement('div');
@@ -239,7 +242,9 @@ class TablePropertiesForm {
     input.classList.add('property-input');
     input.value = value;
     input.addEventListener('input', e => {
-      
+      // debounce
+      const value = (e.target as HTMLInputElement).value;
+      this.setAttribute(propertyName, value, container);
     });
     status.classList.add('label-field-view-status', 'ql-hidden');
     wrapper.appendChild(input);
@@ -292,13 +297,13 @@ class TablePropertiesForm {
         dropdown.addEventListener('click', () => this.toggleHidden(list));
         return dropdown;
       case 'color':
-        const colorContainer = this.createColorContainer(attribute, value);
+        const colorContainer = this.createColorContainer(attribute, propertyName, value);
         return colorContainer;
       case 'menus':
         const checkBtns = this.createCheckBtns(menus);
         return checkBtns;
       case 'input':
-        const input = this.createInput(attribute, value);
+        const input = this.createInput(attribute, propertyName, value);
         return input;
       default:
         break;
@@ -327,6 +332,25 @@ class TablePropertiesForm {
     return getClosestElement(container, '.ql-table-color-container');
   }
 
+  removePropertiesForm() {
+    this.form.remove();
+  }
+
+  setAttribute(propertyName: string, value: string, container?: HTMLElement) {
+    this.attrs[propertyName] = value;
+    if (propertyName.includes('-color')) {
+      this.updateSelectColor(this.getColorClosest(container), value);
+    }
+  }
+
+  toggleHidden(container: HTMLElement) {
+    container.classList.toggle('ql-hidden');
+  }
+
+  updatePropertiesForm() {
+
+  }
+
   updateSelectColor(element: Element, value: string) {
     const input: HTMLInputElement = element.querySelector('.property-input');
     const colorButton: HTMLElement = element.querySelector('.color-button');
@@ -338,19 +362,7 @@ class TablePropertiesForm {
     }
     input.value = value;
     setElementProperty(colorButton, { 'background-color': value });
-    this.toggleHidden(colorPickerSelect);
-  }
-
-  removePropertiesForm() {
-    this.form.remove();
-  }
-
-  toggleHidden(container: HTMLElement) {
-    container.classList.toggle('ql-hidden');
-  }
-
-  updatePropertiesForm() {
-
+    colorPickerSelect.classList.add('ql-hidden');
   }
 }
 

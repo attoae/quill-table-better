@@ -31,6 +31,18 @@ function createTooltip(content: string) {
   return element;
 }
 
+function debounce(cb: Function, delay: number) {
+  let timer: NodeJS.Timeout = null;
+  return function () {
+    let context = this;
+    let args = arguments;
+    if(timer) clearTimeout(timer);
+    timer = setTimeout(function () {
+      cb.apply(context, args);
+    }, delay);
+  }
+}
+
 function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
 }
@@ -173,9 +185,42 @@ function setElementProperty(node: HTMLElement, properties: Properties) {
   }
 }
 
+function throttle(cb: Function, delay: number) {
+  let last = 0
+  return function () {
+    let context = this;
+    let args = arguments;
+    let now = +new Date();
+    if (now - last >= delay) {
+      last = now;
+      cb.apply(context, args);
+    }
+  }
+}
+
+function throttleStrong(cb: Function, delay: number) {
+  let last = 0, timer: NodeJS.Timeout = null;
+  return function () { 
+    let context = this;
+    let args = arguments;
+    let now = +new Date();
+    if (now - last < delay) {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        last = now;
+        cb.apply(context, args);
+      }, delay);
+    } else {
+      last = now;
+      cb.apply(context, args);
+    }
+  }
+}
+
 export {
   convertUnitToInteger,
   createTooltip,
+  debounce,
   filterWordStyle,
   getClosestElement,
   getComputeBounds,
@@ -187,5 +232,7 @@ export {
   rgbToHex,
   rgbaToHex,
   setElementAttribute,
-  setElementProperty
+  setElementProperty,
+  throttle,
+  throttleStrong
 };
