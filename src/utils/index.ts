@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import { TableCell, TableCol } from '../formats/table';
+import { colors } from '../config';
 
 interface Properties {
   [propertyName: string]: string
@@ -142,6 +143,30 @@ function getElementStyle(node: Element, rules: string[]) {
   }, {});
 }
 
+function isSimpleColor(color: string) {
+  for (const col of colors) {
+    if (col === color) return true;
+  }
+  return false;
+}
+
+function isValidColor(color: string) {
+  const hexRegex = /^#([A-Fa-f0-9]{3,6})$/;
+  const rgbRegex = /^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
+  // const rgbaRegex = /^rgba\((\d{1,3}), (\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
+  if (hexRegex.test(color)) {
+    return true;
+  } else if (rgbRegex.test(color)) {
+    return true;
+  }
+  return isSimpleColor(color);
+}
+
+function isValidDimensions(value: string) {
+  const unit = value.slice(-2); // 'px' or 'em'
+  
+}
+
 function removeElementProperty(node: HTMLElement, properties: string[]) {
   for (const property of properties) {
     node.style.removeProperty(property);
@@ -228,6 +253,7 @@ export {
   getComputeSelectedTds,
   getCorrectBounds,
   getElementStyle,
+  isValidColor,
   removeElementProperty,
   rgbToHex,
   rgbaToHex,

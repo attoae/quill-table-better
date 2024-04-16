@@ -102,7 +102,7 @@ class TablePropertiesForm {
     return container;
   }
 
-  createCheckBtns(menus: Menus[]) {
+  createCheckBtns(menus: Menus[], propertyName: string) {
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
     for (const { icon, describe, align } of menus) {
@@ -110,6 +110,9 @@ class TablePropertiesForm {
       container.innerHTML = icon;
       container.setAttribute('data-align', align);
       container.classList.add('ql-table-tooltip-hover');
+      if (this.options.attribute[propertyName] === align) {
+        container.classList.add('ql-table-btns-checked');
+      }
       const tooltip = createTooltip(describe);
       container.appendChild(tooltip);
       fragment.appendChild(container);
@@ -117,8 +120,12 @@ class TablePropertiesForm {
     container.classList.add('ql-table-check-container');
     container.appendChild(fragment);
     container.addEventListener('click', e => {
-      const target = (e.target as HTMLElement).closest('span.ql-table-tooltip-hover');
+      const target: HTMLSpanElement = (
+        e.target as HTMLElement
+      ).closest('span.ql-table-tooltip-hover');
       const value = target.getAttribute('data-align');
+      this.switchButton(container, target);
+      this.setAttribute(propertyName, value);
     });
     return container;
   }
@@ -300,7 +307,7 @@ class TablePropertiesForm {
         const colorContainer = this.createColorContainer(attribute, propertyName, value);
         return colorContainer;
       case 'menus':
-        const checkBtns = this.createCheckBtns(menus);
+        const checkBtns = this.createCheckBtns(menus, propertyName);
         return checkBtns;
       case 'input':
         const input = this.createInput(attribute, propertyName, value);
@@ -341,6 +348,14 @@ class TablePropertiesForm {
     if (propertyName.includes('-color')) {
       this.updateSelectColor(this.getColorClosest(container), value);
     }
+  }
+
+  switchButton(container: HTMLDivElement, target: HTMLSpanElement) {
+    const children = container.querySelectorAll('span.ql-table-tooltip-hover');
+    for (const child of children) {
+      child.classList.remove('ql-table-btns-checked');
+    }
+    target.classList.add('ql-table-btns-checked');
   }
 
   toggleHidden(container: HTMLElement) {

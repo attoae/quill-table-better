@@ -252,6 +252,12 @@ $hover-background: #f0f0f0;
           background: $hover-background;
         }
       }
+      .ql-table-btns-checked {
+        background: #f0f7ff;
+        & > svg path {
+          stroke: #2977ff;
+        }
+      }
     }
   }
   .properties-form-row-full {
