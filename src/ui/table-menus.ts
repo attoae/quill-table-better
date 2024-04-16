@@ -37,6 +37,11 @@ interface MenusDefaults {
   }
 }
 
+enum Alignment {
+  left = 'margin-left',
+  right = 'margin-right'
+}
+
 const MENUS_DEFAULTS: MenusDefaults = {
   column: {
     content: 'Column',
@@ -135,7 +140,10 @@ const MENUS_DEFAULTS: MenusDefaults = {
     content: 'Table properties',
     icon: tableIcon,
     handler(list, tooltip) {
-      const attribute = getElementStyle(this.table, tableProperties);
+      const attribute = {
+        ...getElementStyle(this.table, tableProperties),
+        'align': this.getTableAlignment(this.table)
+      };
       this.toggleAttribute(list, tooltip);
       this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'table' });
       this.hideMenus();
@@ -177,7 +185,7 @@ const MENUS_DEFAULTS: MenusDefaults = {
 
 class TableMenus {
   quill: any;
-  table: Element | null;
+  table: HTMLTableElement | null;
   root: HTMLElement;
   prevList: HTMLUListElement | null;
   prevTooltip: HTMLDivElement | null;
@@ -278,6 +286,22 @@ class TableMenus {
       leftTd: startTd,
       rightTd: endTd
     };
+  }
+
+  getTableAlignment(table: HTMLTableElement) {
+    const align = table.getAttribute('align');
+    if (!align) {
+      const {
+        [Alignment.left]: left,
+        [Alignment.right]: right
+      } = getElementStyle(table, [Alignment.left, Alignment.right]);
+      if (left === 'auto') {
+        if (right === 'auto') return 'center';
+        return 'right';
+      }
+      return 'left';
+    }
+    return align || 'center';
   }
 
   handleClick(e: MouseEvent) {
