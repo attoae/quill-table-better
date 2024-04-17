@@ -148,7 +148,7 @@ $hover-background: #f0f0f0;
   }
   &-status {
     bottom: 0;
-    @extend .ql-table-tooltip;
+    @extend .ql-table-tooltip-error;
   }
 }
 .ql-table-dropdown,.ql-table-dropdown-properties {
