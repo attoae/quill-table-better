@@ -17,6 +17,14 @@ interface CorrectBound {
 
 const DEVIATION = 2;
 
+function addDimensionsUnit(value: string) {
+  const unit = value.slice(-2); // 'px' or 'em'
+  if (unit !== 'px' && unit !== 'em') {
+    return value + 'px';
+  }
+  return value;
+}
+
 function convertUnitToInteger(withUnit: string) {
   if (typeof withUnit !== 'string') return withUnit;
   const unit = withUnit.slice(-2); // 'px' or 'em'
@@ -135,10 +143,14 @@ function getCorrectBounds(target: Element, container: Element) {
   }
 }
 
-function getElementStyle(node: Element, rules: string[]) {
+function getElementStyle(node: HTMLElement, rules: string[]) {
   const computedStyle = getComputedStyle(node);
+  const style = node.style;
   return rules.reduce((styles: Properties, rule: string) => {
-    styles[rule] = rgbToHex(computedStyle.getPropertyValue(rule));
+    styles[rule] = rgbToHex(
+      style.getPropertyValue(rule) ||
+      computedStyle.getPropertyValue(rule)
+    );
     return styles;
   }, {});
 }
@@ -151,6 +163,7 @@ function isSimpleColor(color: string) {
 }
 
 function isValidColor(color: string) {
+  if (!color) return true;
   const hexRegex = /^#([A-Fa-f0-9]{3,6})$/;
   const rgbRegex = /^rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
   // const rgbaRegex = /^rgba\((\d{1,3}), (\d{1,3}), (\d{1,3}), (\d{1,3})\)$/;
@@ -163,8 +176,12 @@ function isValidColor(color: string) {
 }
 
 function isValidDimensions(value: string) {
+  if (!value) return true;
   const unit = value.slice(-2); // 'px' or 'em'
-  
+  if (unit !== 'px' && unit !== 'em') {
+    return !/[a-z]/.test(unit) && !isNaN(parseFloat(unit));
+  }
+  return true;
 }
 
 function removeElementProperty(node: HTMLElement, properties: string[]) {
@@ -243,6 +260,7 @@ function throttleStrong(cb: Function, delay: number) {
 }
 
 export {
+  addDimensionsUnit,
   convertUnitToInteger,
   createTooltip,
   debounce,
@@ -254,6 +272,7 @@ export {
   getCorrectBounds,
   getElementStyle,
   isValidColor,
+  isValidDimensions,
   removeElementProperty,
   rgbToHex,
   rgbaToHex,
