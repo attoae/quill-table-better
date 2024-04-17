@@ -25,7 +25,8 @@ interface Child {
   options?: string[]
   tooltip?: string
   menus?: Menus[]
-  handler?: () => void
+  valid?: (value?: string) => boolean,
+  message?: string
 }
 
 interface Menus {
@@ -68,8 +69,8 @@ const colorList: ColorList[] = [
 ];
 
 const actionList = [
-  { icon: saveIcon, label: 'Save', action: '' },
-  { icon: closeIcon, label: 'Cancel', action: '' }
+  { icon: saveIcon, label: 'Save' },
+  { icon: closeIcon, label: 'Cancel' }
 ];
 
 class TablePropertiesForm {
@@ -82,6 +83,14 @@ class TablePropertiesForm {
     this.options = options;
     this.form = this.createPropertiesForm(options);
     this.attrs = { ...options.attribute };
+  }
+
+  checkBtnsAction(status: string) {
+    if (status === 'save') {
+      this.saveAction(this.options.type);
+    }
+    this.removePropertiesForm();
+    this.tableMenus.showMenus();
   }
 
   createActionBtns() {
@@ -98,11 +107,18 @@ class TablePropertiesForm {
       button.appendChild(labelContainer);
       fragment.appendChild(button);
     }
+    container.addEventListener('click', e => {
+      const target = (
+        e.target as HTMLElement
+      ).closest('button').lastElementChild as HTMLSpanElement;
+      this.checkBtnsAction(target.innerText.toLowerCase());
+    });
     container.appendChild(fragment);
     return container;
   }
 
-  createCheckBtns(menus: Menus[], propertyName: string) {
+  createCheckBtns(child: Child) {
+    const { menus, propertyName } = child;
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
     for (const { icon, describe, align } of menus) {
@@ -130,23 +146,23 @@ class TablePropertiesForm {
     return container;
   }
 
-  createColorContainer(attribute: Attribute, propertyName: string, value: string) {
+  createColorContainer(child: Child) {
     const container = document.createElement('div');
     container.classList.add('ql-table-color-container');
-    const input = this.createColorInput(attribute, propertyName, value);
-    const colorPicker = this.createColorPicker(value);
+    const input = this.createColorInput(child);
+    const colorPicker = this.createColorPicker(child);
     container.appendChild(input);
     container.appendChild(colorPicker);
     return container;
   }
 
-  createColorInput(attribute: Attribute, propertyName: string, value: string) {
-    const container = this.createInput(attribute, propertyName, value);
+  createColorInput(child: Child) {
+    const container = this.createInput(child);
     container.classList.add('label-field-view-color');    
     return container;
   }
 
-  createColorList() {
+  createColorList(propertyName: string) {
     const container = document.createElement('ul');
     const fragment = document.createDocumentFragment();
     container.classList.add('color-list');
@@ -167,12 +183,13 @@ class TablePropertiesForm {
           ? target.parentElement
           : target
       ).getAttribute('data-color');
-      this.updateSelectColor(this.getColorClosest(container), value);
+      this.setAttribute(propertyName, value, container);
     });
     return container;
   }
 
-  createColorPicker(value: string) {
+  createColorPicker(child: Child) {
+    const { propertyName, value } = child;
     const container = document.createElement('span');
     const colorButton = document.createElement('span');
     container.classList.add('color-picker');
@@ -182,7 +199,7 @@ class TablePropertiesForm {
     } else {
       colorButton.classList.add('color-unselected');
     }
-    const select = this.createColorPickerSelect();
+    const select = this.createColorPickerSelect(propertyName);
     colorButton.addEventListener('click', () => {
       this.toggleHidden(select);
     });
@@ -191,12 +208,12 @@ class TablePropertiesForm {
     return container;
   }
 
-  createColorPickerSelect() {
+  createColorPickerSelect(propertyName: string) {
     const container = document.createElement('div');
     const eraseContainer = document.createElement('div');
     const icon = document.createElement('span');
     const button = document.createElement('button');
-    const list = this.createColorList();
+    const list = this.createColorList(propertyName);
     icon.innerHTML = eraseIcon;
     button.innerHTML = 'Remove color';
     container.classList.add('color-picker-select', 'ql-hidden');
@@ -206,7 +223,7 @@ class TablePropertiesForm {
     container.appendChild(eraseContainer);
     container.appendChild(list);
     button.addEventListener('click', () => {
-      this.updateSelectColor(this.getColorClosest(container), '');
+      this.setAttribute(propertyName, '', container);
     });
     // container.addEventListener('blur', () => this.toggleHidden(container));
     return container;
@@ -234,7 +251,8 @@ class TablePropertiesForm {
     return { dropdown: container, dropText };
   }
 
-  createInput(attribute: Attribute, propertyName: string, value: string) {
+  createInput(child: Child) {
+    const { attribute, message, propertyName, value, valid } = child;
     const { placeholder = '' } = attribute;
     const container = document.createElement('div');
     const wrapper = document.createElement('div');
@@ -251,13 +269,15 @@ class TablePropertiesForm {
     input.addEventListener('input', e => {
       // debounce
       const value = (e.target as HTMLInputElement).value;
+      valid && this.switchHidden(status, valid(value));
       this.setAttribute(propertyName, value, container);
     });
     status.classList.add('label-field-view-status', 'ql-hidden');
+    message && (status.innerText = message);
     wrapper.appendChild(input);
     wrapper.appendChild(label);
     container.appendChild(wrapper);
-    container.appendChild(status);
+    valid && container.appendChild(status);
     return container;
   }
 
@@ -295,7 +315,7 @@ class TablePropertiesForm {
   }
 
   createPropertyChild(child: Child) {
-    const { category, propertyName, value, attribute, options, menus, handler } = child;
+    const { category, options, value } = child;
     switch (category) {
       case 'dropdown':
         const { dropdown, dropText } = this.createDropdown(value, category);
@@ -304,13 +324,13 @@ class TablePropertiesForm {
         dropdown.addEventListener('click', () => this.toggleHidden(list));
         return dropdown;
       case 'color':
-        const colorContainer = this.createColorContainer(attribute, propertyName, value);
+        const colorContainer = this.createColorContainer(child);
         return colorContainer;
       case 'menus':
-        const checkBtns = this.createCheckBtns(menus, propertyName);
+        const checkBtns = this.createCheckBtns(child);
         return checkBtns;
       case 'input':
-        const input = this.createInput(attribute, propertyName, value);
+        const input = this.createInput(child);
         return input;
       default:
         break;
@@ -339,8 +359,57 @@ class TablePropertiesForm {
     return getClosestElement(container, '.ql-table-color-container');
   }
 
+  getDiffProperties() {
+    const change = this.attrs;
+    const old = this.options.attribute;
+    return Object.keys(change).reduce((attrs: Attribute, key) => {
+      if (change[key] !== old[key]) {
+        attrs[key] = change[key];
+      }
+      return attrs;
+    }, {});
+  }
+
   removePropertiesForm() {
     this.form.remove();
+  }
+
+  saveAction(type: string) {
+    switch (type) {
+      case 'table':
+        this.saveTableAction();
+        break;
+      default:
+        this.saveCellAction();
+        break;
+    }
+  }
+
+  saveCellAction() {
+    const { selectedTds } = this.tableMenus.tableBetter.cellSelection;
+    const attrs = this.getDiffProperties();
+    for (const td of selectedTds) {
+      setElementProperty(td, attrs);
+    }
+  }
+
+  saveTableAction() {
+    const { table } = this.tableMenus;
+    const attrs = this.getDiffProperties();
+    const align = attrs['align'];
+    delete attrs['align'];
+    setElementProperty(table, attrs);
+    switch (align) {
+      case 'center':
+        setElementProperty(table, { 'margin': '0 auto' });
+        break;
+      case 'right':
+        setElementProperty(table, { 'margin-left': 'auto', 'margin-right': '' });
+        break;
+      default:
+        setElementProperty(table, { 'margin': '' });
+        break;
+    }
   }
 
   setAttribute(propertyName: string, value: string, container?: HTMLElement) {
@@ -356,6 +425,14 @@ class TablePropertiesForm {
       child.classList.remove('ql-table-btns-checked');
     }
     target.classList.add('ql-table-btns-checked');
+  }
+
+  switchHidden(container: HTMLElement, valid: boolean) {
+    if (!valid) {
+      container.classList.remove('ql-hidden');
+    } else {
+      container.classList.add('ql-hidden');
+    }
   }
 
   toggleHidden(container: HTMLElement) {

@@ -5,7 +5,7 @@ import alignMiddleIcon from '../assets/icon/align-middle.svg';
 import alignJustifyIcon from '../assets/icon/align-justify.svg';
 import alignRightIcon from '../assets/icon/align-right.svg';
 import alignTopIcon from '../assets/icon/align-top.svg';
-import { convertUnitToInteger } from '../utils';
+import { convertUnitToInteger, isValidColor, isValidDimensions } from '../utils';
 
 interface Attribute {
   [propName: string]: string
@@ -15,6 +15,9 @@ interface Options {
   type: string
   attribute: Attribute
 }
+
+const colorMessage = 'The color is invalid. Try "#FF0000" or "rgb(255,0,0)" or "red".';
+const dimensionsMessage = 'The value is invalid. Try "10px" or "2em" or simply "2".';
 
 const cellProperties = [
   'border-style',
@@ -204,7 +207,6 @@ function getCellProperties(attribute: Attribute) {
             propertyName: 'border-style',
             value: attribute['border-style'] || 'none',
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
-            handler: () => {}
           },
           {
             category: 'color',
@@ -214,7 +216,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Color'
             },
-            handler: () => {}
+            valid: isValidColor,
+            message: colorMessage
           },
           {
             category: 'input',
@@ -224,7 +227,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Width'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           }
         ]
       },
@@ -239,7 +243,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Color'
             },
-            handler: () => {}
+            valid: isValidColor,
+            message: colorMessage
           }
         ]
       },
@@ -254,7 +259,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Width'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           },
           {
             category: 'input',
@@ -264,7 +270,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Height'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           },
           {
             category: 'input',
@@ -274,7 +281,8 @@ function getCellProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Padding'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           }
         ]
       },
@@ -289,9 +297,8 @@ function getCellProperties(attribute: Attribute) {
               { icon: alignLeftIcon, describe: 'Align cell text to the left', align: 'left' },
               { icon: alignCenterIcon, describe: 'Align cell text to the center', align: 'center' },
               { icon: alignRightIcon, describe: 'Align cell text to the right', align: 'right' },
-              { icon: alignJustifyIcon, describe: 'Justify cell text', align: 'right' }
-            ],
-            handler: () => {}
+              { icon: alignJustifyIcon, describe: 'Justify cell text', align: 'justify' }
+            ]
           },
           {
             category: 'menus',
@@ -301,8 +308,7 @@ function getCellProperties(attribute: Attribute) {
               { icon: alignTopIcon, describe: 'Align cell text to the top', align: 'top' },
               { icon: alignMiddleIcon, describe: 'Align cell text to the middle', align: 'middle' },
               { icon: alignBottomIcon, describe: 'Align cell text to the bottom', align: 'bottom' },
-            ],
-            handler: () => {}
+            ]
           }
         ]
       }
@@ -322,7 +328,6 @@ function getTableProperties(attribute: Attribute) {
             propertyName: 'border-style',
             value: attribute['border-style'] || 'none',
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
-            handler: () => {}
           },
           {
             category: 'color',
@@ -332,7 +337,8 @@ function getTableProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Color'
             },
-            handler: () => {}
+            valid: isValidColor,
+            message: colorMessage
           },
           {
             category: 'input',
@@ -342,7 +348,8 @@ function getTableProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Width'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           }
         ]
       },
@@ -357,7 +364,8 @@ function getTableProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Color'
             },
-            handler: () => {}
+            valid: isValidColor,
+            message: colorMessage
           }
         ]
       },
@@ -372,7 +380,8 @@ function getTableProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Width'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           },
           {
             category: 'input',
@@ -382,7 +391,8 @@ function getTableProperties(attribute: Attribute) {
               type: 'text',
               placeholder: 'Height'
             },
-            handler: () => {}
+            valid: isValidDimensions,
+            message: dimensionsMessage
           },
           {
             category: 'menus',
@@ -392,8 +402,7 @@ function getTableProperties(attribute: Attribute) {
               { icon: alignLeftIcon, describe: 'Align table to the left', align: 'left' },
               { icon: alignCenterIcon, describe: 'Center table', align: 'center' },
               { icon: alignRightIcon, describe: 'Align table to the right', align: 'right' }
-            ],
-            handler: () => {}
+            ]
           }
         ]
       }
