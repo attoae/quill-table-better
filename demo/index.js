@@ -7,7 +7,7 @@ Quill.register({
   'modules/table-better': QuillTableBetter
 }, true);
 
-var options = {
+const options = {
   theme: 'snow',
   modules: {
     table: false,
@@ -15,4 +15,9 @@ var options = {
   }
 };
 
-var editor = new Quill('#root', options);
+const editor = new Quill('#root', options);
+const tableModule = editor.getModule('table-better');
+const btn = document.getElementById('btn');
+btn.onclick = () => {
+  tableModule.insertTable(3, 3);
+}

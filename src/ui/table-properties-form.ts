@@ -6,9 +6,11 @@ import saveIcon from '../assets/icon/save.svg';
 import closeIcon from '../assets/icon/close.svg';
 import { getProperties } from '../config';
 import {
+  addDimensionsUnit,
   createTooltip,
   debounce,
   getClosestElement,
+  isDimensions,
   setElementProperty,
   setElementAttribute
 } from '../utils';
@@ -364,7 +366,10 @@ class TablePropertiesForm {
     const old = this.options.attribute;
     return Object.keys(change).reduce((attrs: Attribute, key) => {
       if (change[key] !== old[key]) {
-        attrs[key] = change[key];
+        attrs[key] =
+          isDimensions(key)
+            ? addDimensionsUnit(change[key])
+            : change[key];
       }
       return attrs;
     }, {});

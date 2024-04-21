@@ -1,6 +1,7 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
 import {
+  cellId,
   TableCellBlock,
   TableCell,
   TableRow,
@@ -70,8 +71,13 @@ class Table extends Module {
     const range = this.quill.getSelection();
     if (range == null) return;
     const delta = new Array(rows).fill(0).reduce(memo => {
-      const text = new Array(columns).fill('\n').join('');
-      return memo.insert(text, { table: tableId() });
+      const id = tableId();
+      return new Array(columns).fill('\n').reduce((memo, text) => {
+        return memo.insert(text, {
+          'table-cell-block': cellId(),
+          'table-cell': { 'data-row': id }
+        });
+      }, memo);
     }, new Delta().retain(range.index));
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(range.index, Quill.sources.SILENT);
