@@ -155,6 +155,11 @@ function getElementStyle(node: HTMLElement, rules: string[]) {
   }, {});
 }
 
+function isDimensions(key: string) {
+  if (key.endsWith('width') || key.endsWith('height')) return true;
+  return false;
+}
+
 function isSimpleColor(color: string) {
   for (const col of colors) {
     if (col === color) return true;
@@ -271,6 +276,7 @@ export {
   getComputeSelectedTds,
   getCorrectBounds,
   getElementStyle,
+  isDimensions,
   isValidColor,
   isValidDimensions,
   removeElementProperty,

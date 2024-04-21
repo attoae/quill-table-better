@@ -498,6 +498,7 @@ function tableId() {
 }
 
 export {
+  cellId,
   TableCellBlock,
   TableCell,
   TableRow,
