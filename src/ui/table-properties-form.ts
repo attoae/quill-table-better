@@ -1,3 +1,4 @@
+import Quill from 'quill';
 import eraseIcon from '../assets/icon/erase.svg';
 import checkIcon from '../assets/icon/check.svg';
 import downIcon from '../assets/icon/down.svg';
@@ -10,10 +11,12 @@ import {
   createTooltip,
   debounce,
   getClosestElement,
+  getComputeSelectedCols,
   isDimensions,
   setElementProperty,
   setElementAttribute
 } from '../utils';
+import { TableCellBlock } from '../formats/table';
 
 interface Attribute {
   [propName: string]: string
@@ -392,9 +395,28 @@ class TablePropertiesForm {
 
   saveCellAction() {
     const { selectedTds } = this.tableMenus.tableBetter.cellSelection;
+    const { getSelectedTdsInfo, quill, table } = this.tableMenus;
+    const colgroup = Quill.find(selectedTds[0]).table().colgroup();
     const attrs = this.getDiffProperties();
+    const width = parseFloat(attrs['width']);
+    const align = attrs['text-align'];
+    align && delete attrs['text-align'];
+    if (colgroup && width) {
+      delete attrs['width'];
+      const { computeBounds } = getSelectedTdsInfo.call(this.tableMenus);
+      const cols = getComputeSelectedCols(computeBounds, table, quill.container);
+      for (const col of cols) {
+        col.setAttribute('width', `${width}`);
+      }
+    }
     for (const td of selectedTds) {
       setElementProperty(td, attrs);
+      if (align) {
+        const tdBlot = Quill.find(td);
+        tdBlot.children.forEach((child: TableCellBlock) => {
+          child.format('align', align);
+        });
+      }
     }
   }
 
