@@ -324,12 +324,7 @@ class TableMenus {
       // });
       this.showMenus();
       if (table && !table.isEqualNode(this.table)) {
-        const { left, right, top } = getCorrectBounds(table, this.quill.container);
-        const { height, width } = this.root.getBoundingClientRect();
-        setElementProperty(this.root, {
-          left: `${(left + right - width) >> 1}px`,
-          top: `${top - height - 10}px`
-        });
+        this.updateMenus(table);
       }
       this.table = table;
     }
@@ -474,6 +469,15 @@ class TableMenus {
     }
     this.quill.update(Quill.sources.USER);
     this.quill.scrollIntoView();
+  }
+
+  updateMenus(table: Element = this.table) {
+    const { left, right, top } = getCorrectBounds(table, this.quill.container);
+    const { height, width } = this.root.getBoundingClientRect();
+    setElementProperty(this.root, {
+      left: `${(left + right - width) >> 1}px`,
+      top: `${top - height - 10}px`
+    });
   }
 
   toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement) {
