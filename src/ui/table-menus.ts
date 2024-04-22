@@ -322,6 +322,7 @@ class TableMenus {
       //   left: `${left}px`,
       //   top: `${top - height - 10}px`
       // });
+      if (this.tablePropertiesForm) return;
       this.showMenus();
       if (table && !table.isEqualNode(this.table)) {
         this.updateMenus(table);
