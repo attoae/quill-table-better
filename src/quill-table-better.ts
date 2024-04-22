@@ -44,7 +44,7 @@ class Table extends Module {
     quill.clipboard.addMatcher('table', matchTableTemporary);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
-    this.operateLine = new OperateLine(quill);
+    this.operateLine = new OperateLine(quill, this);
   }
 
   deleteTable() {
