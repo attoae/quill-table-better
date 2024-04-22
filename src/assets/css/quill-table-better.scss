@@ -226,6 +226,17 @@ $hover-background: #f0f0f0;
   left: 50%;
   box-shadow: $box-shadow;
   padding-bottom: 12px;
+  background: #fff;
+  &::before {
+    @extend .ql-table-triangle-common;
+    top: -20px;
+    border-bottom-color: #ccced1;
+  }
+  &::after {
+    @extend .ql-table-triangle-common;
+    top: -19px;
+    border-bottom-color: #fff;
+  }
   .properties-form-header {
     height: 40px;
     line-height: 40px;

@@ -12,6 +12,7 @@ import {
   debounce,
   getClosestElement,
   getComputeSelectedCols,
+  getCorrectBounds,
   isDimensions,
   setElementProperty,
   setElementAttribute
@@ -358,11 +359,22 @@ class TablePropertiesForm {
     }
     container.appendChild(actions);
     this.tableMenus.quill.container.appendChild(container);
+    this.updatePropertiesForm(container, options.type);
     return container;
   }
 
   getColorClosest(container: HTMLElement) {
     return getClosestElement(container, '.ql-table-color-container');
+  }
+
+  getComputeBounds(type: string) {
+    if (type === 'table') {
+      const { quill, table } = this.tableMenus;
+      return getCorrectBounds(table, quill.container);
+    } else {
+      const { computeBounds } = this.tableMenus.getSelectedTdsInfo();
+      return computeBounds;
+    }
   }
 
   getDiffProperties() {
@@ -396,7 +408,7 @@ class TablePropertiesForm {
 
   saveCellAction() {
     const { selectedTds } = this.tableMenus.tableBetter.cellSelection;
-    const { getSelectedTdsInfo, quill, table } = this.tableMenus;
+    const { quill, table } = this.tableMenus;
     const colgroup = Quill.find(selectedTds[0]).table().colgroup();
     const attrs = this.getDiffProperties();
     const width = parseFloat(attrs['width']);
@@ -404,7 +416,7 @@ class TablePropertiesForm {
     align && delete attrs['text-align'];
     if (colgroup && width) {
       delete attrs['width'];
-      const { computeBounds } = getSelectedTdsInfo.call(this.tableMenus);
+      const { computeBounds } = this.tableMenus.getSelectedTdsInfo();
       const cols = getComputeSelectedCols(computeBounds, table, quill.container);
       for (const col of cols) {
         col.setAttribute('width', `${width}`);
@@ -467,8 +479,13 @@ class TablePropertiesForm {
     container.classList.toggle('ql-hidden');
   }
 
-  updatePropertiesForm() {
-
+  updatePropertiesForm(container: HTMLElement, type: string) {
+    const { width } = container.getBoundingClientRect();
+    const { left, right, bottom } = this.getComputeBounds(type);
+    setElementProperty(container, {
+      left: `${(left + right - width) >> 1}px`,
+      top: `${bottom + 10}px`
+    });
   }
 
   updateSelectColor(element: Element, value: string) {
