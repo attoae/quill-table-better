@@ -96,6 +96,7 @@ class TablePropertiesForm {
     }
     this.removePropertiesForm();
     this.tableMenus.showMenus();
+    this.tableMenus.updateMenus();
   }
 
   createActionBtns() {

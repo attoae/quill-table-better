@@ -24,7 +24,8 @@ class OperateLine {
   dragBlock: HTMLElement | null;
   dragTable: HTMLElement | null;
   direction: string | null;
-  constructor(quill: any) {
+  tableBetter: any;
+  constructor(quill: any, tableBetter?: any) {
     this.quill = quill;
     this.options = null;
     this.drag = false;
@@ -32,6 +33,7 @@ class OperateLine {
     this.dragBlock = null;
     this.dragTable = null;
     this.direction = null; // 1.level 2.vertical
+    this.tableBetter = tableBetter;
     this.quill.root.addEventListener('mousemove', this.handleMouseMove.bind(this));
   }
 
@@ -361,6 +363,7 @@ class OperateLine {
       this.drag = false;
       document.removeEventListener('mousemove', handleDrag, false);
       document.removeEventListener('mouseup', handleMouseup, false);
+      this.tableBetter.tableMenus.updateMenus();
     }
 
     const handleMousedown = (e: MouseEvent) => {
