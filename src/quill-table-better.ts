@@ -84,4 +84,37 @@ class Table extends Module {
   }
 }
 
+const keyboardBindings = {
+  'table-cell-block backspace': makeCellBlockHandler('Backspace'),
+  'table-cell-block delete':  makeCellBlockHandler('Delete')
+}
+
+function makeCellBlockHandler(key: string) {
+  return {
+    key,
+    format: ['table-cell-block'],
+    collapsed: true,
+    handler(range: any, context: any) {
+      const [line] = this.quill.getLine(range.index);
+      const { offset, suffix } = context;
+      if (
+        offset === 0 &&
+        (
+          !line.prev ||
+          line.prev.statics.blotName !== 'table-cell-block'
+        )
+      ) {
+        return false;
+      }
+      // Delete isn't from the end
+      if (offset !== 0 && suffix === '') {
+        return false;
+      }
+      return true;
+    }
+  }
+}
+
+Table.keyboardBindings = keyboardBindings;
+
 export default Table;

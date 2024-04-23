@@ -11,7 +11,10 @@ const options = {
   theme: 'snow',
   modules: {
     table: false,
-    'table-better': {}
+    'table-better': {},
+    keyboard: {
+      bindings: QuillTableBetter.keyboardBindings
+    }
   }
 };
 
