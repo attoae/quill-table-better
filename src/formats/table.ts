@@ -112,7 +112,7 @@ class TableCell extends Container {
   }
 
   static hasColgroup(domNode: Element) {
-    while (domNode.tagName !== 'TBODY') {
+    while (domNode && domNode.tagName !== 'TBODY') {
       domNode = domNode.parentElement;
     }
     while (domNode) {

@@ -1,6 +1,7 @@
 import Delta from 'quill-delta';
 import extend from 'extend';
 import { filterWordStyle } from './';
+import { TableCell } from '../formats/table';
 
 interface Formats {
   [propName: string]: string
@@ -42,7 +43,8 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
       ? node.parentNode.parentNode
       : node.parentNode.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
-  const cells = Array.from(node.parentNode.querySelectorAll('td'));
+  const tagName = node.tagName;
+  const cells = Array.from(node.parentNode.querySelectorAll(tagName));
   const row =
     (node.parentNode as HTMLTableRowElement).getAttribute('data-row') ||
     rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
@@ -52,8 +54,8 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
     if (op.attributes && op.attributes['table-cell']) {
       op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
     }
-  })
-  return applyFormat(delta, 'table-cell-block', cell);
+  });
+  return applyFormat(matchTableTh(node, delta, row), 'table-cell-block', cell);
 }
 
 function matchTableCol(node: HTMLElement, delta: Delta) {
@@ -77,6 +79,22 @@ function matchTableTemporary(node: HTMLElement, delta: Delta) {
   return new Delta()
     .insert('\n', { 'table-temporary': formats })
     .concat(delta);
+}
+
+function matchTableTh(node: HTMLTableCellElement, delta: Delta, row: string | number) {
+  const formats = TableCell.formats(node);
+  if (node.tagName === 'TH') {
+    delta.ops.forEach(op => {
+      if (
+        typeof op.insert === 'string' &&
+        !op.insert.endsWith('\n')
+      ) {
+        op.insert += '\n';
+      }
+    });
+    return applyFormat(delta, 'table-cell', { ...formats, 'data-row': row });
+  }
+  return delta;
 }
 
 export {
