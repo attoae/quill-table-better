@@ -38,7 +38,7 @@ class Table extends Module {
 
   constructor(quill: any, options: any) {
     super(quill, options);
-    quill.clipboard.addMatcher('td', matchTableCell);
+    quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
