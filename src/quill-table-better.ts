@@ -107,7 +107,7 @@ function makeCellBlockHandler(key: string) {
         return false;
       }
       // Delete isn't from the end
-      if (offset !== 0 && suffix === '') {
+      if (offset !== 0 && !suffix && key === 'Delete') {
         return false;
       }
       return true;
