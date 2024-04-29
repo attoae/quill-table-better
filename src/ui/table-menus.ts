@@ -312,6 +312,7 @@ class TableMenus {
     this.prevTooltip = null;
     if (!table && !this.tableBetter.cellSelection.selectedTds.length) {
       this.hideMenus();
+      this.destroyTablePropertiesForm();
       return;
     } else {
       // const cell = (e.target as Element).closest('td');

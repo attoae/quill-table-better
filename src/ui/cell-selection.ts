@@ -1,8 +1,10 @@
+import Quill from 'quill';
 import {
   getCorrectBounds,
   getComputeBounds,
   getComputeSelectedTds
 } from '../utils';
+import { TableCellBlock } from '../formats/table';
 
 class CellSelection {
   quill: any;
@@ -15,6 +17,7 @@ class CellSelection {
     this.startTd = null;
     this.endTd = null;
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
+    // document.addEventListener('keyup', this.handleKeyup.bind(this));
   }
 
   clearSelected() {
@@ -22,6 +25,23 @@ class CellSelection {
       td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
     }
     this.selectedTds = [];
+  }
+
+  handleKeyup(e: KeyboardEvent) {
+    if (this.selectedTds.length < 2) return;
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      for (const td of this.selectedTds) {
+        const tdBlot = Quill.find(td);
+        let head = tdBlot.children.head;
+        const cellId = head.formats()[TableCellBlock.blotName];
+        const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
+        tdBlot.insertBefore(cellBlock, head);
+        while (head) {
+          head.remove();
+          head = head.next;
+        }
+      }
+    }
   }
 
   handleMousedown(e: MouseEvent) {
