@@ -19,6 +19,18 @@ interface Options {
 const colorMessage = 'The color is invalid. Try "#FF0000" or "rgb(255,0,0)" or "red".';
 const dimensionsMessage = 'The value is invalid. Try "10px" or "2em" or simply "2".';
 
+const cellDefaultValues: Attribute = {
+  'border-style': 'none',
+  'border-color': '',
+  'border-width': '',
+  'background-color': '',
+  'width': '',
+  'height': '',
+  'padding': '',
+  'text-align': 'center',
+  'vertical-align': 'middle'
+};
+
 const cellProperties = [
   'border-style',
   'border-color',
@@ -416,6 +428,7 @@ function getProperties({ type, attribute }: Options) {
 }
 
 export {
+  cellDefaultValues,
   cellProperties,
   colors,
   tableProperties,

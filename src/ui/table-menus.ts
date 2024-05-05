@@ -19,7 +19,11 @@ import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
 import { TableCell, TableRow } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
-import { cellProperties, tableProperties } from '../config';
+import {
+  cellDefaultValues,
+  cellProperties,
+  tableProperties
+} from '../config';
 
 interface Children {
   [propName: string]: {
@@ -154,7 +158,10 @@ const MENUS_DEFAULTS: MenusDefaults = {
     icon: cellIcon,
     handler(list, tooltip) {
       const { selectedTds } = this.tableBetter.cellSelection;
-      const attribute = selectedTds.length > 1 ? {} : getElementStyle(selectedTds[0], cellProperties);
+      const attribute =
+        selectedTds.length > 1
+          ? this.getSelectedTdsAttrs(selectedTds)
+          : getElementStyle(selectedTds[0], cellProperties);
       this.toggleAttribute(list, tooltip);
       this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'cell' });
       this.hideMenus();
@@ -264,6 +271,30 @@ class TableMenus {
       td = td.next;
     }
     return { id, ref: null };
+  }
+
+  getSelectedTdsAttrs(selectedTds: HTMLElement[]) {
+    const map = new Map();
+    let attribute = null;
+    for (const td of selectedTds) {
+      const attr = getElementStyle(td, cellProperties);
+      if (!attribute) {
+        attribute = attr;
+        continue;
+      }
+      for (const key of Object.keys(attribute)) {
+        if (map.has(key)) continue;
+        if (attr[key] !== attribute[key]) {
+          map.set(key, false);
+        }
+      }
+    }
+    for (const key of Object.keys(attribute)) {
+      if (map.has(key)) {
+        attribute[key] = cellDefaultValues[key];
+      }
+    }
+    return attribute;
   }
 
   getSelectedTdsInfo() {
