@@ -399,6 +399,7 @@ class TableMenus {
     );
     this.quill.scrollIntoView();
     this.hideMenus();
+    this.destroyTablePropertiesForm();
     this.tableBetter.cellSelection.clearSelected();
   }
 
