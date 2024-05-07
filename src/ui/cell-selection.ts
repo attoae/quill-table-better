@@ -17,6 +17,7 @@ class CellSelection {
     this.startTd = null;
     this.endTd = null;
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
+    this.quill.root.addEventListener('click', this.handleClick.bind(this));
     // document.addEventListener('keyup', this.handleKeyup.bind(this));
   }
 
@@ -25,6 +26,15 @@ class CellSelection {
       td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
     }
     this.selectedTds = [];
+  }
+
+  handleClick(e: MouseEvent) {
+    if (e.detail < 3 || !this.selectedTds.length) return;
+    // Multiple clicks result in cell being selected
+    // Cell are deleted when deleting
+    const { index, length } = this.quill.getSelection(true);
+    this.quill.setSelection(index, length - 1, Quill.sources.SILENT);
+    this.quill.scrollIntoView();
   }
 
   handleKeyup(e: KeyboardEvent) {
