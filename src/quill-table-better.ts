@@ -21,6 +21,7 @@ import {
 import OperateLine from './ui/operate-line';
 import CellSelection from './ui/cell-selection';
 import TableMenus from './ui/table-menus';
+import Language from './language';
 
 const Module = Quill.import('core/module');
 
@@ -42,6 +43,7 @@ class Table extends Module {
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
+    this.language = new Language(options?.language);
     this.cellSelection = new CellSelection(quill);
     this.tableMenus = new TableMenus(quill, this);
     this.operateLine = new OperateLine(quill, this);

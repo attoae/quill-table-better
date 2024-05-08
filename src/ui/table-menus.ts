@@ -46,148 +46,150 @@ enum Alignment {
   right = 'margin-right'
 }
 
-const MENUS_DEFAULTS: MenusDefaults = {
-  column: {
-    content: 'Column',
-    icon: columnIcon,
-    handler(list, tooltip) {
-      this.toggleAttribute(list, tooltip);
-    },
-    children: {
-      left: {
-        content: 'Insert column left',
-        handler() {
-          const { leftTd } = this.getSelectedTdsInfo();
-          this.insertColumn(leftTd, 0);
-        }
+function getMenusConfig(useLanguage: Function): MenusDefaults {
+  return {
+    column: {
+      content: useLanguage('col'),
+      icon: columnIcon,
+      handler(list, tooltip) {
+        this.toggleAttribute(list, tooltip);
       },
-      right: {
-        content: 'Insert column right',
-        handler() {
-          const { rightTd } = this.getSelectedTdsInfo();
-          this.insertColumn(rightTd, 1);
-        }
-      },
-      delete: {
-        content: 'Delete column',
-        handler() {
-          const { computeBounds, leftTd } = this.getSelectedTdsInfo();
-          const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
-          const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
-          const tableBlot = Quill.find(leftTd).table();
-          tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this), deleteCols);
-        }
-      }
-    }
-  },
-  row: {
-    content: 'Row',
-    icon: rowIcon,
-    handler(list, tooltip) {
-      this.toggleAttribute(list, tooltip);
-    },
-    children: {
-      above: {
-        content: 'Insert row above',
-        handler() {
-          const { leftTd } = this.getSelectedTdsInfo();
-          this.insertRow(leftTd, 0);
-        }
-      },
-      below: {
-        content: 'Insert row below',
-        handler() {
-          const { rightTd } = this.getSelectedTdsInfo();
-          this.insertRow(rightTd, 1);
-        }
-      },
-      delete: {
-        content: 'Delete row',
-        handler() {
-          const selectedTds = this.tableBetter.cellSelection.selectedTds;
-          const rows = [];
-          let id = '';
-          for (const td of selectedTds) {
-            if (td.getAttribute('data-row') !== id) {
-              rows.push(Quill.find(td.parentElement));
-              id = td.getAttribute('data-row');
-            }
+      children: {
+        left: {
+          content: useLanguage('insColL'),
+          handler() {
+            const { leftTd } = this.getSelectedTdsInfo();
+            this.insertColumn(leftTd, 0);
           }
-          const tableBlot = Quill.find(selectedTds[0]).table();
-          tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+        },
+        right: {
+          content: useLanguage('insColR'),
+          handler() {
+            const { rightTd } = this.getSelectedTdsInfo();
+            this.insertColumn(rightTd, 1);
+          }
+        },
+        delete: {
+          content: useLanguage('delCol'),
+          handler() {
+            const { computeBounds, leftTd } = this.getSelectedTdsInfo();
+            const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+            const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
+            const tableBlot = Quill.find(leftTd).table();
+            tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this), deleteCols);
+          }
         }
       }
-    }
-  },
-  merge: {
-    content: 'Merge cells',
-    icon: mergeIcon,
-    handler(list, tooltip) {
-      this.toggleAttribute(list, tooltip);
     },
-    children: {
-      merge: {
-        content: 'Merge cells',
-        handler() {
-          this.mergeCells();
-        }
+    row: {
+      content: useLanguage('row'),
+      icon: rowIcon,
+      handler(list, tooltip) {
+        this.toggleAttribute(list, tooltip);
       },
-      split: {
-        content: 'Split cell',
-        handler() {
-          this.splitCell();
+      children: {
+        above: {
+          content: useLanguage('insRowAbv'),
+          handler() {
+            const { leftTd } = this.getSelectedTdsInfo();
+            this.insertRow(leftTd, 0);
+          }
+        },
+        below: {
+          content: useLanguage('insRowBlw'),
+          handler() {
+            const { rightTd } = this.getSelectedTdsInfo();
+            this.insertRow(rightTd, 1);
+          }
+        },
+        delete: {
+          content: useLanguage('delRow'),
+          handler() {
+            const selectedTds = this.tableBetter.cellSelection.selectedTds;
+            const rows = [];
+            let id = '';
+            for (const td of selectedTds) {
+              if (td.getAttribute('data-row') !== id) {
+                rows.push(Quill.find(td.parentElement));
+                id = td.getAttribute('data-row');
+              }
+            }
+            const tableBlot = Quill.find(selectedTds[0]).table();
+            tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+          }
         }
       }
-    }
-  },
-  table: {
-    content: 'Table properties',
-    icon: tableIcon,
-    handler(list, tooltip) {
-      const attribute = {
-        ...getElementStyle(this.table, tableProperties),
-        'align': this.getTableAlignment(this.table)
-      };
-      this.toggleAttribute(list, tooltip);
-      this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'table' });
-      this.hideMenus();
-    }
-  },
-  cell: {
-    content: 'Cell properties',
-    icon: cellIcon,
-    handler(list, tooltip) {
-      const { selectedTds } = this.tableBetter.cellSelection;
-      const attribute =
-        selectedTds.length > 1
-          ? this.getSelectedTdsAttrs(selectedTds)
-          : getElementStyle(selectedTds[0], cellProperties);
-      this.toggleAttribute(list, tooltip);
-      this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'cell' });
-      this.hideMenus();
-    }
-  },
-  wrap: {
-    content: 'Insert paragraph outside the table',
-    icon: wrapIcon,
-    handler(list, tooltip) {
-      this.toggleAttribute(list, tooltip);
     },
-    children: {
-      before: {
-        content: 'Insert before',
-        handler() {
-          this.insertParagraph(-1);
-        }
+    merge: {
+      content: useLanguage('mCells'),
+      icon: mergeIcon,
+      handler(list, tooltip) {
+        this.toggleAttribute(list, tooltip);
       },
-      after: {
-        content: 'Insert after',
-        handler() {
-          this.insertParagraph(1);
+      children: {
+        merge: {
+          content: useLanguage('mCells'),
+          handler() {
+            this.mergeCells();
+          }
+        },
+        split: {
+          content: useLanguage('sCell'),
+          handler() {
+            this.splitCell();
+          }
+        }
+      }
+    },
+    table: {
+      content: useLanguage('tblProps'),
+      icon: tableIcon,
+      handler(list, tooltip) {
+        const attribute = {
+          ...getElementStyle(this.table, tableProperties),
+          'align': this.getTableAlignment(this.table)
+        };
+        this.toggleAttribute(list, tooltip);
+        this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'table' });
+        this.hideMenus();
+      }
+    },
+    cell: {
+      content: useLanguage('cellProps'),
+      icon: cellIcon,
+      handler(list, tooltip) {
+        const { selectedTds } = this.tableBetter.cellSelection;
+        const attribute =
+          selectedTds.length > 1
+            ? this.getSelectedTdsAttrs(selectedTds)
+            : getElementStyle(selectedTds[0], cellProperties);
+        this.toggleAttribute(list, tooltip);
+        this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'cell' });
+        this.hideMenus();
+      }
+    },
+    wrap: {
+      content: useLanguage('insParaOTbl'),
+      icon: wrapIcon,
+      handler(list, tooltip) {
+        this.toggleAttribute(list, tooltip);
+      },
+      children: {
+        before: {
+          content: useLanguage('insB4'),
+          handler() {
+            this.insertParagraph(-1);
+          }
+        },
+        after: {
+          content: useLanguage('insAft'),
+          handler() {
+            this.insertParagraph(1);
+          }
         }
       }
     }
-  }
+  };
 }
 
 class TableMenus {
@@ -201,12 +203,12 @@ class TableMenus {
   constructor(quill: any, tableBetter?: any) {
     this.quill = quill;
     this.table = null;
-    this.root = this.createMenus();
     this.prevList = null;
     this.prevTooltip = null;
     this.tableBetter = tableBetter;
     this.tablePropertiesForm = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
+    this.root = this.createMenus();
   }
 
   createList(children: Children) {
@@ -238,9 +240,11 @@ class TableMenus {
   }
 
   createMenus() {
+    const { language } = this.tableBetter;
+    const useLanguage = language.useLanguage.bind(language);
     const container = document.createElement('div');
     container.classList.add('ql-table-menus-container', 'ql-hidden');
-    for (const [, val] of Object.entries(MENUS_DEFAULTS)) {
+    for (const [, val] of Object.entries(getMenusConfig(useLanguage))) {
       const { content, icon, children, handler } = val;
       const list = this.createList(children);
       const tooltip = createTooltip(content);
