@@ -298,6 +298,7 @@ $hover-background: #f0f0f0;
       flex: 1;
       & > span {
         margin: 0 2px;
+        display: flex;
       }
       &:hover {
         background: $hover-background;

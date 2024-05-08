@@ -75,8 +75,8 @@ const colorList: ColorList[] = [
 ];
 
 const actionList = [
-  { icon: saveIcon, label: 'Save' },
-  { icon: closeIcon, label: 'Cancel' }
+  { icon: saveIcon, label: 'save' },
+  { icon: closeIcon, label: 'cancel' }
 ];
 
 class TablePropertiesForm {
@@ -101,6 +101,7 @@ class TablePropertiesForm {
   }
 
   createActionBtns() {
+    const useLanguage = this.getUseLanguage();
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
     container.classList.add('properties-form-action-row');
@@ -109,7 +110,7 @@ class TablePropertiesForm {
       const iconContainer = document.createElement('span');
       const labelContainer = document.createElement('span');
       iconContainer.innerHTML = icon;
-      labelContainer.innerText = label;
+      labelContainer.innerText = useLanguage(label);
       button.appendChild(iconContainer);
       button.appendChild(labelContainer);
       fragment.appendChild(button);
@@ -345,7 +346,8 @@ class TablePropertiesForm {
   }
 
   createPropertiesForm(options: Options) {
-    const { title, properties } = getProperties(options);
+    const useLanguage = this.getUseLanguage();
+    const { title, properties } = getProperties(options, useLanguage);
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
@@ -389,6 +391,12 @@ class TablePropertiesForm {
       }
       return attrs;
     }, {});
+  }
+
+  getUseLanguage() {
+    const { language } = this.tableMenus.tableBetter;
+    const useLanguage = language.useLanguage.bind(language);
+    return useLanguage;
   }
 
   removePropertiesForm() {
