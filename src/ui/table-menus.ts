@@ -46,7 +46,7 @@ enum Alignment {
   right = 'margin-right'
 }
 
-function getMenusConfig(useLanguage: Function): MenusDefaults {
+function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
   return {
     column: {
       content: useLanguage('col'),

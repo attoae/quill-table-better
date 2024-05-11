@@ -12,10 +12,6 @@ const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
 const STYLE_RULES = ['color', 'border', 'width', 'height'];
 const COL_ATTRIBUTE = ['width'];
 
-interface BlotValue {
-  [propName: string]: any
-}
-
 class TableCellBlock extends Block {
   static create(value: string) {
     const node = super.create();
@@ -27,7 +23,7 @@ class TableCellBlock extends Block {
     return node;
   }
 
-  format(name: string, value: string | any) {
+  format(name: string, value: string | Props) {
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
       this.wrap(name, value);
@@ -66,7 +62,7 @@ class TableCell extends Container {
     return false;
   }
   
-  static create(value: BlotValue) {
+  static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
     for (const key of keys) {
@@ -77,7 +73,7 @@ class TableCell extends Container {
 
   static formats(domNode: HTMLElement) {
     const rowspan = this.getEmptyRowspan(domNode);
-    const formats = CELL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+    const formats = CELL_ATTRIBUTE.reduce((formats: Props, attr) => {
       if (domNode.hasAttribute(attr)) {
         if (attr === 'rowspan' && rowspan) {
           formats[attr] = `${~~domNode.getAttribute(attr) - rowspan}`;
@@ -177,7 +173,7 @@ TableBody.blotName = 'table-body';
 TableBody.tagName = 'TBODY';
 
 class TableTemporary extends Block {
-  static create(value: BlotValue) {
+  static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
     for (const key of keys) {
@@ -187,7 +183,7 @@ class TableTemporary extends Block {
   }
 
   static formats(domNode: Element) {
-    return TABLE_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+    return TABLE_ATTRIBUTE.reduce((formats: Props, attr) => {
       if (domNode.hasAttribute(attr)) {
         formats[attr] = domNode.getAttribute(attr);
       }
@@ -204,7 +200,7 @@ TableTemporary.blotName = 'table-temporary';
 TableTemporary.tagName = 'temporary';
 
 class TableCol extends Block {
-  static create(value: BlotValue) {
+  static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
     for (const key of keys) {
@@ -214,7 +210,7 @@ class TableCol extends Block {
   }
 
   static formats(domNode: Element) {
-    return COL_ATTRIBUTE.reduce((formats: BlotValue, attr) => {
+    return COL_ATTRIBUTE.reduce((formats: Props, attr) => {
       if (domNode.hasAttribute(attr)) {
         formats[attr] = domNode.getAttribute(attr);
       }
@@ -437,7 +433,7 @@ class TableContainer extends Container {
     body.insertBefore(correctRow, ref);
   }
 
-  insertTableCell(colspan: number, formats: { [propName: string]: string }, row: TableRow) {
+  insertTableCell(colspan: number, formats: Props, row: TableRow) {
     if (colspan > 1) {
       Object.assign(formats, { colspan });
     }

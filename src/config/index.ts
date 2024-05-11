@@ -7,16 +7,12 @@ import alignRightIcon from '../assets/icon/align-right.svg';
 import alignTopIcon from '../assets/icon/align-top.svg';
 import { convertUnitToInteger, isValidColor, isValidDimensions } from '../utils';
 
-interface Attribute {
-  [propName: string]: string
-}
-
 interface Options {
   type: string
-  attribute: Attribute
+  attribute: Props
 }
 
-const cellDefaultValues: Attribute = {
+const cellDefaultValues: Props = {
   'border-style': 'none',
   'border-color': '',
   'border-width': '',
@@ -204,7 +200,7 @@ const tableProperties = [
   'align'
 ];
 
-function getCellProperties(attribute: Attribute, useLanguage: Function) {
+function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
   return {
     title: useLanguage('cellProps'),
     properties: [
@@ -325,7 +321,7 @@ function getCellProperties(attribute: Attribute, useLanguage: Function) {
   };
 }
 
-function getTableProperties(attribute: Attribute, useLanguage: Function) {
+function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
   return {
     title: useLanguage('tblProps'),
     properties: [
@@ -419,7 +415,7 @@ function getTableProperties(attribute: Attribute, useLanguage: Function) {
   };
 }
 
-function getProperties({ type, attribute }: Options, useLanguage: Function) {
+function getProperties({ type, attribute }: Options, useLanguage: _useLanguage) {
   if (type === 'table') return getTableProperties(attribute, useLanguage);
   return getCellProperties(attribute, useLanguage);
 }
