@@ -1,15 +1,11 @@
 import Delta from 'quill-delta';
-import extend from 'extend';
+import merge from 'lodash.merge';
 import { filterWordStyle } from './';
 import { TableCell } from '../formats/table';
 
-interface Formats {
-  [propName: string]: string
-}
-
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
 
-function applyFormat(delta: Delta, format: Formats | string, value?: any): Delta {
+function applyFormat(delta: Delta, format: Props | string, value?: any): Delta {
   if (typeof format === 'object') {
     return Object.keys(format).reduce((newDelta, key) => {
       return applyFormat(newDelta, key, format[key]);
@@ -21,7 +17,7 @@ function applyFormat(delta: Delta, format: Formats | string, value?: any): Delta
     }
     return newDelta.insert(
       op.insert,
-      extend({}, { [format]: value }, op.attributes)
+      merge({}, { [format]: value }, op.attributes)
     );
   }, new Delta());
 }
@@ -52,6 +48,7 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
   if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
   delta.ops.forEach(op => {
     if (op.attributes && op.attributes['table-cell']) {
+      // @ts-ignore
       op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
     }
   });
@@ -70,7 +67,7 @@ function matchTableCol(node: HTMLElement, delta: Delta) {
 }
 
 function matchTableTemporary(node: HTMLElement, delta: Delta) {
-  const formats = TABLE_ATTRIBUTE.reduce((formats: Formats, attr) => {
+  const formats = TABLE_ATTRIBUTE.reduce((formats: Props, attr) => {
     if (node.hasAttribute(attr)) {
       formats[attr] = filterWordStyle(node.getAttribute(attr));
     }
