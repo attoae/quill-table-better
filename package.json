@@ -29,7 +29,7 @@
     "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "^2.6.0",
     "parchment": "^2.0.1",
-    "quill": "^2.0.0-dev.4",
+    "quill": "^2.0.1",
     "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
     "ts-loader": "^9.3.0",

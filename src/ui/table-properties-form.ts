@@ -19,15 +19,11 @@ import {
 } from '../utils';
 import { TableCellBlock } from '../formats/table';
 
-interface Attribute {
-  [propName: string]: string
-}
-
 interface Child {
   category: string
   propertyName: string
   value?: string
-  attribute?: Attribute
+  attribute?: Props
   options?: string[]
   tooltip?: string
   menus?: Menus[]
@@ -48,7 +44,7 @@ interface Properties {
 
 interface Options {
   type: string
-  attribute: Attribute
+  attribute: Props
 }
 
 interface ColorList {
@@ -83,7 +79,7 @@ class TablePropertiesForm {
   tableMenus: any;
   options: Options;
   form: HTMLDivElement;
-  attrs: Attribute;
+  attrs: Props;
   constructor(tableMenus: any, options?: Options) {
     this.tableMenus = tableMenus;
     this.options = options;
@@ -382,7 +378,7 @@ class TablePropertiesForm {
   getDiffProperties() {
     const change = this.attrs;
     const old = this.options.attribute;
-    return Object.keys(change).reduce((attrs: Attribute, key) => {
+    return Object.keys(change).reduce((attrs: Props, key) => {
       if (change[key] !== old[key]) {
         attrs[key] =
           isDimensions(key)

@@ -1,12 +1,8 @@
 import en_US from './en_US';
 import zh_CN from './zh_CN';
 
-interface Content {
-  [propName: string]: string
-}
-
 interface Config {
-  [propName: string]: Content
+  [propName: string]: Props
 }
 
 class Language {
@@ -24,7 +20,7 @@ class Language {
     this.language = language;
   }
 
-  registry(language: string, content: Content) {
+  registry(language: string, content: Props) {
     this.config = {
       ...this.config,
       [language]: content
