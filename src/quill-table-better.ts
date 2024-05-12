@@ -18,10 +18,10 @@ import {
   matchTableCol,
   matchTableTemporary
 } from './utils/clipboard-matchers';
-import OperateLine from './ui/operate-line';
-import CellSelection from './ui/cell-selection';
-import TableMenus from './ui/table-menus';
 import Language from './language';
+import CellSelection from './ui/cell-selection';
+import OperateLine from './ui/operate-line';
+import TableMenus from './ui/table-menus';
 
 const Module = Quill.import('core/module');
 
@@ -45,8 +45,8 @@ class Table extends Module {
     quill.clipboard.addMatcher('table', matchTableTemporary);
     this.language = new Language(options?.language);
     this.cellSelection = new CellSelection(quill);
-    this.tableMenus = new TableMenus(quill, this);
     this.operateLine = new OperateLine(quill, this);
+    this.tableMenus = new TableMenus(quill, this);
   }
 
   deleteTable() {
@@ -54,19 +54,30 @@ class Table extends Module {
     if (table == null) return;
     const offset = table.offset();
     table.remove();
+    this.hideTools();
     this.quill.update(Quill.sources.USER);
     this.quill.setSelection(offset, Quill.sources.SILENT);
   }
 
   getTable(range = this.quill.getSelection()) {
     if (range == null) return [null, null, null, -1];
-    const [cell, offset] = this.quill.getLine(range.index);
-    if (cell == null || cell.statics.blotName !== TableCell.blotName) {
+    const [block, offset] = this.quill.getLine(range.index);
+    if (block == null || block.statics.blotName !== TableCellBlock.blotName) {
       return [null, null, null, -1];
     }
+    const cell = block.parent;
     const row = cell.parent;
     const table = row.parent.parent;
     return [table, row, cell, offset];
+  }
+
+  hideTools() {
+    this.cellSelection?.clearSelected();
+    this.operateLine?.hideDragBlock();
+    this.operateLine?.hideDragTable();
+    this.operateLine?.hideLine();
+    this.tableMenus?.hideMenus();
+    this.tableMenus?.destroyTablePropertiesForm();
   }
 
   insertTable(rows: number, columns: number) {
