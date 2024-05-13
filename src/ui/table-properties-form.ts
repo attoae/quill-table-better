@@ -78,13 +78,15 @@ const actionList = [
 class TablePropertiesForm {
   tableMenus: any;
   options: Options;
-  form: HTMLDivElement;
   attrs: Props;
+  borderForm: HTMLElement[];
+  form: HTMLDivElement;
   constructor(tableMenus: any, options?: Options) {
     this.tableMenus = tableMenus;
     this.options = options;
-    this.form = this.createPropertiesForm(options);
     this.attrs = { ...options.attribute };
+    this.borderForm = [];
+    this.form = this.createPropertiesForm(options);
   }
 
   checkBtnsAction(status: string) {
@@ -285,23 +287,28 @@ class TablePropertiesForm {
     return container;
   }
 
-  createList(contents: string[], dropText?: HTMLSpanElement) {
-    if (!contents.length) return null;
+  createList(child: Child, dropText?: HTMLSpanElement) {
+    const { options, propertyName } = child;
+    if (!options.length) return null;
     const container = document.createElement('ul');
-    for (const content of contents) {
+    for (const option of options) {
       const list = document.createElement('li');
-      list.innerText = content;
+      list.innerText = option;
       container.appendChild(list);
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
     container.addEventListener('click', e => {
-      dropText.innerText = (e.target as HTMLLIElement).innerText;
+      const value = (e.target as HTMLLIElement).innerText;
+      dropText.innerText = value;
+      this.toggleBorderDisabled(value);
+      this.setAttribute(propertyName, value);
     });
     return container;
   }
 
   createProperty(property: Properties) {
     const { content, children } = property;
+    const useLanguage = this.getUseLanguage();
     const container = document.createElement('div');
     const label = document.createElement('label');
     label.innerText = content;
@@ -314,16 +321,19 @@ class TablePropertiesForm {
     for (const child of children) {
       const node = this.createPropertyChild(child);
       node && container.appendChild(node);
+      if (node && content === useLanguage('border')) {
+        this.borderForm.push(node);
+      }
     }
     return container;
   }
 
   createPropertyChild(child: Child) {
-    const { category, options, value } = child;
+    const { category, value } = child;
     switch (category) {
       case 'dropdown':
         const { dropdown, dropText } = this.createDropdown(value, category);
-        const list = this.createList(options, dropText);
+        const list = this.createList(child, dropText);
         dropdown.appendChild(list);
         dropdown.addEventListener('click', () => this.toggleHidden(list));
         return dropdown;
@@ -356,6 +366,7 @@ class TablePropertiesForm {
       container.appendChild(node);
     }
     container.appendChild(actions);
+    this.setBorderDisabled();
     this.tableMenus.quill.container.appendChild(container);
     this.updatePropertiesForm(container, options.type);
     return container;
@@ -397,6 +408,7 @@ class TablePropertiesForm {
 
   removePropertiesForm() {
     this.form.remove();
+    this.borderForm = [];
   }
 
   saveAction(type: string) {
@@ -428,12 +440,10 @@ class TablePropertiesForm {
     }
     for (const td of selectedTds) {
       setElementProperty(td, attrs);
-      if (align) {
-        const tdBlot = Quill.find(td);
-        tdBlot.children.forEach((child: TableCellBlock) => {
-          child.format('align', align);
-        });
-      }
+      const tdBlot = Quill.find(td);
+      tdBlot.children.forEach((child: TableCellBlock) => {
+        child.format('align', align === 'left' ? '' : align);
+      });
     }
   }
 
@@ -463,6 +473,13 @@ class TablePropertiesForm {
     }
   }
 
+  setBorderDisabled() {
+    const [borderContainer] = this.borderForm;
+    // @ts-ignore
+    const borderStyle = borderContainer.querySelector('.ql-table-dropdown-text').innerText;
+    this.toggleBorderDisabled(borderStyle);
+  }
+
   switchButton(container: HTMLDivElement, target: HTMLSpanElement) {
     const children = container.querySelectorAll('span.ql-table-tooltip-hover');
     for (const child of children) {
@@ -479,8 +496,28 @@ class TablePropertiesForm {
     }
   }
 
+  toggleBorderDisabled(value: string) {
+    const [, colorContainer, widthContainer] = this.borderForm;
+    if (value === 'none' || !value) {
+      this.attrs['border-color'] = '';
+      this.attrs['border-width'] = '';
+      this.updateSelectColor(colorContainer, '');
+      this.updateInputValue(widthContainer, '');
+      colorContainer.classList.add('ql-table-disabled');
+      widthContainer.classList.add('ql-table-disabled');
+    } else {
+      colorContainer.classList.remove('ql-table-disabled');
+      widthContainer.classList.remove('ql-table-disabled');
+    }
+  }
+
   toggleHidden(container: HTMLElement) {
     container.classList.toggle('ql-hidden');
+  }
+
+  updateInputValue(element: Element, value: string) {
+    const input: HTMLInputElement = element.querySelector('.property-input');
+    input.value = value;
   }
 
   updatePropertiesForm(container: HTMLElement, type: string) {

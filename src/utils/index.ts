@@ -18,6 +18,7 @@ interface CorrectBound {
 const DEVIATION = 2;
 
 function addDimensionsUnit(value: string) {
+  if (!value) return value;
   const unit = value.slice(-2); // 'px' or 'em'
   if (unit !== 'px' && unit !== 'em') {
     return value + 'px';
@@ -26,7 +27,7 @@ function addDimensionsUnit(value: string) {
 }
 
 function convertUnitToInteger(withUnit: string) {
-  if (typeof withUnit !== 'string') return withUnit;
+  if (typeof withUnit !== 'string' || !withUnit) return withUnit;
   const unit = withUnit.slice(-2); // 'px' or 'em'
   const numberPart = withUnit.slice(0, -2);
   const integerPart = Math.round(parseFloat(numberPart));

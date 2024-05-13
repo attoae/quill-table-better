@@ -37,6 +37,7 @@ $hover-background: #f0f0f0;
   border: $border;
   outline: none;
   padding-left: 6px;
+  background: inherit;
   &:focus::placeholder {
     color: transparent;
   }
@@ -396,4 +397,8 @@ $hover-background: #f0f0f0;
       }
     }
   }
+}
+.ql-table-disabled {
+  background: #f2f2f2;
+  pointer-events: none;
 }
