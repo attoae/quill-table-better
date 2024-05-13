@@ -162,7 +162,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
         const attribute =
           selectedTds.length > 1
             ? this.getSelectedTdsAttrs(selectedTds)
-            : getElementStyle(selectedTds[0], cellProperties);
+            : this.getSelectedTdAttrs(selectedTds[0]);
         this.toggleAttribute(list, tooltip);
         this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'cell' });
         this.hideMenus();
@@ -277,11 +277,20 @@ class TableMenus {
     return { id, ref: null };
   }
 
+  getSelectedTdAttrs(td: HTMLElement) {
+    const align = Quill.find(td).children.head?.getAlign();
+    const attr: Props =
+      align
+        ? { ...getElementStyle(td, cellProperties), 'text-align': align }
+        : getElementStyle(td, cellProperties);
+    return attr;
+  }
+
   getSelectedTdsAttrs(selectedTds: HTMLElement[]) {
     const map = new Map();
     let attribute = null;
     for (const td of selectedTds) {
-      const attr = getElementStyle(td, cellProperties);
+      const attr = this.getSelectedTdAttrs(td);
       if (!attribute) {
         attribute = attr;
         continue;
