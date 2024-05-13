@@ -210,13 +210,13 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'dropdown',
             propertyName: 'border-style',
-            value: attribute['border-style'] || 'none',
+            value: attribute['border-style'],
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
           },
           {
             category: 'color',
             propertyName: 'border-color',
-            value: attribute['border-color'] || '',
+            value: attribute['border-color'],
             attribute: {
               type: 'text',
               placeholder: useLanguage('color')
@@ -227,7 +227,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'border-width',
-            value: convertUnitToInteger(attribute['border-width']) || '',
+            value: convertUnitToInteger(attribute['border-width']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('width')
@@ -243,7 +243,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'color',
             propertyName: 'background-color',
-            value: attribute['background-color'] || '',
+            value: attribute['background-color'],
             attribute: {
               type: 'text',
               placeholder: useLanguage('color')
@@ -259,7 +259,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'width',
-            value: convertUnitToInteger(attribute['width']) || '',
+            value: convertUnitToInteger(attribute['width']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('width')
@@ -270,7 +270,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'height',
-            value: convertUnitToInteger(attribute['height']) || '',
+            value: convertUnitToInteger(attribute['height']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('height')
@@ -281,7 +281,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'padding',
-            value: convertUnitToInteger(attribute['padding']) || '',
+            value: convertUnitToInteger(attribute['padding']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('padding')
@@ -297,7 +297,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'menus',
             propertyName: 'text-align',
-            value: attribute['text-align'] || 'center',
+            value: attribute['text-align'],
             menus: [
               { icon: alignLeftIcon, describe: useLanguage('alCellTxtL'), align: 'left' },
               { icon: alignCenterIcon, describe: useLanguage('alCellTxtC'), align: 'center' },
@@ -308,7 +308,7 @@ function getCellProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'menus',
             propertyName: 'vertical-align',
-            value: attribute['vertical-align'] || 'middle',
+            value: attribute['vertical-align'],
             menus: [
               { icon: alignTopIcon, describe: useLanguage('alCellTxtT'), align: 'top' },
               { icon: alignMiddleIcon, describe: useLanguage('alCellTxtM'), align: 'middle' },
@@ -331,13 +331,13 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'dropdown',
             propertyName: 'border-style',
-            value: attribute['border-style'] || 'none',
+            value: attribute['border-style'],
             options: ['dashed', 'dotted', 'double', 'groove', 'inset', 'none', 'outset', 'ridge', 'solid'],
           },
           {
             category: 'color',
             propertyName: 'border-color',
-            value: attribute['border-color'] || '',
+            value: attribute['border-color'],
             attribute: {
               type: 'text',
               placeholder: useLanguage('color')
@@ -348,7 +348,7 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'border-width',
-            value: convertUnitToInteger(attribute['border-width']) || '',
+            value: convertUnitToInteger(attribute['border-width']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('width')
@@ -364,7 +364,7 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'color',
             propertyName: 'background-color',
-            value: attribute['background-color'] || '',
+            value: attribute['background-color'],
             attribute: {
               type: 'text',
               placeholder: useLanguage('color')
@@ -380,7 +380,7 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'width',
-            value: convertUnitToInteger(attribute['width']) || '',
+            value: convertUnitToInteger(attribute['width']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('width')
@@ -391,7 +391,7 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'input',
             propertyName: 'height',
-            value: convertUnitToInteger(attribute['height']) || '',
+            value: convertUnitToInteger(attribute['height']),
             attribute: {
               type: 'text',
               placeholder: useLanguage('height')
@@ -402,7 +402,7 @@ function getTableProperties(attribute: Props, useLanguage: _useLanguage) {
           {
             category: 'menus',
             propertyName: 'align',
-            value: attribute['align'] || '',
+            value: attribute['align'],
             menus: [
               { icon: alignLeftIcon, describe: useLanguage('alTblL'), align: 'left' },
               { icon: alignCenterIcon, describe: useLanguage('tblC'), align: 'center' },

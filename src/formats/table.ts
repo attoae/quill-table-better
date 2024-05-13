@@ -23,6 +23,15 @@ class TableCellBlock extends Block {
     return node;
   }
 
+  getAlign() {
+    for (const name of this.domNode.classList) {
+      if (/ql-align-/.test(name)) {
+        return name.split('ql-align-')[1];
+      }
+    }
+    return '';
+  }
+
   format(name: string, value: string | Props) {
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
