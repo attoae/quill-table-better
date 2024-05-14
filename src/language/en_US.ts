@@ -36,5 +36,7 @@ export default {
   'save': 'Save',
   'cancel': 'Cancel',
   'colorMsg': 'The color is invalid. Try "#FF0000" or "rgb(255,0,0)" or "red".',
-  'dimsMsg': 'The value is invalid. Try "10px" or "2em" or simply "2".'
+  'dimsMsg': 'The value is invalid. Try "10px" or "2em" or simply "2".',
+  'colorPicker': 'Color picker',
+  'removeColor': 'Remove color'
 };

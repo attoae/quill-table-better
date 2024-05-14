@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.17.9",
+    "@jaames/iro": "^5.5.2",
     "@types/lodash.merge": "^4.6.7",
     "lodash.merge": "^4.6.2",
     "webpack-merge": "^5.8.0"

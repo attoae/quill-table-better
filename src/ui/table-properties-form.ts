@@ -2,7 +2,7 @@ import Quill from 'quill';
 import eraseIcon from '../assets/icon/erase.svg';
 import checkIcon from '../assets/icon/check.svg';
 import downIcon from '../assets/icon/down.svg';
-import platteIcon from '../assets/icon/platte.svg';
+import paletteIcon from '../assets/icon/palette.svg';
 import saveIcon from '../assets/icon/save.svg';
 import closeIcon from '../assets/icon/close.svg';
 import { getProperties } from '../config';
@@ -18,6 +18,7 @@ import {
   setElementAttribute
 } from '../utils';
 import { TableCellBlock } from '../formats/table';
+import iro from '@jaames/iro';
 
 interface Child {
   category: string
@@ -98,7 +99,7 @@ class TablePropertiesForm {
     this.tableMenus.updateMenus();
   }
 
-  createActionBtns() {
+  createActionBtns(listener: EventListener, showLabel: boolean) {
     const useLanguage = this.getUseLanguage();
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
@@ -106,19 +107,17 @@ class TablePropertiesForm {
     for (const { icon, label } of actionList) {
       const button = document.createElement('button');
       const iconContainer = document.createElement('span');
-      const labelContainer = document.createElement('span');
       iconContainer.innerHTML = icon;
-      labelContainer.innerText = useLanguage(label);
       button.appendChild(iconContainer);
-      button.appendChild(labelContainer);
+      setElementAttribute(button, { label });
+      if (showLabel) {
+        const labelContainer = document.createElement('span');
+        labelContainer.innerText = useLanguage(label);
+        button.appendChild(labelContainer);
+      }
       fragment.appendChild(button);
     }
-    container.addEventListener('click', e => {
-      const target = (
-        e.target as HTMLElement
-      ).closest('button').lastElementChild as HTMLSpanElement;
-      this.checkBtnsAction(target.innerText.toLowerCase());
-    });
+    container.addEventListener('click', e => listener(e));
     container.appendChild(fragment);
     return container;
   }
@@ -214,23 +213,33 @@ class TablePropertiesForm {
     return container;
   }
 
-  createColorPickerSelect(propertyName: string) {
+  createColorPickerIcon(svg: string, text: string, listener: EventListener) {
     const container = document.createElement('div');
-    const eraseContainer = document.createElement('div');
     const icon = document.createElement('span');
     const button = document.createElement('button');
+    icon.innerHTML = svg;
+    button.innerText = text;
+    container.classList.add('erase-container');
+    container.appendChild(icon);
+    container.appendChild(button);
+    button.addEventListener('click', listener);
+    return container;
+  }
+
+  createColorPickerSelect(propertyName: string) {
+    const useLanguage = this.getUseLanguage();
+    const container = document.createElement('div');
+    const remove = this.createColorPickerIcon(
+      eraseIcon,
+      useLanguage('removeColor'),
+      () => this.setAttribute(propertyName, '', container)
+    );
     const list = this.createColorList(propertyName);
-    icon.innerHTML = eraseIcon;
-    button.innerHTML = 'Remove color';
+    const palette = this.createPalette(propertyName, useLanguage, container);
     container.classList.add('color-picker-select', 'ql-hidden');
-    eraseContainer.classList.add('erase-container');
-    eraseContainer.appendChild(icon);
-    eraseContainer.appendChild(button);
-    container.appendChild(eraseContainer);
+    container.appendChild(remove);
     container.appendChild(list);
-    button.addEventListener('click', () => {
-      this.setAttribute(propertyName, '', container);
-    });
+    container.appendChild(palette);
     // container.addEventListener('blur', () => this.toggleHidden(container));
     return container;
   }
@@ -306,6 +315,55 @@ class TablePropertiesForm {
     return container;
   }
 
+  createPalette(propertyName: string, useLanguage: _useLanguage, parent: HTMLElement) {
+    const container = document.createElement('div');
+    const palette = document.createElement('div');
+    const wrap = document.createElement('div');
+    const iroContainer = document.createElement('div');
+    // @ts-ignore
+    const colorPicker = new iro.ColorPicker(iroContainer, {
+      width: 150,
+      layout: [
+        { 
+          component: iro.ui.Box,
+          options: {
+            boxHeight: 110
+          }
+        }
+      ]
+    });
+    const eraseContainer = this.createColorPickerIcon(
+      paletteIcon,
+      useLanguage('colorPicker'),
+      () => this.toggleHidden(palette)
+    );
+    const btns = this.createActionBtns(
+      (e: MouseEvent) => {
+        const target = (e.target as HTMLElement).closest('button');
+        const label = target.getAttribute('label');
+        if (label === 'save') {
+          this.setAttribute(
+            propertyName,
+            colorPicker.color.hexString,
+            parent
+          );
+        }
+        palette.classList.add('ql-hidden');
+        parent.classList.add('ql-hidden');
+      },
+      false
+    );
+    palette.classList.add('color-picker-palette', 'ql-hidden');
+    wrap.classList.add('color-picker-wrap')
+    iroContainer.classList.add('iro-container');
+    wrap.appendChild(iroContainer);
+    wrap.appendChild(btns);
+    palette.appendChild(wrap);
+    container.appendChild(eraseContainer);
+    container.appendChild(palette);
+    return container;
+  }
+
   createProperty(property: Properties) {
     const { content, children } = property;
     const useLanguage = this.getUseLanguage();
@@ -357,7 +415,13 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
-    const actions = this.createActionBtns();
+    const actions = this.createActionBtns(
+      (e: MouseEvent) => {
+        const target = (e.target as HTMLElement).closest('button');
+        this.checkBtnsAction(target.getAttribute('label'));
+      },
+      true
+    );
     header.innerText = title;
     header.classList.add('properties-form-header');
     container.appendChild(header);
