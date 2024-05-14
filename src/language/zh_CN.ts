@@ -36,5 +36,7 @@ export default {
   'save': '保存',
   'cancel': '取消',
   'colorMsg': '无效颜色，请使用 "#FF0000" 或者 "rgb(255,0,0)" 或者 "red"',
-  'dimsMsg': '无效值， 请使用 "10px" 或者 "2em" 或者 "2"'
+  'dimsMsg': '无效值， 请使用 "10px" 或者 "2em" 或者 "2"',
+  'colorPicker': '颜色选择器',
+  'removeColor': '删除颜色'
 };
