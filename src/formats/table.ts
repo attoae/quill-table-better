@@ -147,6 +147,21 @@ class TableCell extends Container {
     }
     return cur;
   }
+
+  optimize(...args: unknown[]) {
+    super.optimize(...args);
+    this.children.forEach((child: TableCellBlock) => {
+      if (child.next == null) return;
+      const childFormats = child.formats()[child.statics.blotName];
+      const nextFormats = child.next.formats()[child.statics.blotName];
+      if (childFormats !== nextFormats) {
+        const next = this.splitAfter(child);
+        if (next) next.optimize();
+        // We might be able to merge with prev now
+        if (this.prev) this.prev.optimize();
+      }
+    });
+  }
 }
 TableCell.blotName = 'table-cell';
 TableCell.tagName = 'TD';

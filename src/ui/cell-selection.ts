@@ -18,7 +18,7 @@ class CellSelection {
     this.endTd = null;
     this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
-    // document.addEventListener('keyup', this.handleKeyup.bind(this));
+    document.addEventListener('keyup', this.handleKeyup.bind(this));
   }
 
   clearSelected() {
@@ -51,6 +51,7 @@ class CellSelection {
           head = head.next;
         }
       }
+      this.quill.selection.setNativeRange(this.endTd);
     }
   }
 
