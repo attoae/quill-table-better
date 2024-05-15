@@ -59,6 +59,14 @@ class Table extends Module {
     this.quill.setSelection(offset, Quill.sources.SILENT);
   }
 
+  deleteTableTemporary() {
+    const temporaries = this.quill.scroll.descendants(TableTemporary);
+    for (const temporary of temporaries) {
+      temporary.remove();
+    }
+    this.hideTools();
+  }
+
   getTable(range = this.quill.getSelection()) {
     if (range == null) return [null, null, null, -1];
     const [block, offset] = this.quill.getLine(range.index);
@@ -83,15 +91,18 @@ class Table extends Module {
   insertTable(rows: number, columns: number) {
     const range = this.quill.getSelection();
     if (range == null) return;
+    const base = new Delta()
+      .retain(range.index)
+      .insert('\n', { [TableTemporary.blotName]: {} });
     const delta = new Array(rows).fill(0).reduce(memo => {
       const id = tableId();
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
-          'table-cell-block': cellId(),
-          'table-cell': { 'data-row': id }
+          [TableCellBlock.blotName]: cellId(),
+          [TableCell.blotName]: { 'data-row': id }
         });
       }, memo);
-    }, new Delta().retain(range.index));
+    }, base);
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(range.index, Quill.sources.SILENT);
   }
