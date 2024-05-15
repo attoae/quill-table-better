@@ -513,19 +513,21 @@ class TablePropertiesForm {
 
   saveTableAction() {
     const { table } = this.tableMenus;
+    const temporary = Quill.find(table).temporary()?.domNode;
+    const element = temporary || table;
     const attrs = this.getDiffProperties();
     const align = attrs['align'];
     delete attrs['align'];
-    setElementProperty(table, attrs);
+    setElementProperty(element, attrs);
     switch (align) {
       case 'center':
-        setElementProperty(table, { 'margin': '0 auto' });
+        setElementProperty(element, { 'margin': '0 auto' });
         break;
       case 'right':
-        setElementProperty(table, { 'margin-left': 'auto', 'margin-right': '' });
+        setElementProperty(element, { 'margin-left': 'auto', 'margin-right': '' });
         break;
       default:
-        setElementProperty(table, { 'margin': '' });
+        setElementProperty(element, { 'margin': '' });
         break;
     }
   }

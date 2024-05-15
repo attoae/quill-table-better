@@ -219,8 +219,23 @@ class TableTemporary extends Block {
     const formats = this.statics.formats(this.domNode, this.scroll);
     return { [this.statics.blotName]: formats };
   }
+
+  optimize(...args: unknown[]) {
+    if (
+      this.statics.requiredContainer &&
+      this.parent instanceof this.statics.requiredContainer
+    ) {
+      const formats = this.formats()[this.statics.blotName];
+      const keys = Object.keys(formats);
+      for (const key of keys) {
+        this.parent.domNode.setAttribute(key, formats[key]);
+      }
+    }
+    super.optimize(...args);
+  }
 }
 TableTemporary.blotName = 'table-temporary';
+TableTemporary.className = 'ql-table-temporary';
 TableTemporary.tagName = 'temporary';
 
 class TableCol extends Block {
@@ -259,27 +274,6 @@ TableColgroup.blotName = 'table-colgroup';
 TableColgroup.tagName = 'COLGROUP';
 
 class TableContainer extends Container {
-  constructor(scroll: any, domNode: HTMLElement) {
-    super(scroll, domNode);
-    const observerOptions = {
-      childList: true,
-      attributes: true
-    }
-    const observer = new MutationObserver(() => {
-      const temporary = this.children.head;
-      if (!temporary) return;
-      if (temporary.domNode.tagName === 'TEMPORARY') {
-        const formats = temporary.formats(temporary.domNode)[temporary.statics.blotName];
-        const keys = Object.keys(formats);
-        for (const key of keys) {
-          domNode.setAttribute(key, formats[key]);
-        }
-        temporary.remove();
-      }
-    });
-    observer.observe(domNode, observerOptions);
-  }
-
   colgroup() {
     const [colgroup] = this.descendant(TableColgroup);
     return colgroup;
@@ -466,6 +460,11 @@ class TableContainer extends Container {
     cell.appendChild(cellBlock);
     row.appendChild(cell);
     cellBlock.optimize();
+  }
+
+  temporary() {
+    const [temporary] = this.descendant(TableTemporary);
+    return temporary;
   }
 
   tbody() {

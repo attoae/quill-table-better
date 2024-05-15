@@ -42,6 +42,9 @@ $hover-background: #f0f0f0;
     color: transparent;
   }
 }
+.ql-table-temporary {
+  display: none;
+}
 
 /*mixin*/
 @mixin qlTableTooltip($color) {
