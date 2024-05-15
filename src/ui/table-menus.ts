@@ -17,7 +17,11 @@ import tableIcon from '../assets/icon/table.svg';
 import cellIcon from '../assets/icon/cell.svg';
 import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
-import { TableCell, TableRow } from '../formats/table';
+import {
+  TableCell,
+  TableCellBlock,
+  TableRow
+} from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
 import {
   cellDefaultValues,
@@ -434,6 +438,8 @@ class TableMenus {
     const { selectedTds } = this.tableBetter.cellSelection;
     const { computeBounds, leftTd } = this.getSelectedTdsInfo();
     const leftTdBlot = Quill.find(leftTd);
+    const head = leftTdBlot.children.head;
+    const cellId = head.formats()[head.statics.blotName];
     const tableBlot = leftTdBlot.table();
     const rows = tableBlot.tbody().children;
     const row = leftTdBlot.row();
@@ -465,6 +471,9 @@ class TableMenus {
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
       const blot = Quill.find(td);
+      blot.children.forEach((child: TableCellBlock) => {
+        child.format(child.statics.blotName, cellId);
+      });
       blot.moveChildren(leftTdBlot);
       blot.remove();
     }
