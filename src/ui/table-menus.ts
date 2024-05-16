@@ -363,14 +363,6 @@ class TableMenus {
       this.destroyTablePropertiesForm();
       return;
     } else {
-      // const cell = (e.target as Element).closest('td');
-      // const { left, right, top } = getCorrectBounds(cell, this.quill.container);
-      // this.root.classList.remove('ql-hidden');
-      // const { height } = this.root.getBoundingClientRect();
-      // setElementProperty(this.root, {
-      //   left: `${left}px`,
-      //   top: `${top - height - 10}px`
-      // });
       if (this.tablePropertiesForm) return;
       this.showMenus();
       if (table && !table.isEqualNode(this.table)) {
@@ -472,7 +464,7 @@ class TableMenus {
       if (leftTd.isEqualNode(td)) continue;
       const blot = Quill.find(td);
       blot.children.forEach((child: TableCellBlock) => {
-        child.format(child.statics.blotName, cellId);
+        child.format && child.format(child.statics.blotName, cellId);
       });
       blot.moveChildren(leftTdBlot);
       blot.remove();
