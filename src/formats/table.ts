@@ -151,10 +151,17 @@ class TableCell extends Container {
   optimize(...args: unknown[]) {
     super.optimize(...args);
     this.children.forEach((child: TableCellBlock) => {
-      if (child.next == null) return;
+      if (
+        child.next == null ||
+        child.next instanceof ListContainer ||
+        child.next instanceof TableHeader
+      ) return;
       const childFormats = child.formats()[child.statics.blotName];
-      const nextFormats = child.next.formats()[child.statics.blotName];
-      if (childFormats !== nextFormats) {
+      const nextFormats = child.next.formats()[child.next.statics.blotName];
+      if (
+        childFormats !== nextFormats &&
+        child.statics.blotName === TableCellBlock.blotName
+      ) {
         const next = this.splitAfter(child);
         if (next) next.optimize();
         // We might be able to merge with prev now
@@ -460,6 +467,17 @@ class TableContainer extends Container {
     cell.appendChild(cellBlock);
     row.appendChild(cell);
     cellBlock.optimize();
+  }
+
+  optimize(...args: unknown[]) {
+    super.optimize(...args);
+    const temporaries = this.descendants(TableTemporary);
+    if (temporaries.length > 1) {
+      temporaries.shift();
+      for (const temporary of temporaries) {
+        temporary.remove();
+      }
+    }
   }
 
   temporary() {

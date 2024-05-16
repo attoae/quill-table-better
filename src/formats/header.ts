@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import { TableCellBlock } from './table';
+import { getCellFormats } from '../utils';
 
 const Header = Quill.import('formats/header');
 
@@ -14,7 +15,8 @@ class TableHeader extends Header {
 
   format(name: string, value: string) {
     if (name === 'header') {
-      this.replaceWith(TableCellBlock.blotName);
+      const [, cellId] = getCellFormats(this.parent);
+      this.replaceWith(TableCellBlock.blotName, cellId);
     } else {
       super.format(name, value);
     }

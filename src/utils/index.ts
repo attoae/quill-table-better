@@ -1,5 +1,9 @@
 import Quill from 'quill';
-import { TableCell, TableCol } from '../formats/table';
+import {
+  TableCell,
+  TableCellBlock,
+  TableCol
+} from '../formats/table';
 import { colors } from '../config';
 
 interface Properties {
@@ -55,6 +59,18 @@ function debounce(cb: Function, delay: number) {
 
 function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
+}
+
+function getCellFormats(cellBlot: TableCell): [Props, string] {
+  const formats = TableCell.formats(cellBlot.domNode);
+  const [block] = cellBlot.descendant(TableCellBlock);
+  if (!block) {
+    const row = formats['data-row'].split('-')[1];
+    return [formats, `cell-${row}`];
+  } else {
+    const cellId = block.formats()[block.statics.blotName];
+    return [formats, cellId];
+  }
 }
 
 function getClosestElement(element: HTMLElement, selector: string) {
@@ -271,6 +287,7 @@ export {
   createTooltip,
   debounce,
   filterWordStyle,
+  getCellFormats,
   getClosestElement,
   getComputeBounds,
   getComputeSelectedCols,
