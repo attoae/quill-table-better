@@ -3,6 +3,7 @@ import Delta from 'quill-delta';
 import merge from 'lodash.merge';
 import {
   createTooltip,
+  getCellFormats,
   getCorrectBounds,
   getComputeBounds,
   getComputeSelectedCols,
@@ -430,8 +431,8 @@ class TableMenus {
     const { selectedTds } = this.tableBetter.cellSelection;
     const { computeBounds, leftTd } = this.getSelectedTdsInfo();
     const leftTdBlot = Quill.find(leftTd);
+    const [formats, cellId] = getCellFormats(leftTdBlot);
     const head = leftTdBlot.children.head;
-    const cellId = head.formats()[head.statics.blotName];
     const tableBlot = leftTdBlot.table();
     const rows = tableBlot.tbody().children;
     const row = leftTdBlot.row();
@@ -469,8 +470,7 @@ class TableMenus {
       blot.moveChildren(leftTdBlot);
       blot.remove();
     }
-    leftTdBlot.domNode.setAttribute('colspan', colspan);
-    leftTdBlot.domNode.setAttribute('rowspan', rowspan);
+    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
     this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
     this.quill.update(Quill.sources.USER);
     this.quill.scrollIntoView();
@@ -511,9 +511,13 @@ class TableMenus {
           tableBlot.insertColumnCell(rowBlot, id, nextBlot);
         }
       }
-      td.setAttribute('width', ~~(width / colspan));
-      td.removeAttribute('colspan');
-      td.removeAttribute('rowspan');
+      const [formats] = getCellFormats(blot);
+      blot.children.head.format(blot.statics.blotName, {
+        ...formats,
+        width: ~~(width / colspan),
+        colspan: null,
+        rowspan: null
+      });
     }
     this.quill.update(Quill.sources.USER);
     this.quill.scrollIntoView();
