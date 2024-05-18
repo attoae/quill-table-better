@@ -1,7 +1,7 @@
 {
   "name": "quill-table-better",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.0-dev.1",
+  "description": "A module that enhances the table functionality of Quill",
   "main": "dist/quill-table-better.js",
   "scripts": {
     "dev": "webpack-dev-server --config config/webpack.dev.js",
@@ -12,8 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/attoae/quill-table-better.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "quill",
+    "quill.js",
+    "quill-table"
+  ],
+  "author": "attoae",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/attoae/quill-table-better/issues"
