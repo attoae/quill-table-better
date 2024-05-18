@@ -6,10 +6,6 @@ import {
 } from '../formats/table';
 import { colors } from '../config';
 
-interface Properties {
-  [propertyName: string]: string
-}
-
 interface CorrectBound {
   left: number;
   top: number;
@@ -163,7 +159,7 @@ function getCorrectBounds(target: Element, container: Element) {
 function getElementStyle(node: HTMLElement, rules: string[]) {
   const computedStyle = getComputedStyle(node);
   const style = node.style;
-  return rules.reduce((styles: Properties, rule: string) => {
+  return rules.reduce((styles: Props, rule: string) => {
     styles[rule] = rgbToHex(
       style.getPropertyValue(rule) ||
       computedStyle.getPropertyValue(rule)
@@ -232,13 +228,13 @@ function rgbaToHex(value: string) {
   return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1) + a;
 }
 
-function setElementAttribute(node: Element, attributes: Properties) {
+function setElementAttribute(node: Element, attributes: Props) {
   for (const attribute in attributes) {
     node.setAttribute(attribute, attributes[attribute]);
   }
 }
 
-function setElementProperty(node: HTMLElement, properties: Properties) {
+function setElementProperty(node: HTMLElement, properties: Props) {
   const style = node.style;
   if (!style) {
     node.setAttribute('style', properties.toString());
