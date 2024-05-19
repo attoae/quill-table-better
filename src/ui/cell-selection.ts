@@ -38,20 +38,21 @@ class CellSelection {
   }
 
   handleKeyup(e: KeyboardEvent) {
-    if (this.selectedTds.length < 2) return;
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      for (const td of this.selectedTds) {
-        const tdBlot = Quill.find(td);
-        let head = tdBlot.children.head;
-        const cellId = head.formats()[TableCellBlock.blotName];
-        const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
-        tdBlot.insertBefore(cellBlock, head);
-        while (head) {
-          head.remove();
-          head = head.next;
-        }
-      }
-      this.quill.selection.setNativeRange(this.endTd);
+    switch (e.key) {
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        this.makeTableArrowLevelHandler(e.key);
+        break;
+      case 'ArrowUp':
+      case 'ArrowDown':
+        this.makeTableArrowVerticalHandler(e.key);
+        break;
+      case 'Backspace':
+      case 'Delete':
+        this.removeSelectedTdsContent();
+        break;
+      default:
+        break;
     }
   }
 
@@ -89,6 +90,84 @@ class CellSelection {
 
     this.quill.root.addEventListener('mousemove', handleMouseMove);
     this.quill.root.addEventListener('mouseup', handleMouseup);
+  }
+
+  makeTableArrowLevelHandler(key: string) {
+    const _key = key === 'ArrowLeft' ? 'prev' : 'next';
+    const td = key === 'ArrowLeft' ? this.startTd : this.endTd;
+    const cell = Quill.find(td);
+    if (cell[_key]) {
+      this.setSelected(cell[_key].domNode);
+    } else {
+      const targetRow = cell.parent[_key];
+      if (targetRow) {
+        const _key = key === 'ArrowLeft' ? 'tail' : 'head';
+        this.setSelected(targetRow.children[_key].domNode);
+      } else {
+        this.setSelected(td);
+      }
+    }
+  }
+
+  makeTableArrowVerticalHandler(key: string) {
+    const _key = key === 'ArrowUp' ? 'prev' : 'next';
+    const td = key === 'ArrowUp' ? this.startTd : this.endTd;
+    const cell = Quill.find(td);
+    const targetRow = cell.parent[_key];
+    const { left, right } = td.getBoundingClientRect();
+    const position = 'ArrowUp' ? left : right;
+    if (!targetRow) {
+      this.setSelected(td);
+    } else {
+      let selected = null;
+      let row = targetRow;
+      while (row && !selected) {
+        let ref = row.children.head;
+        while (ref) {
+          const { left, right } = ref.domNode.getBoundingClientRect();
+          if (Math.abs(left - position) <= 2) {
+            selected = ref.domNode;
+            break;
+          } else if (Math.abs(right - position) <= 2 && !ref.next) {
+            selected = ref.domNode;
+            break;
+          }
+          ref = ref.next;
+        }
+        row = row[_key];
+      }
+      this.setSelected(selected);
+    }
+  }
+
+  removeSelectedTdsContent() {
+    if (this.selectedTds.length < 2) return;
+    for (const td of this.selectedTds) {
+      const tdBlot = Quill.find(td);
+      let head = tdBlot.children.head;
+      const cellId = head.formats()[TableCellBlock.blotName];
+      const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
+      tdBlot.insertBefore(cellBlock, head);
+      while (head) {
+        head.remove();
+        head = head.next;
+      }
+    }
+    this.quill.selection.setNativeRange(this.endTd);
+  }
+
+  setSelected(target: Element) {
+    const cell = Quill.find(target);
+    this.clearSelected();
+    this.startTd = target;
+    this.endTd = target;
+    this.selectedTds = [target];
+    target.classList.add('ql-cell-focused');
+    this.quill.setSelection(
+      cell.offset(this.quill.scroll) + cell.length() - 1,
+      0,
+      Quill.sources.USER
+    );
   }
 }
 

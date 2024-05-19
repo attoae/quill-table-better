@@ -322,13 +322,11 @@ class TablePropertiesForm {
     const iroContainer = document.createElement('div');
     // @ts-ignore
     const colorPicker = new iro.ColorPicker(iroContainer, {
-      width: 150,
+      width: 110,
       layout: [
         { 
-          component: iro.ui.Box,
-          options: {
-            boxHeight: 110
-          }
+          component: iro.ui.Wheel,
+          options: {}
         }
       ]
     });
