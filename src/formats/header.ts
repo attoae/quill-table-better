@@ -23,8 +23,8 @@ class TableHeader extends Header {
   }
 }
 
-Quill.register({
-  'formats/table-header': TableHeader
-}, true);
+// Quill.register({
+//   'formats/table-header': TableHeader
+// }, true);
 
 export default TableHeader;
