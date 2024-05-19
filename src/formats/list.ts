@@ -37,9 +37,9 @@ class TableList extends List {
 TableList.blotName = 'table-list';
 TableList.className = 'table-list';
 
-Quill.register({
-  'formats/table-list': TableList
-}, true);
+// Quill.register({
+//   'formats/table-list': TableList
+// }, true);
 
 ListContainer.allowedChildren = [TableList];
 TableList.requiredContainer = ListContainer;
