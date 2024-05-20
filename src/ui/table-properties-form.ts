@@ -431,6 +431,10 @@ class TablePropertiesForm {
     this.setBorderDisabled();
     this.tableMenus.quill.container.appendChild(container);
     this.updatePropertiesForm(container, options.type);
+    container.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      this.hiddenSelectList(target);
+    });
     return container;
   }
 
@@ -466,6 +470,22 @@ class TablePropertiesForm {
     const { language } = this.tableMenus.tableBetter;
     const useLanguage = language.useLanguage.bind(language);
     return useLanguage;
+  }
+
+  hiddenSelectList(element: HTMLElement) {
+    const listClassName = '.ql-table-dropdown-properties';
+    const colorClassName = '.color-picker';
+    const list = this.form.querySelectorAll('.ql-table-dropdown-list');
+    const colorPicker = this.form.querySelectorAll('.color-picker-select');
+    for (const node of [...list, ...colorPicker]) {
+      if (
+        node.closest(listClassName)?.isEqualNode(element.closest(listClassName)) ||
+        node.closest(colorClassName)?.isEqualNode(element.closest(colorClassName))
+      ) {
+        continue;
+      }
+      node.classList.add('ql-hidden');
+    }
   }
 
   removePropertiesForm() {
