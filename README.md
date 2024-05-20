@@ -5,6 +5,7 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 [quill.js](https://quilljs.com/) ">= v2.0.0"
 
 ## Quickstart
+npm
 ```html
 import QuillTableBetter from 'quill-table-better';
 import 'quill-table-better/dist/quill-table-better.css'
@@ -23,6 +24,32 @@ const options = {
     }
   }
 };
+```
+cdn
+```html
+<link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/quill-table-better/dist/quill-table-better.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-table-better/dist/quill-table-better.js"></script>
+
+<div id="root"></div>
+<script>
+  Quill.register({
+    'modules/table-better': QuillTableBetter
+  }, true);
+
+  const options = {
+    theme: 'snow',
+    modules: {
+      table: false,
+      'table-better': {},
+      keyboard: {
+        bindings: QuillTableBetter.keyboardBindings
+      }
+    }
+  };
+  const quill = new Quill('#root', options);
+</script>
 ```
 
 ## Conifg
