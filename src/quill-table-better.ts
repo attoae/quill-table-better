@@ -23,6 +23,10 @@ import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 
+interface Options extends Props {
+  language: string
+}
+
 const Module = Quill.import('core/module');
 
 class Table extends Module {
@@ -37,7 +41,7 @@ class Table extends Module {
     Quill.register(TableColgroup, true);
   }
 
-  constructor(quill: any, options: any) {
+  constructor(quill: any, options: Options) {
     super(quill, options);
     quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
