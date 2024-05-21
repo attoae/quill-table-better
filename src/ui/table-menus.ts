@@ -392,7 +392,7 @@ class TableMenus {
       tableBlot.insertColumn(left);
     }
     this.quill.update(Quill.sources.USER);
-    this.quill.scrollIntoView();
+    this.quill.scrollSelectionIntoView();
   }
 
   insertParagraph(offset: number) {
@@ -407,7 +407,7 @@ class TableMenus {
       index + length,
       Quill.sources.SILENT,
     );
-    this.quill.scrollIntoView();
+    this.quill.scrollSelectionIntoView();
     this.hideMenus();
     this.destroyTablePropertiesForm();
     this.tableBetter.cellSelection.clearSelected();
@@ -424,7 +424,7 @@ class TableMenus {
       tableBlot.insertRow(index + offset, offset);
     }
     this.quill.update(Quill.sources.USER);
-    this.quill.scrollIntoView();
+    this.quill.scrollSelectionIntoView();
   }
 
   mergeCells() {
@@ -471,13 +471,20 @@ class TableMenus {
       blot.remove();
     }
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
-    this.tableBetter.cellSelection.selectedTds = [leftTdBlot.domNode];
     this.quill.update(Quill.sources.USER);
-    this.quill.scrollIntoView();
+    this.tableBetter.cellSelection.setSelected(head.parent.domNode);
+    this.quill.scrollSelectionIntoView();
+  }
+
+  showMenus() {
+    this.root.classList.remove('ql-hidden');
   }
 
   splitCell() {
     const { selectedTds } = this.tableBetter.cellSelection;
+    const { leftTd } = this.getSelectedTdsInfo();
+    const leftTdBlot = Quill.find(leftTd);
+    const head = leftTdBlot.children.head;
     for (const td of selectedTds) {
       const colspan = ~~td.getAttribute('colspan') || 1;
       const rowspan = ~~td.getAttribute('rowspan') || 1;
@@ -520,16 +527,8 @@ class TableMenus {
       });
     }
     this.quill.update(Quill.sources.USER);
-    this.quill.scrollIntoView();
-  }
-
-  updateMenus(table: Element = this.table) {
-    const { left, right, top } = getCorrectBounds(table, this.quill.container);
-    const { height, width } = this.root.getBoundingClientRect();
-    setElementProperty(this.root, {
-      left: `${(left + right - width) >> 1}px`,
-      top: `${top - height - 10}px`
-    });
+    this.tableBetter.cellSelection.setSelected(head.parent.domNode);
+    this.quill.scrollSelectionIntoView();
   }
 
   toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement) {
@@ -544,8 +543,13 @@ class TableMenus {
     this.prevTooltip = tooltip;
   }
 
-  showMenus() {
-    this.root.classList.remove('ql-hidden');
+  updateMenus(table: Element = this.table) {
+    const { left, right, top } = getCorrectBounds(table, this.quill.container);
+    const { height, width } = this.root.getBoundingClientRect();
+    setElementProperty(this.root, {
+      left: `${(left + right - width) >> 1}px`,
+      top: `${top - height - 10}px`
+    });
   }
 }
 

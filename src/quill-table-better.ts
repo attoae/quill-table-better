@@ -108,7 +108,15 @@ class Table extends Module {
       }, memo);
     }, base);
     this.quill.updateContents(delta, Quill.sources.USER);
-    this.quill.setSelection(range.index, Quill.sources.SILENT);
+    this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+    this.showTools();
+  }
+
+  private showTools() {
+    const [table, , cell] = this.getTable();
+    this.cellSelection.setSelected(cell.domNode);
+    this.tableMenus.showMenus();
+    this.tableMenus.updateMenus(table.domNode);
   }
 }
 
