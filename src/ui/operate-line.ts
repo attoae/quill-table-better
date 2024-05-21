@@ -363,7 +363,7 @@ class OperateLine {
       this.drag = false;
       document.removeEventListener('mousemove', handleDrag, false);
       document.removeEventListener('mouseup', handleMouseup, false);
-      this.tableBetter.tableMenus.updateMenus();
+      this.tableBetter.tableMenus.updateMenus(tableNode);
     }
 
     const handleMousedown = (e: MouseEvent) => {
