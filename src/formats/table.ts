@@ -375,7 +375,7 @@ class TableContainer extends Container {
     }, 0);
   }
 
-  insertColumn(position: number, isLast?: boolean) {
+  insertColumn(position: number, isLast: boolean, w: number) {
     const colgroup = this.colgroup();
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
@@ -396,6 +396,10 @@ class TableContainer extends Container {
             break;
           } else if (Math.abs(right - position) <= 2 && !ref.next) {
             columnCells.push([row, id, null]);
+            break;
+          // rowspan > 1 (insertLeft, position + w is left)
+          } else if (Math.abs(left - position - w) <= 2) {
+            columnCells.push([row, id, ref]);
             break;
           }
           ref = ref.next;
