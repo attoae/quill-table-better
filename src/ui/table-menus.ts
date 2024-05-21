@@ -378,18 +378,14 @@ class TableMenus {
   }
 
   insertColumn(td: HTMLTableColElement, offset: number) {
-    const { left, right } = td.getBoundingClientRect();
+    const { left, right, width } = td.getBoundingClientRect();
     const tdBlot = Quill.find(td);
     const tableBlot = tdBlot.table();
+    const isLast = td.parentElement.lastChild.isEqualNode(td);
     if (offset > 0) {
-      const isLast = td.parentElement.lastChild.isEqualNode(td);
-      if (isLast) {
-        tableBlot.insertColumn(right, isLast);
-      } else {
-        tableBlot.insertColumn(right);
-      }
+      tableBlot.insertColumn(right, isLast, width);
     } else {
-      tableBlot.insertColumn(left);
+      tableBlot.insertColumn(left, isLast, width);
     }
     this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
