@@ -34,7 +34,7 @@ class CellSelection {
     // Cell are deleted when deleting
     const { index, length } = this.quill.getSelection(true);
     this.quill.setSelection(index, length - 1, Quill.sources.SILENT);
-    this.quill.scrollIntoView();
+    this.quill.scrollSelectionIntoView();
   }
 
   handleKeyup(e: KeyboardEvent) {
