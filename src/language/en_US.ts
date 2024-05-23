@@ -38,5 +38,20 @@ export default {
   'colorMsg': 'The color is invalid. Try "#FF0000" or "rgb(255,0,0)" or "red".',
   'dimsMsg': 'The value is invalid. Try "10px" or "2em" or simply "2".',
   'colorPicker': 'Color picker',
-  'removeColor': 'Remove color'
+  'removeColor': 'Remove color',
+  'black': 'Black',
+  'dimGrey': 'Dim grey',
+  'grey': 'Grey',
+  'lightGrey': 'Light grey',
+  'white': 'White',
+  'red': 'Red',
+  'orange': 'Orange',
+  'yellow': 'Yellow',
+  'lightGreen': 'Light green',
+  'green': 'Green',
+  'aquamarine': 'Aquamarine',
+  'turquoise': 'Turquoise',
+  'lightBlue': 'Light blue',
+  'blue': 'Blue',
+  'purple': 'Purple'
 };

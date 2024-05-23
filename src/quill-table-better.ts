@@ -117,6 +117,7 @@ class Table extends Module {
     this.cellSelection.setSelected(cell.domNode);
     this.tableMenus.showMenus();
     this.tableMenus.updateMenus(table.domNode);
+    this.tableMenus.updateTable(table.domNode);
   }
 }
 
