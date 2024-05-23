@@ -38,5 +38,20 @@ export default {
   'colorMsg': '无效颜色，请使用 "#FF0000" 或者 "rgb(255,0,0)" 或者 "red"',
   'dimsMsg': '无效值， 请使用 "10px" 或者 "2em" 或者 "2"',
   'colorPicker': '颜色选择器',
-  'removeColor': '删除颜色'
+  'removeColor': '删除颜色',
+  'black': '黑色',
+  'dimGrey': '暗灰色',
+  'grey': '灰色',
+  'lightGrey': '浅灰色',
+  'white': '白色',
+  'red': '红色',
+  'orange': '橙色',
+  'yellow': '黄色',
+  'lightGreen': '浅绿色',
+  'green': '绿色',
+  'aquamarine': '海蓝色',
+  'turquoise': '青绿色',
+  'lightBlue': '浅蓝色',
+  'blue': '蓝色',
+  'purple': '紫色'
 };

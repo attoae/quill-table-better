@@ -54,21 +54,21 @@ interface ColorList {
 }
 
 const colorList: ColorList[] = [
-  { value: '#000000', describe: 'Black' },
-  { value: '#4d4d4d', describe: 'Dim grey' },
-  { value: '#808080', describe: 'Grey' },
-  { value: '#e6e6e6', describe: 'Light grey' },
-  { value: '#ffffff', describe: 'White' },
-  { value: '#ff0000', describe: 'Red' },
-  { value: '#ffa500', describe: 'Orange' },
-  { value: '#ffff00', describe: 'Yellow' },
-  { value: '#99e64d', describe: 'Light green' },
-  { value: '#008000', describe: 'Green' },
-  { value: '#7fffd4', describe: 'Aquamarine' },
-  { value: '#40e0d0', describe: 'Turquoise' },
-  { value: '#4d99e6', describe: 'Light blue' },
-  { value: '#0000ff', describe: 'Blue' },
-  { value: '#800080', describe: 'Purple' }
+  { value: '#000000', describe: 'black' },
+  { value: '#4d4d4d', describe: 'dimGrey' },
+  { value: '#808080', describe: 'grey' },
+  { value: '#e6e6e6', describe: 'lightGrey' },
+  { value: '#ffffff', describe: 'white' },
+  { value: '#ff0000', describe: 'red' },
+  { value: '#ffa500', describe: 'orange' },
+  { value: '#ffff00', describe: 'yellow' },
+  { value: '#99e64d', describe: 'lightGreen' },
+  { value: '#008000', describe: 'green' },
+  { value: '#7fffd4', describe: 'aquamarine' },
+  { value: '#40e0d0', describe: 'turquoise' },
+  { value: '#4d99e6', describe: 'lightBlue' },
+  { value: '#0000ff', describe: 'blue' },
+  { value: '#800080', describe: 'purple' }
 ];
 
 const actionList = [
@@ -168,12 +168,13 @@ class TablePropertiesForm {
   }
 
   createColorList(propertyName: string) {
+    const useLanguage = this.getUseLanguage();
     const container = document.createElement('ul');
     const fragment = document.createDocumentFragment();
     container.classList.add('color-list');
     for (const { value, describe } of colorList) {
       const li = document.createElement('li');
-      const tooltip = createTooltip(describe);
+      const tooltip = createTooltip(useLanguage(describe));
       li.setAttribute('data-color', value);
       li.classList.add('ql-table-tooltip-hover');
       setElementProperty(li, { background: value });
