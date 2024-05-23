@@ -539,13 +539,17 @@ class TableMenus {
     this.prevTooltip = tooltip;
   }
 
-  updateMenus(table: Element = this.table) {
+  updateMenus(table: HTMLTableElement = this.table) {
     const { left, right, top } = getCorrectBounds(table, this.quill.container);
     const { height, width } = this.root.getBoundingClientRect();
     setElementProperty(this.root, {
       left: `${(left + right - width) >> 1}px`,
       top: `${top - height - 10}px`
     });
+  }
+
+  updateTable(table: HTMLTableElement) {
+    this.table = table;
   }
 }
 
