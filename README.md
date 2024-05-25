@@ -1,6 +1,9 @@
 # quill-table-better
 A module that enhances the table functionality of [Quill](https://quilljs.com/).
 
+## Demo
+[quill-table-better Codepen Demo](https://codepen.io/attoae/pen/WNBGjZp)
+
 ## Dependencies
 [quill.js](https://quilljs.com/) ">= v2.0.0"
 
