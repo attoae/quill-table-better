@@ -103,7 +103,7 @@ class Table extends Module {
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
           [TableCellBlock.blotName]: cellId(),
-          [TableCell.blotName]: { 'data-row': id }
+          [TableCell.blotName]: { 'data-row': id, width: '72' }
         });
       }, memo);
     }, base);
