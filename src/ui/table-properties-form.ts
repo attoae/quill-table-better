@@ -531,24 +531,25 @@ class TablePropertiesForm {
   }
 
   saveTableAction() {
-    const { table } = this.tableMenus;
+    const { table, tableBetter } = this.tableMenus;
     const temporary = Quill.find(table).temporary()?.domNode;
-    const element = temporary || table;
+    const td = table.querySelector('td');
     const attrs = this.getDiffProperties();
     const align = attrs['align'];
     delete attrs['align'];
-    setElementProperty(element, attrs);
     switch (align) {
       case 'center':
-        setElementProperty(element, { 'margin': '0 auto' });
+        Object.assign(attrs, { 'margin': '0 auto' });
         break;
       case 'right':
-        setElementProperty(element, { 'margin-left': 'auto', 'margin-right': '' });
+        Object.assign(attrs, { 'margin-left': 'auto', 'margin-right': '' });
         break;
       default:
-        setElementProperty(element, { 'margin': '' });
+        Object.assign(attrs, { 'margin': '' });
         break;
     }
+    setElementProperty(temporary || table, attrs);
+    tableBetter.cellSelection.setSelected(td);
   }
 
   setAttribute(propertyName: string, value: string, container?: HTMLElement) {
