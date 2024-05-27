@@ -233,9 +233,12 @@ class TableTemporary extends Block {
       this.parent instanceof this.statics.requiredContainer
     ) {
       const formats = this.formats()[this.statics.blotName];
-      const keys = Object.keys(formats);
-      for (const key of keys) {
-        this.parent.domNode.setAttribute(key, formats[key]);
+      for (const key of TABLE_ATTRIBUTE) {
+        if (formats[key]) {
+          this.parent.domNode.setAttribute(key, formats[key]);
+        } else {
+          this.parent.domNode.removeAttribute(key);
+        }
       }
     }
     super.optimize(...args);
