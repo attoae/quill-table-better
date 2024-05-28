@@ -508,7 +508,7 @@ class TablePropertiesForm {
   saveCellAction() {
     const { selectedTds } = this.tableMenus.tableBetter.cellSelection;
     const { quill, table } = this.tableMenus;
-    const colgroup = Quill.find(selectedTds[0]).table().colgroup();
+    const colgroup = Quill.find(table).colgroup();
     const attrs = this.getDiffProperties();
     const width = parseFloat(attrs['width']);
     const align = attrs['text-align'];
