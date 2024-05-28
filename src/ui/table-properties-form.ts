@@ -96,7 +96,7 @@ class TablePropertiesForm {
     }
     this.removePropertiesForm();
     this.tableMenus.showMenus();
-    this.tableMenus.updateMenus();
+    Promise.resolve().then(() => this.tableMenus.updateMenus());
   }
 
   createActionBtns(listener: EventListener, showLabel: boolean) {
@@ -541,11 +541,13 @@ class TablePropertiesForm {
       case 'center':
         Object.assign(attrs, { 'margin': '0 auto' });
         break;
+      case 'left':
+        Object.assign(attrs, { 'margin': '' });
+        break;
       case 'right':
         Object.assign(attrs, { 'margin-left': 'auto', 'margin-right': '' });
         break;
       default:
-        Object.assign(attrs, { 'margin': '' });
         break;
     }
     setElementProperty(temporary || table, attrs);

@@ -286,7 +286,7 @@ TableColgroup.tagName = 'COLGROUP';
 class TableContainer extends Container {
   colgroup() {
     const [colgroup] = this.descendant(TableColgroup);
-    return colgroup;
+    return colgroup || this.findChild('table-colgroup');
   }
 
   deleteColumn(cells: Element[], hideMenus: () => void, cols: Element[] = []) {
@@ -326,6 +326,17 @@ class TableContainer extends Container {
 
   deleteTable() {
     this.remove();
+  }
+
+  findChild(blotName: string) {
+    let child = this.children.head;
+    while (child) {
+      if (child.statics.blotName === blotName) {
+        return child;
+      }
+      child = child.next;
+    }
+    return null;
   }
 
   getCorrectRow(prev: TableRow, maxColumns: number) {
@@ -494,14 +505,7 @@ class TableContainer extends Container {
 
   tbody() {
     const [body] = this.descendant(TableBody);
-    if(body) return body;
-    let child = this.children.head;
-    while (child) {
-      if (child.statics.blotName === 'table-body') {
-        return child;
-      }
-      child = child.next;
-    }
+    return body || this.findChild('table-body');
   }
 }
 TableContainer.blotName = 'table-container';
