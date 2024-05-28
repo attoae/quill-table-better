@@ -415,6 +415,10 @@ class TableContainer extends Container {
           } else if (Math.abs(left - position - w) <= 2) {
             columnCells.push([row, id, ref]);
             break;
+          // rowspan > 1 (position between left and right, rowspan++)
+          } else if (position > left && position < right) {
+            columnCells.push([null, id, ref]);
+            break;
           }
           ref = ref.next;
         }
@@ -445,7 +449,11 @@ class TableContainer extends Container {
       }
     }
     for (const [row, id, ref] of columnCells) {
-      this.insertColumnCell(row, id, ref);
+      if (!row) {
+        this.setCellColspan(ref, 1);
+      } else {
+        this.insertColumnCell(row, id, ref);
+      }
     }
     for (const [colgroup, ref] of cols) {
       this.insertCol(colgroup, ref);
@@ -496,6 +504,13 @@ class TableContainer extends Container {
         temporary.remove();
       }
     }
+  }
+
+  setCellColspan(cell: TableCell, offset: number) {
+    const blotName = cell.statics.blotName;
+    const formats = cell.formats()[blotName];
+    const colspan = (~~formats['colspan'] || 1) + offset;
+    cell.children.head.format(blotName, { ...formats, colspan });
   }
 
   temporary() {

@@ -82,6 +82,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
             const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
             const tableBlot = Quill.find(leftTd).table();
             tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this), deleteCols);
+            this.updateMenus();
           }
         }
       }
@@ -387,6 +388,7 @@ class TableMenus {
     } else {
       tableBlot.insertColumn(left, isLast, width);
     }
+    this.updateMenus();
     this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
   }
