@@ -6,15 +6,6 @@ import {
 } from '../formats/table';
 import { colors } from '../config';
 
-interface CorrectBound {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-  width?: number;
-  height?: number;
-}
-
 const DEVIATION = 2;
 
 function addDimensionsUnit(value: string) {
@@ -118,6 +109,16 @@ function getComputeSelectedTds(
         if (
           left + DEVIATION >= computeBounds.left &&
           left - DEVIATION + width <= computeBounds.right
+        ) {
+          selectedTds.push(tableCell.domNode);
+        } else if (
+          left + DEVIATION < computeBounds.right &&
+          computeBounds.right < left - DEVIATION + width
+        ) {
+          selectedTds.push(tableCell.domNode);
+        } else if (
+          computeBounds.left > left + DEVIATION &&
+          computeBounds.left < left - DEVIATION + width
         ) {
           selectedTds.push(tableCell.domNode);
         }
