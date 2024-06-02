@@ -77,11 +77,12 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
         delete: {
           content: useLanguage('delCol'),
           handler() {
-            const { computeBounds, leftTd } = this.getSelectedTdsInfo();
+            const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
             const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
             const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
             const tableBlot = Quill.find(leftTd).table();
-            tableBlot.deleteColumn(deleteTds, this.hideMenus.bind(this), deleteCols);
+            const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
+            tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
             this.updateMenus();
           }
         }
@@ -268,6 +269,48 @@ class TableMenus {
     if (!this.tablePropertiesForm) return;
     this.tablePropertiesForm.removePropertiesForm();
     this.tablePropertiesForm = null;
+  }
+
+  getCellOffset(cell: Element, position: number, key: string) {
+    let num = 0;
+    let blot = Quill.find(cell);
+    while (blot) {
+      const { left, right } = getCorrectBounds(blot.domNode, this.quill.container);
+      if (
+        (key === 'next' && left >= position) ||
+        (key === 'prev' && right <= position)
+      ) {
+        break;
+      }
+      const colspan = ~~blot.domNode.getAttribute('colspan') || 1;
+      num += colspan;
+      blot = blot[key];
+    }
+    return -num;
+  }
+
+  getCorrectTds(
+    deleteTds: Element[],
+    computeBounds: CorrectBound,
+    leftTd: HTMLTableCellElement,
+    rightTd: HTMLTableCellElement
+  ) {
+    const changeTds = [];
+    const delTds = [];
+    const parent = Quill.find(leftTd).parent;
+    for (const td of deleteTds) {
+      const { left, right } = getCorrectBounds(td, this.quill.container);
+      if (left < computeBounds.left) {
+        const offset = this.getCellOffset(leftTd, right, 'next');
+        changeTds.push([td, offset]);
+      } else if (right > computeBounds.right) {
+        const offset = this.getCellOffset(rightTd, left, 'prev');
+        changeTds.push([td, offset]);
+      } else {
+        delTds.push(td);
+      }
+    }
+    return { changeTds, delTds };
   }
 
   getRefInfo(row: TableRow, right: number) {
