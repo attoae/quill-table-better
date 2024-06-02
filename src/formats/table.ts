@@ -57,7 +57,11 @@ TableCellBlock.tagName = 'P';
 
 class TableCell extends Container {
   checkMerge() {
-    if (super.checkMerge() && this.next.children.head != null) {
+    if (
+      super.checkMerge() &&
+      this.next.children.head != null &&
+      this.next.children.head.formats
+    ) {
       const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
       const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
@@ -175,7 +179,11 @@ TableCell.tagName = 'TD';
 
 class TableRow extends Container {
   checkMerge() {
-    if (super.checkMerge() && this.next.children.head != null) {
+    if (
+      super.checkMerge() &&
+      this.next.children.head != null &&
+      this.next.children.head.formats
+    ) {
       const thisHead = this.children.head.formats()[this.children.head.statics.blotName];
       const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
@@ -289,16 +297,27 @@ class TableContainer extends Container {
     return colgroup || this.findChild('table-colgroup');
   }
 
-  deleteColumn(cells: Element[], hideMenus: () => void, cols: Element[] = []) {
+  deleteColumn(
+    changeTds: [Element, number][],
+    delTds: Element[],
+    hideMenus: () => void,
+    cols: Element[] = []
+  ) {
     const body = this.tbody();
     const tableCells = this.descendants(TableCell);
     if (body == null || body.children.head == null) return;
-    if (cells.length === tableCells.length) {
+    if (delTds.length === tableCells.length) {
       this.deleteTable();
       hideMenus();
     } else {
-      for (const td of [...cells, ...cols]) {
+      for (const td of [...delTds, ...cols]) {
+        if (td.parentElement.children.length === 1) {
+          this.setCellRowspan(td.parentElement.previousElementSibling);
+        }
         td.remove();
+      }
+      for (const [td, offset] of changeTds) {
+        this.setCellColspan(Quill.find(td), offset);
       }
     }
   }
@@ -487,6 +506,8 @@ class TableContainer extends Container {
   insertTableCell(colspan: number, formats: Props, row: TableRow) {
     if (colspan > 1) {
       Object.assign(formats, { colspan });
+    } else {
+      delete formats['colspan'];
     }
     const cell = this.scroll.create(TableCell.blotName, formats);
     const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
@@ -510,18 +531,45 @@ class TableContainer extends Container {
     const blotName = cell.statics.blotName;
     const formats = cell.formats()[blotName];
     const colspan = (~~formats['colspan'] || 1) + offset;
-    cell.children.head.format(blotName, { ...formats, colspan });
+    if (colspan > 1) {
+      Object.assign(formats, { colspan });
+    } else {
+      delete formats['colspan'];
+    }
+    cell.children.head.format(blotName, formats);
   }
 
-  temporary() {
-    const [temporary] = this.descendant(TableTemporary);
-    return temporary;
+  setCellRowspan(parentElement: Element) {
+    while (parentElement) {
+      const children = parentElement.querySelectorAll('td[rowspan]');
+      if (children.length) {
+        for (const child of children) {
+          const cell = Quill.find(child);
+          const blotName = cell.statics.blotName;
+          const formats = cell.formats()[blotName];
+          const rowspan = (~~formats['rowspan'] || 1) - 1;
+          if (rowspan > 1) {
+            Object.assign(formats, { rowspan });
+          } else {
+            delete formats['rowspan'];
+          }
+          cell.children.head.format(blotName, formats);
+        }
+        break;
+      }
+      parentElement = parentElement.previousElementSibling;
+    }
   }
 
   tbody() {
     const [body] = this.descendant(TableBody);
     return body || this.findChild('table-body');
   }
+
+  temporary() {
+    const [temporary] = this.descendant(TableTemporary);
+    return temporary;
+  } 
 }
 TableContainer.blotName = 'table-container';
 TableContainer.className = 'ql-table-better';
