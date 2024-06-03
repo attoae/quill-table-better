@@ -241,7 +241,6 @@ class TablePropertiesForm {
     container.appendChild(remove);
     container.appendChild(list);
     container.appendChild(palette);
-    // container.addEventListener('blur', () => this.toggleHidden(container));
     return container;
   }
 
@@ -523,10 +522,12 @@ class TablePropertiesForm {
     }
     for (const td of selectedTds) {
       setElementProperty(td, attrs);
-      const tdBlot = Quill.find(td);
-      tdBlot.children.forEach((child: TableCellBlock) => {
-        child.format('align', align === 'left' ? '' : align);
-      });
+      if (align) {
+        const tdBlot = Quill.find(td);
+        tdBlot.children.forEach((child: TableCellBlock) => {
+          child.format('align', align === 'left' ? '' : align);
+        });
+      }
     }
   }
 
