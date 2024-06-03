@@ -51,6 +51,7 @@ class Table extends Module {
     this.cellSelection = new CellSelection(quill);
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
+    document.addEventListener('keyup', this.handleKeyup.bind(this));
   }
 
   deleteTable() {
@@ -81,6 +82,13 @@ class Table extends Module {
     const row = cell.parent;
     const table = row.parent.parent;
     return [table, row, cell, offset];
+  }
+
+  handleKeyup(e: KeyboardEvent) {
+    this.cellSelection.handleKeyup(e);
+    if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
+      this.hideTools();
+    }
   }
 
   hideTools() {
