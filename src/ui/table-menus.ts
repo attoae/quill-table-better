@@ -21,6 +21,7 @@ import downIcon from '../assets/icon/down.svg';
 import {
   TableCell,
   TableCellBlock,
+  TableCol,
   TableRow
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
@@ -65,6 +66,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
           handler() {
             const { leftTd } = this.getSelectedTdsInfo();
             this.insertColumn(leftTd, 0);
+            this.updateTableStyle();
           }
         },
         right: {
@@ -72,6 +74,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
           handler() {
             const { rightTd } = this.getSelectedTdsInfo();
             this.insertColumn(rightTd, 1);
+            this.updateTableStyle();
           }
         },
         delete: {
@@ -83,6 +86,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
             const tableBlot = Quill.find(leftTd).table();
             const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
             tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
+            this.updateTableStyle();
             this.updateMenus();
           }
         }
@@ -272,7 +276,7 @@ class TableMenus {
   }
 
   getCellOffset(cell: Element, position: number, key: string) {
-    let num = 0;
+    let offset = 0;
     let blot = Quill.find(cell);
     while (blot) {
       const { left, right } = getCorrectBounds(blot.domNode, this.quill.container);
@@ -283,10 +287,41 @@ class TableMenus {
         break;
       }
       const colspan = ~~blot.domNode.getAttribute('colspan') || 1;
-      num += colspan;
+      offset -= colspan;
       blot = blot[key];
     }
-    return -num;
+    return offset;
+  }
+
+  getColsOffset(
+    colgroup: TableCol,
+    computeBounds: CorrectBound,
+    bounds: CorrectBound
+  ) {
+    let col = colgroup.children.head;
+    const { left, right } = bounds;
+    const _left = Math.max(left, computeBounds.left);
+    const _right = Math.min(right, computeBounds.right);
+    let colLeft = null;
+    let colRight = null;
+    let offset = 0;
+    while (col) {
+      const { width } = col.domNode.getBoundingClientRect();
+      if (!colLeft && !colRight) {
+        const colBounds = getCorrectBounds(col.domNode, this.quill.container);
+        colLeft = colBounds.left;
+        colRight = colLeft + width;
+      } else {
+        colLeft = colRight;
+        colRight += width;
+      }
+      if (colLeft > _right) break;
+      if (colLeft >= _left && colRight <= _right) {
+        offset--;
+      }
+      col = col.next;
+    }
+    return offset;
   }
 
   getCorrectTds(
@@ -297,17 +332,32 @@ class TableMenus {
   ) {
     const changeTds = [];
     const delTds = [];
-    const parent = Quill.find(leftTd).parent;
-    for (const td of deleteTds) {
-      const { left, right } = getCorrectBounds(td, this.quill.container);
-      if (left < computeBounds.left) {
-        const offset = this.getCellOffset(leftTd, right, 'next');
-        changeTds.push([td, offset]);
-      } else if (right > computeBounds.right) {
-        const offset = this.getCellOffset(rightTd, left, 'prev');
-        changeTds.push([td, offset]);
-      } else {
-        delTds.push(td);
+    const colgroup = Quill.find(leftTd).table().colgroup();
+    if (colgroup) {
+      for (const td of deleteTds) {
+        const bounds = getCorrectBounds(td, this.quill.container);
+        if (
+          bounds.left >= computeBounds.left &&
+          bounds.right <= computeBounds.right
+        ) {
+          delTds.push(td);
+        } else {
+          const offset = this.getColsOffset(colgroup, computeBounds, bounds);
+          changeTds.push([td, offset]);
+        }
+      }
+    } else {
+      for (const td of deleteTds) {
+        const { left, right } = getCorrectBounds(td, this.quill.container);
+        if (left < computeBounds.left) {
+          const offset = this.getCellOffset(leftTd, right, 'next');
+          changeTds.push([td, offset]);
+        } else if (right > computeBounds.right) {
+          const offset = this.getCellOffset(rightTd, left, 'prev');
+          changeTds.push([td, offset]);
+        } else {
+          delTds.push(td);
+        }
       }
     }
     return { changeTds, delTds };
@@ -560,7 +610,8 @@ class TableMenus {
         }
       }
       const [formats] = getCellFormats(blot);
-      blot.children.head.format(blot.statics.blotName, {
+      const [block] = blot.descendant(TableCellBlock);
+      block.format(blot.statics.blotName, {
         ...formats,
         width: ~~(width / colspan),
         colspan: null,
@@ -595,6 +646,23 @@ class TableMenus {
 
   updateTable(table: HTMLTableElement) {
     this.table = table;
+  }
+
+  updateTableStyle() {
+    const tableBlot = Quill.find(this.table);
+    const colgroup = tableBlot.colgroup();
+    const temporary = tableBlot.temporary();
+    let _width = 0;
+    if (colgroup) {
+      const cols = colgroup.domNode.querySelectorAll('col');
+      for (const col of cols) {
+        const width = ~~col.getAttribute('width');
+        _width += width;
+      }
+      setElementProperty(temporary.domNode, {
+        width: `${_width}px`
+      });
+    }
   }
 }
 
