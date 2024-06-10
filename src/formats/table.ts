@@ -531,12 +531,13 @@ class TableContainer extends Container {
     const blotName = cell.statics.blotName;
     const formats = cell.formats()[blotName];
     const colspan = (~~formats['colspan'] || 1) + offset;
+    const [block] = cell.descendant(TableCellBlock);
     if (colspan > 1) {
       Object.assign(formats, { colspan });
     } else {
       delete formats['colspan'];
     }
-    cell.children.head.format(blotName, formats);
+    block.format(blotName, formats);
   }
 
   setCellRowspan(parentElement: Element) {
@@ -548,12 +549,13 @@ class TableContainer extends Container {
           const blotName = cell.statics.blotName;
           const formats = cell.formats()[blotName];
           const rowspan = (~~formats['rowspan'] || 1) - 1;
+          const [block] = cell.descendant(TableCellBlock);
           if (rowspan > 1) {
             Object.assign(formats, { rowspan });
           } else {
             delete formats['rowspan'];
           }
-          cell.children.head.format(blotName, formats);
+          block.format(blotName, formats);
         }
         break;
       }
