@@ -275,22 +275,39 @@ class TableMenus {
     this.tablePropertiesForm = null;
   }
 
-  getCellOffset(cell: Element, position: number, key: string) {
-    let offset = 0;
-    let blot = Quill.find(cell);
-    while (blot) {
-      const { left, right } = getCorrectBounds(blot.domNode, this.quill.container);
-      if (
-        (key === 'next' && left >= position) ||
-        (key === 'prev' && right <= position)
+  getCellsOffset(
+    computeBounds: CorrectBound,
+    bounds: CorrectBound,
+    leftColspan: number,
+    rightColspan: number
+  ) {
+    const DEVIATION = 2;
+    const tableBlot = Quill.find(this.table);
+    const cells = tableBlot.descendants(TableCell);
+    const _left = Math.max(bounds.left, computeBounds.left);
+    const _right = Math.min(bounds.right, computeBounds.right);
+    const map: _Map = new Map();
+    const leftMap: _Map = new Map();
+    const rightMap: _Map = new Map();
+    for (const cell of cells) {
+      const { left, right } = getCorrectBounds(cell.domNode, this.quill.container);
+      if (left + DEVIATION >= _left && right <= _right + DEVIATION) {
+        this.setCellsMap(cell, map);
+      } else if (
+        left + DEVIATION >= computeBounds.left &&
+        right <= bounds.left + DEVIATION
       ) {
-        break;
+        this.setCellsMap(cell, leftMap);
+      } else if (
+        left + DEVIATION >= bounds.right &&
+        right <= computeBounds.right + DEVIATION
+      ) {
+        this.setCellsMap(cell, rightMap);
       }
-      const colspan = ~~blot.domNode.getAttribute('colspan') || 1;
-      offset -= colspan;
-      blot = blot[key];
     }
-    return offset;
+    return this.getDiffOffset(map)
+      + this.getDiffOffset(leftMap, leftColspan)
+      + this.getDiffOffset(rightMap, rightColspan);
   }
 
   getColsOffset(
@@ -299,9 +316,8 @@ class TableMenus {
     bounds: CorrectBound
   ) {
     let col = colgroup.children.head;
-    const { left, right } = bounds;
-    const _left = Math.max(left, computeBounds.left);
-    const _right = Math.min(right, computeBounds.right);
+    const _left = Math.max(bounds.left, computeBounds.left);
+    const _right = Math.min(bounds.right, computeBounds.right);
     let colLeft = null;
     let colRight = null;
     let offset = 0;
@@ -330,15 +346,18 @@ class TableMenus {
     leftTd: HTMLTableCellElement,
     rightTd: HTMLTableCellElement
   ) {
+    const DEVIATION = 2;
     const changeTds = [];
     const delTds = [];
     const colgroup = Quill.find(leftTd).table().colgroup();
+    const leftColspan = (~~leftTd.getAttribute('colspan') || 1);
+    const rightColspan = (~~rightTd.getAttribute('colspan') || 1);
     if (colgroup) {
       for (const td of deleteTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
         if (
-          bounds.left >= computeBounds.left &&
-          bounds.right <= computeBounds.right
+          bounds.left + DEVIATION >= computeBounds.left &&
+          bounds.right <= computeBounds.right + DEVIATION
         ) {
           delTds.push(td);
         } else {
@@ -348,19 +367,42 @@ class TableMenus {
       }
     } else {
       for (const td of deleteTds) {
-        const { left, right } = getCorrectBounds(td, this.quill.container);
-        if (left < computeBounds.left) {
-          const offset = this.getCellOffset(leftTd, right, 'next');
-          changeTds.push([td, offset]);
-        } else if (right > computeBounds.right) {
-          const offset = this.getCellOffset(rightTd, left, 'prev');
-          changeTds.push([td, offset]);
-        } else {
+        const bounds = getCorrectBounds(td, this.quill.container);
+        if (
+          bounds.left + DEVIATION >= computeBounds.left &&
+          bounds.right <= computeBounds.right + DEVIATION
+        ) {
           delTds.push(td);
+        } else {
+          const offset = this.getCellsOffset(
+            computeBounds,
+            bounds,
+            leftColspan,
+            rightColspan
+          );
+          changeTds.push([td, offset]);
         }
       }
     }
     return { changeTds, delTds };
+  }
+
+  getDiffOffset(map: _Map, colspan?: number) {
+    let offset = 0;
+    const tds = this.getTdsFromMap(map);
+    if (tds.length) {
+      if (colspan) {
+        for (const td of tds) {
+          offset += (~~td.getAttribute('colspan') || 1);
+        }
+        offset -= colspan;
+      } else {
+        for (const td of tds) {
+          offset -= (~~td.getAttribute('colspan') || 1);
+        }
+      }
+    }
+    return offset;
   }
 
   getRefInfo(row: TableRow, right: number) {
@@ -445,6 +487,13 @@ class TableMenus {
       return 'left';
     }
     return align || 'center';
+  }
+
+  getTdsFromMap(map: _Map) {
+    return Object.values(Object.fromEntries(map))
+    .reduce((tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
+      return tds.length > item.length ? tds : item;
+    }, []);
   }
 
   handleClick(e: MouseEvent) {
@@ -565,6 +614,15 @@ class TableMenus {
     this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
+  }
+
+  setCellsMap(cell: TableCell, map: _Map) {
+    const key: string = cell.domNode.getAttribute('data-row');
+    if (map.has(key)) {
+      map.set(key, [...map.get(key), cell.domNode]);
+    } else {
+      map.set(key, [cell.domNode]);
+    }
   }
 
   showMenus() {

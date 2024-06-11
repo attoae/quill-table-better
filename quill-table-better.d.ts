@@ -14,4 +14,6 @@ declare interface Props {
   [propName: string]: string
 }
 
+declare type _Map = Map<string, HTMLTableCellElement[]>;
+
 declare type _useLanguage = (name: string) => string
