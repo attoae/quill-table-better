@@ -305,8 +305,8 @@ class TableMenus {
         this.setCellsMap(cell, rightMap);
       }
     }
-    return this.getDiffOffset(map)
-      + this.getDiffOffset(leftMap, leftColspan)
+    return this.getDiffOffset(map) ||
+      this.getDiffOffset(leftMap, leftColspan)
       + this.getDiffOffset(rightMap, rightColspan);
   }
 
