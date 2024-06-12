@@ -8,6 +8,25 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 [quill.js](https://quilljs.com/) ">= v2.0.0"
 
 ## Quickstart
+$\color{red}{notice}$
+```html
+const delta = quill.clipboard.convert({
+  html,
+  text: '\n'
+})
+quill.setContents(delta, Quill.sources.USER);
+
+// The above method causes the table to not display properly
+// Please use the following method instead
+const [range] = quill.selection.getRange();
+quill.updateContents(delta, Quill.sources.USER);
+quill.setSelection(
+  delta.length() - range.length,
+  Quill.sources.SILENT,
+);
+quill.scrollIntoView();
+```
+
 npm
 ```html
 import QuillTableBetter from 'quill-table-better';
@@ -70,12 +89,20 @@ cdn
 ```
 module.deleteTable();
 ```
-### deleteTableTemporary
-When you need to submit data to the server, you should use 'module.deleteTableTemporary()',for example：
+### deleteTableTemporary、hideTools
+When you need to submit data(html or delta) to the server, you should use this function,for example：
 ```html
+// Delta
+module.hideTools();
+const delta = quill.getContents();
+axios.post(url, delta);
+```
+
+```html
+// HTML
 module.deleteTableTemporary();
-const data = quill.getContents();
-axios.post(url, data);
+const html = quill.getSemanticHTML();
+axios.post(url, html);
 ```
 ### getTable(range = this.quill.getSelection())
 Function return '[table, row, cell, offset]'
