@@ -168,6 +168,16 @@ class CellSelection {
       Quill.sources.USER
     );
   }
+
+  setSelectedTds(selectedTds: Element[]) {
+    this.clearSelected();
+    this.startTd = selectedTds[0];
+    this.endTd = selectedTds[selectedTds.length - 1];
+    this.selectedTds = selectedTds;
+    for (const td of this.selectedTds) {
+      td.classList && td.classList.add('ql-cell-selected');
+    }
+  }
 }
 
 export default CellSelection;

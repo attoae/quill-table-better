@@ -17,7 +17,7 @@ import {
   setElementProperty,
   setElementAttribute
 } from '../utils';
-import { TableCellBlock } from '../formats/table';
+import { TableCellBlock, TableCell } from '../formats/table';
 import iro from '@jaames/iro';
 
 interface Child {
@@ -438,6 +438,20 @@ class TablePropertiesForm {
     return container;
   }
 
+  getCellStyle(td: HTMLElement, attrs: Props) {
+    const style = (td.getAttribute('style') || '')
+      .split(';')
+      .filter((value: string) => value.trim())
+      .reduce((style: Props, value: string) => {
+        const arr = value.split(':');
+        return { ...style, [arr[0].trim()]: arr[1].trim() };
+      }, {});
+    Object.assign(style, attrs);
+    return Object.keys(style).reduce((value: string, key: string) => {
+      return value += `${key}: ${style[key]}; `;
+    }, '');
+  }
+
   getColorClosest(container: HTMLElement) {
     return getClosestElement(container, '.ql-table-color-container');
   }
@@ -512,6 +526,7 @@ class TablePropertiesForm {
     const width = parseFloat(attrs['width']);
     const align = attrs['text-align'];
     align && delete attrs['text-align'];
+    const newSelectedTds = [];
     if (colgroup && width) {
       delete attrs['width'];
       const { computeBounds } = this.tableMenus.getSelectedTdsInfo();
@@ -521,14 +536,20 @@ class TablePropertiesForm {
       }
     }
     for (const td of selectedTds) {
-      setElementProperty(td, attrs);
+      const tdBlot = Quill.find(td);
+      const blotName = tdBlot.statics.blotName;
+      const formats = tdBlot.formats()[blotName];
+      const style = this.getCellStyle(td, attrs);
+      const [block] = tdBlot.descendant(TableCellBlock);
       if (align) {
-        const tdBlot = Quill.find(td);
         tdBlot.children.forEach((child: TableCellBlock) => {
           child.format('align', align === 'left' ? '' : align);
         });
       }
+      const parent: TableCell = block.format(blotName, { ...formats, style });
+      newSelectedTds.push(parent.domNode);
     }
+    this.tableMenus.tableBetter.cellSelection.setSelectedTds(newSelectedTds);
   }
 
   saveTableAction() {
