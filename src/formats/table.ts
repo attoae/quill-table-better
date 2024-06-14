@@ -35,7 +35,7 @@ class TableCellBlock extends Block {
   format(name: string, value: string | Props) {
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
-      this.wrap(name, value);
+      return this.wrap(name, value);
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
     } else if (name === 'header') {
