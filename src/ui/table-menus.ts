@@ -9,7 +9,8 @@ import {
   getComputeSelectedCols,
   getComputeSelectedTds,
   setElementProperty,
-  getElementStyle
+  getElementStyle,
+  updateTableWidth
 } from '../utils';
 import columnIcon from '../assets/icon/column.svg';
 import rowIcon from '../assets/icon/row.svg';
@@ -26,9 +27,11 @@ import {
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
 import {
-  cellDefaultValues,
-  cellProperties,
-  tableProperties
+  CELL_DEFAULT_VALUES,
+  CELL_DEFAULT_WIDTH,
+  CELL_PROPERTIES,
+  DEVIATION,
+  TABLE_PROPERTIES
 } from '../config';
 
 interface Children {
@@ -65,16 +68,16 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
           content: useLanguage('insColL'),
           handler() {
             const { leftTd } = this.getSelectedTdsInfo();
+            updateTableWidth(this.table, CELL_DEFAULT_WIDTH);
             this.insertColumn(leftTd, 0);
-            this.updateTableStyle();
           }
         },
         right: {
           content: useLanguage('insColR'),
           handler() {
             const { rightTd } = this.getSelectedTdsInfo();
+            updateTableWidth(this.table, CELL_DEFAULT_WIDTH);
             this.insertColumn(rightTd, 1);
-            this.updateTableStyle();
           }
         },
         delete: {
@@ -85,8 +88,8 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
             const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
             const tableBlot = Quill.find(leftTd).table();
             const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
+            updateTableWidth(this.table, computeBounds.left - computeBounds.right);
             tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
-            this.updateTableStyle();
             this.updateMenus();
           }
         }
@@ -157,7 +160,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
       icon: tableIcon,
       handler(list, tooltip) {
         const attribute = {
-          ...getElementStyle(this.table, tableProperties),
+          ...getElementStyle(this.table, TABLE_PROPERTIES),
           'align': this.getTableAlignment(this.table)
         };
         this.toggleAttribute(list, tooltip);
@@ -281,7 +284,6 @@ class TableMenus {
     leftColspan: number,
     rightColspan: number
   ) {
-    const DEVIATION = 2;
     const tableBlot = Quill.find(this.table);
     const cells = tableBlot.descendants(TableCell);
     const _left = Math.max(bounds.left, computeBounds.left);
@@ -346,7 +348,6 @@ class TableMenus {
     leftTd: HTMLTableCellElement,
     rightTd: HTMLTableCellElement
   ) {
-    const DEVIATION = 2;
     const changeTds = [];
     const delTds = [];
     const colgroup = Quill.find(leftTd).table().colgroup();
@@ -422,8 +423,8 @@ class TableMenus {
     const align = Quill.find(td).children.head?.getAlign();
     const attr: Props =
       align
-        ? { ...getElementStyle(td, cellProperties), 'text-align': align }
-        : getElementStyle(td, cellProperties);
+        ? { ...getElementStyle(td, CELL_PROPERTIES), 'text-align': align }
+        : getElementStyle(td, CELL_PROPERTIES);
     return attr;
   }
 
@@ -445,7 +446,7 @@ class TableMenus {
     }
     for (const key of Object.keys(attribute)) {
       if (map.has(key)) {
-        attribute[key] = cellDefaultValues[key];
+        attribute[key] = CELL_DEFAULT_VALUES[key];
       }
     }
     return attribute;
@@ -704,23 +705,6 @@ class TableMenus {
 
   updateTable(table: HTMLTableElement) {
     this.table = table;
-  }
-
-  updateTableStyle() {
-    const tableBlot = Quill.find(this.table);
-    const colgroup = tableBlot.colgroup();
-    const temporary = tableBlot.temporary();
-    let _width = 0;
-    if (colgroup) {
-      const cols = colgroup.domNode.querySelectorAll('col');
-      for (const col of cols) {
-        const width = ~~col.getAttribute('width');
-        _width += width;
-      }
-      setElementProperty(temporary.domNode, {
-        width: `${_width}px`
-      });
-    }
   }
 }
 

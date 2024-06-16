@@ -2,6 +2,7 @@ import Quill from 'quill';
 import { getElementStyle, filterWordStyle } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
+import { CELL_DEFAULT_WIDTH } from '../config';
 
 const Block = Quill.import('blots/block');
 const Break = Quill.import('blots/break');
@@ -480,13 +481,13 @@ class TableContainer extends Container {
   }
 
   insertCol(colgroup: TableColgroup, ref: TableCol | null) {
-    const col = this.scroll.create(TableCol.blotName, { width: '72' });
+    const col = this.scroll.create(TableCol.blotName, { width: `${CELL_DEFAULT_WIDTH}` });
     colgroup.insertBefore(col, ref);
   }
 
   insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
     const colgroup = this.colgroup();
-    const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: '72' };
+    const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
     const cell = this.scroll.create(TableCell.blotName, formats);
     const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
     cell.appendChild(cellBlock);

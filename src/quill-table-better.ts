@@ -22,6 +22,7 @@ import Language from './language';
 import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
+import { CELL_DEFAULT_WIDTH } from './config';
 
 interface Options extends Props {
   language: string
@@ -111,7 +112,7 @@ class Table extends Module {
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
           [TableCellBlock.blotName]: cellId(),
-          [TableCell.blotName]: { 'data-row': id, width: '72' }
+          [TableCell.blotName]: { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` }
         });
       }, memo);
     }, base);
