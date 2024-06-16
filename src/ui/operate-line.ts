@@ -1,5 +1,9 @@
 import Quill from 'quill';
-import { setElementProperty, setElementAttribute } from '../utils';
+import {
+  setElementProperty,
+  setElementAttribute,
+  updateTableWidth
+} from '../utils';
 import { TableColgroup } from '../formats/table';
 
 interface Options {
@@ -221,7 +225,8 @@ class OperateLine {
     const { right } = cell.getBoundingClientRect();
     const change = ~~(clientX - right);
     const colSum = this.getLevelColSum(cell);
-    const colgroup = Quill.find(cell).table().colgroup();
+    const tableBlot = Quill.find(cell).table();
+    const colgroup = tableBlot.colgroup();
     if (colgroup) {
       const col = this.getCorrectCol(colgroup, colSum);
       const nextCol = col.next;
@@ -262,6 +267,7 @@ class OperateLine {
         setElementProperty(node as HTMLElement, { width: `${width}px` });
       }
     }
+    updateTableWidth(tableBlot.domNode, 0);
   }
 
   setCellRect(cell: Element, clientX: number, clientY: number) {
@@ -278,7 +284,8 @@ class OperateLine {
     const averageX = changeX / maxColNum;
     const averageY = changeY / rows.length;
     const preNodes: [Element, string, string][] = [];
-    const colgroup = Quill.find(cell).table().colgroup();
+    const tableBlot = Quill.find(cell).table();
+    const colgroup = tableBlot.colgroup();
     for (const row of rows) {
       const cells = row.children;
       for (const cell of cells) {
@@ -307,6 +314,7 @@ class OperateLine {
         });
       }
     }
+    updateTableWidth(tableBlot.domNode, 0);
   }
 
   setCellVerticalRect(cell: Element, clientY: number) {

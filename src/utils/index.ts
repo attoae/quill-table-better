@@ -4,9 +4,7 @@ import {
   TableCellBlock,
   TableCol
 } from '../formats/table';
-import { colors } from '../config';
-
-const DEVIATION = 2;
+import { COLORS, DEVIATION } from '../config';
 
 function addDimensionsUnit(value: string) {
   if (!value) return value;
@@ -175,7 +173,7 @@ function isDimensions(key: string) {
 }
 
 function isSimpleColor(color: string) {
-  for (const col of colors) {
+  for (const col of COLORS) {
     if (col === color) return true;
   }
   return false;
@@ -278,6 +276,16 @@ function throttleStrong(cb: Function, delay: number) {
   }
 }
 
+function updateTableWidth(table: HTMLElement, change: number) {
+  if (!table?.style.getPropertyValue('width')) return;
+  const tableBlot = Quill.find(table);
+  const temporary = tableBlot.temporary();
+  const { width } = table.getBoundingClientRect();
+  setElementProperty(temporary.domNode, {
+    width: `${~~(width + change)}px`
+  });
+}
+
 export {
   addDimensionsUnit,
   convertUnitToInteger,
@@ -300,5 +308,6 @@ export {
   setElementAttribute,
   setElementProperty,
   throttle,
-  throttleStrong
+  throttleStrong,
+  updateTableWidth
 };

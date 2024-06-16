@@ -12,7 +12,7 @@ interface Options {
   attribute: Props
 }
 
-const cellDefaultValues: Props = {
+const CELL_DEFAULT_VALUES: Props = {
   'border-style': 'none',
   'border-color': '',
   'border-width': '',
@@ -24,7 +24,9 @@ const cellDefaultValues: Props = {
   'vertical-align': 'middle'
 };
 
-const cellProperties = [
+const CELL_DEFAULT_WIDTH = 72;
+
+const CELL_PROPERTIES = [
   'border-style',
   'border-color',
   'border-width',
@@ -36,7 +38,7 @@ const cellProperties = [
   'vertical-align'
 ];
 
-const colors = [
+const COLORS = [
   'aliceblue',
   'antiquewhite',
   'aqua',
@@ -190,7 +192,9 @@ const colors = [
   'yellowgreen'
 ];
 
-const tableProperties = [
+const DEVIATION = 2;
+
+const TABLE_PROPERTIES = [
   'border-style',
   'border-color',
   'border-width',
@@ -421,9 +425,11 @@ function getProperties({ type, attribute }: Options, useLanguage: _useLanguage) 
 }
 
 export {
-  cellDefaultValues,
-  cellProperties,
-  colors,
-  tableProperties,
+  CELL_DEFAULT_VALUES,
+  CELL_DEFAULT_WIDTH,
+  CELL_PROPERTIES,
+  COLORS,
+  DEVIATION,
+  TABLE_PROPERTIES,
   getProperties
 };
