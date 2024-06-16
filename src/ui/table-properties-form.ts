@@ -53,7 +53,12 @@ interface ColorList {
   describe: string
 }
 
-const colorList: ColorList[] = [
+const ACTION_LIST = [
+  { icon: saveIcon, label: 'save' },
+  { icon: closeIcon, label: 'cancel' }
+];
+
+const COLOR_LIST: ColorList[] = [
   { value: '#000000', describe: 'black' },
   { value: '#4d4d4d', describe: 'dimGrey' },
   { value: '#808080', describe: 'grey' },
@@ -69,11 +74,6 @@ const colorList: ColorList[] = [
   { value: '#4d99e6', describe: 'lightBlue' },
   { value: '#0000ff', describe: 'blue' },
   { value: '#800080', describe: 'purple' }
-];
-
-const actionList = [
-  { icon: saveIcon, label: 'save' },
-  { icon: closeIcon, label: 'cancel' }
 ];
 
 class TablePropertiesForm {
@@ -104,7 +104,7 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
     container.classList.add('properties-form-action-row');
-    for (const { icon, label } of actionList) {
+    for (const { icon, label } of ACTION_LIST) {
       const button = document.createElement('button');
       const iconContainer = document.createElement('span');
       iconContainer.innerHTML = icon;
@@ -172,7 +172,7 @@ class TablePropertiesForm {
     const container = document.createElement('ul');
     const fragment = document.createDocumentFragment();
     container.classList.add('color-list');
-    for (const { value, describe } of colorList) {
+    for (const { value, describe } of COLOR_LIST) {
       const li = document.createElement('li');
       const tooltip = createTooltip(useLanguage(describe));
       li.setAttribute('data-color', value);
