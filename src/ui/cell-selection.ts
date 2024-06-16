@@ -5,6 +5,7 @@ import {
   getComputeSelectedTds
 } from '../utils';
 import { TableCellBlock } from '../formats/table';
+import { DEVIATION } from '../config';
 
 class CellSelection {
   quill: any;
@@ -176,6 +177,46 @@ class CellSelection {
     this.selectedTds = selectedTds;
     for (const td of this.selectedTds) {
       td.classList && td.classList.add('ql-cell-selected');
+    }
+  }
+
+  updateSelected(type: string) {
+    switch (type) {
+      case 'column':
+        {
+          const target =
+            this.endTd.nextElementSibling ||
+            this.startTd.previousElementSibling;
+          if (!target) return;
+          this.setSelected(target);
+        }
+        break;
+      case 'row':
+        {
+          const row =
+            this.endTd.parentElement.nextElementSibling ||
+            this.startTd.parentElement.previousElementSibling;
+          if (!row) return;
+          const startCorrectBounds = getCorrectBounds(this.startTd, this.quill.container);
+          let child = row.firstElementChild;
+          while (child) {
+            const childCorrectBounds = getCorrectBounds(child, this.quill.container);
+            if (
+              childCorrectBounds.left + DEVIATION >= startCorrectBounds.left &&
+              (
+                childCorrectBounds.right <= startCorrectBounds.right + DEVIATION ||
+                childCorrectBounds.right + DEVIATION >= startCorrectBounds.right
+              )
+            ) {
+              this.setSelected(child);
+              break;
+            }
+            child = child.nextElementSibling;
+          }
+        }
+        break;
+      default:
+        break;
     }
   }
 }

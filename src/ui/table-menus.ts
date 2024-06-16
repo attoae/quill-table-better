@@ -91,6 +91,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
             const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
             const tableBlot = Quill.find(leftTd).table();
             const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
+            this.tableBetter.cellSelection.updateSelected('column');
             tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
             updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
             this.updateMenus();
@@ -131,6 +132,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
                 id = td.getAttribute('data-row');
               }
             }
+            this.tableBetter.cellSelection.updateSelected('row');
             const tableBlot = Quill.find(selectedTds[0]).table();
             tableBlot.deleteRow(rows, this.hideMenus.bind(this));
           }
