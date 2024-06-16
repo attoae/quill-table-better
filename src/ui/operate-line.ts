@@ -187,7 +187,7 @@ class OperateLine {
       clientX: e.clientX,
       clientY: e.clientY
     }
-    if (!tableNode) {
+    if (!tableNode || !cellNode) {
       if (this.line && !this.drag) {
         this.hideLine();
         this.hideDragBlock();
@@ -227,6 +227,7 @@ class OperateLine {
     const colSum = this.getLevelColSum(cell);
     const tableBlot = Quill.find(cell).table();
     const colgroup = tableBlot.colgroup();
+    const bounds = tableBlot.domNode.getBoundingClientRect();
     if (colgroup) {
       const col = this.getCorrectCol(colgroup, colSum);
       const nextCol = col.next;
@@ -267,7 +268,9 @@ class OperateLine {
         setElementProperty(node as HTMLElement, { width: `${width}px` });
       }
     }
-    updateTableWidth(tableBlot.domNode, 0);
+    if (cell.nextElementSibling == null) {
+      updateTableWidth(tableBlot.domNode, bounds, change);
+    }
   }
 
   setCellRect(cell: Element, clientX: number, clientY: number) {
@@ -286,6 +289,7 @@ class OperateLine {
     const preNodes: [Element, string, string][] = [];
     const tableBlot = Quill.find(cell).table();
     const colgroup = tableBlot.colgroup();
+    const bounds = tableBlot.domNode.getBoundingClientRect();
     for (const row of rows) {
       const cells = row.children;
       for (const cell of cells) {
@@ -314,7 +318,7 @@ class OperateLine {
         });
       }
     }
-    updateTableWidth(tableBlot.domNode, 0);
+    updateTableWidth(tableBlot.domNode, bounds, changeX);
   }
 
   setCellVerticalRect(cell: Element, clientY: number) {
