@@ -276,14 +276,30 @@ function throttleStrong(cb: Function, delay: number) {
   }
 }
 
-function updateTableWidth(table: HTMLElement, change: number) {
+function updateTableWidth(
+  table: HTMLElement,
+  tableBounds: CorrectBound,
+  change: number
+) {
   if (!table?.style.getPropertyValue('width')) return;
   const tableBlot = Quill.find(table);
+  const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
-  const { width } = table.getBoundingClientRect();
-  setElementProperty(temporary.domNode, {
-    width: `${~~(width + change)}px`
-  });
+  if (colgroup) {
+    let _width = 0;
+    const cols = colgroup.domNode.querySelectorAll('col');
+    for (const col of cols) {
+      const width = ~~col.getAttribute('width');
+      _width += width;
+    }
+    setElementProperty(temporary.domNode, {
+      width: `${_width}px`
+    });
+  } else {
+    setElementProperty(temporary.domNode, {
+      width: `${~~(tableBounds.width + change)}px`
+    });
+  }
 }
 
 export {

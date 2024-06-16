@@ -68,28 +68,31 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
           content: useLanguage('insColL'),
           handler() {
             const { leftTd } = this.getSelectedTdsInfo();
-            updateTableWidth(this.table, CELL_DEFAULT_WIDTH);
+            const bounds = this.table.getBoundingClientRect();
             this.insertColumn(leftTd, 0);
+            updateTableWidth(this.table, bounds, CELL_DEFAULT_WIDTH);
           }
         },
         right: {
           content: useLanguage('insColR'),
           handler() {
             const { rightTd } = this.getSelectedTdsInfo();
-            updateTableWidth(this.table, CELL_DEFAULT_WIDTH);
+            const bounds = this.table.getBoundingClientRect();
             this.insertColumn(rightTd, 1);
+            updateTableWidth(this.table, bounds, CELL_DEFAULT_WIDTH);
           }
         },
         delete: {
           content: useLanguage('delCol'),
           handler() {
             const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
+            const bounds = this.table.getBoundingClientRect();
             const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
             const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
             const tableBlot = Quill.find(leftTd).table();
             const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
-            updateTableWidth(this.table, computeBounds.left - computeBounds.right);
             tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
+            updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
             this.updateMenus();
           }
         }
