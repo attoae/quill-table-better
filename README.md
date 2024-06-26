@@ -50,9 +50,9 @@ const options = {
 cdn
 ```html
 <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/quill-table-better@1.0.0-dev.3/dist/quill-table-better.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/quill-table-better@1.0.0-dev.3/dist/quill-table-better.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.js"></script>
 
 <div id="root"></div>
 <script>
@@ -134,8 +134,8 @@ npm i quill-table-better
 ### CDN
 ```html
 <link
-  href="https://cdn.jsdelivr.net/npm/quill-table-better@1.0.0-dev.3/dist/quill-table-better.css"
+  href="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.css"
   rel="stylesheet"
 />
-<script src="https://cdn.jsdelivr.net/npm/quill-table-better@1.0.0-dev.3/dist/quill-table-better.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.js"></script>
 ```
