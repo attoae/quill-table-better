@@ -347,6 +347,16 @@ class TableMenus {
     return offset;
   }
 
+  getCorrectBounds(table: HTMLTableElement) {
+    const bounds = this.quill.container.getBoundingClientRect();
+    const tableBounds = getCorrectBounds(table, this.quill.container);
+    return (
+      tableBounds.width >= bounds.width
+       ? { ...tableBounds, left: bounds.left, right: bounds.right }
+       : tableBounds
+    );
+  }
+
   getCorrectTds(
     deleteTds: Element[],
     computeBounds: CorrectBound,
@@ -553,10 +563,8 @@ class TableMenus {
       index + length,
       Quill.sources.SILENT,
     );
+    this.tableBetter.hideTools();
     this.quill.scrollSelectionIntoView();
-    this.hideMenus();
-    this.destroyTablePropertiesForm();
-    this.tableBetter.cellSelection.clearSelected();
   }
 
   insertRow(td: HTMLTableColElement, offset: number) {
@@ -700,7 +708,7 @@ class TableMenus {
   }
 
   updateMenus(table: HTMLTableElement = this.table) {
-    const { left, right, top } = getCorrectBounds(table, this.quill.container);
+    const { left, right, top } = this.getCorrectBounds(table);
     const { height, width } = this.root.getBoundingClientRect();
     setElementProperty(this.root, {
       left: `${(left + right - width) >> 1}px`,
