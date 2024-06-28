@@ -17,7 +17,6 @@ class CellSelection {
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
-    this.quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
   }
 

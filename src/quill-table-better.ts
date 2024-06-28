@@ -53,6 +53,7 @@ class Table extends Module {
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
     document.addEventListener('keyup', this.handleKeyup.bind(this));
+    quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
   }
 
   deleteTable() {
@@ -90,6 +91,12 @@ class Table extends Module {
     if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
       this.hideTools();
     }
+  }
+
+  handleMousedown(e: MouseEvent) {
+    const table = (e.target as Element).closest('table');
+    if (!table) return this.hideTools();
+    this.cellSelection.handleMousedown(e);
   }
 
   hideTools() {
