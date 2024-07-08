@@ -111,8 +111,15 @@ class Table extends Module {
   insertTable(rows: number, columns: number) {
     const range = this.quill.getSelection();
     if (range == null) return;
+    const formats = this.quill.getFormat(range.index - 1);
+    const offset = formats[TableCellBlock.blotName] ? 2 : 1;
     const base = new Delta()
       .retain(range.index)
+      .concat(
+        formats[TableCellBlock.blotName]
+         ? new Delta().insert('\n')
+         : new Delta()
+      )
       .insert('\n', { [TableTemporary.blotName]: {} });
     const delta = new Array(rows).fill(0).reduce(memo => {
       const id = tableId();
@@ -124,7 +131,7 @@ class Table extends Module {
       }, memo);
     }, base);
     this.quill.updateContents(delta, Quill.sources.USER);
-    this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+    this.quill.setSelection(range.index + offset, Quill.sources.SILENT);
     this.showTools();
   }
 
