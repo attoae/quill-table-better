@@ -459,7 +459,11 @@ class TablePropertiesForm {
   getComputeBounds(type: string) {
     if (type === 'table') {
       const { table } = this.tableMenus;
-      return this.tableMenus.getCorrectBounds(table);
+      const [tableBounds, containerBounds] = this.tableMenus.getCorrectBounds(table);
+      if (tableBounds.bottom > containerBounds.bottom) {
+        return { ...tableBounds, bottom: containerBounds.height };
+      }
+      return tableBounds;
     } else {
       const { computeBounds } = this.tableMenus.getSelectedTdsInfo();
       return computeBounds;

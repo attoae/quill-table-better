@@ -1,11 +1,58 @@
 $line-color: #0589f3;
 $focused-cell-background: rgba(158, 207, 250, .3);
 $focused-border-color: #3779eb;
-$border: 1px solid #ccced1;
-$box-shadow: 0 1px 2px 1px #ccced1;
 $tooltip-color-simple: #000000d9;
 $tooltip-color-error: #db3700;
 $hover-background: #f0f0f0;
+$border-color-simple: #00000026;
+$color-white: #fff;
+$color-ccced1: #ccced1;
+$border: 1px solid $color-ccced1;
+
+/*mixin*/
+@mixin boxShadow($color) {
+  box-shadow: 0 1px 2px 1px $color;
+}
+
+@mixin qlTableTooltip($color) {
+  min-width: 32px;
+  line-height: 20px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  color: $color-white;
+  text-align: center;
+  word-wrap: break-word;
+  background: $color;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  &::before {
+    @extend .ql-table-triangle-common;
+    border-bottom-color: $color !important;
+    top: -20px;
+  }
+  &:hover {
+    display: block;
+  }
+  &-hidden {
+    display: none !important;
+  }
+}
+
+@mixin triangle($direction1, $direction2) {
+  &::before {
+    @extend .ql-table-triangle-common;
+    #{$direction1}: -20px;
+    border-#{$direction2}-color: $border-color-simple !important;
+  }
+  &::after {
+    @extend .ql-table-triangle-common;
+    #{$direction1}: -19px;
+    border-#{$direction2}-color: $color-white !important;
+  }
+}
 
 /*extend-style*/
 .ql-cell-selected-after {
@@ -21,8 +68,8 @@ $hover-background: #f0f0f0;
 .ql-table-border-shadow {
   border-radius: 2px;
   border: $border;
-  background: #fff;
-  box-shadow: 0 1px 2px 1px #00000026;
+  background: $color-white;
+  @include boxShadow($border-color-simple);
 }
 .ql-table-triangle-common {
   position: absolute;
@@ -44,34 +91,6 @@ $hover-background: #f0f0f0;
 }
 .ql-table-temporary {
   display: none;
-}
-
-/*mixin*/
-@mixin qlTableTooltip($color) {
-  min-width: 32px;
-  line-height: 20px;
-  padding: 6px 8px;
-  white-space: nowrap;
-  color: #fff;
-  text-align: center;
-  word-wrap: break-word;
-  background: $color;
-  border-radius: 6px;
-  position: absolute;
-  z-index: 10;
-  left: 50%;
-  transform: translate(-50%, 100%);
-  &::before {
-    @extend .ql-table-triangle-common;
-    border-bottom-color: $color !important;
-    top: -20px;
-  }
-  &:hover {
-    display: block;
-  }
-  &-hidden {
-    display: none !important;
-  }
 }
 
 /*style*/
@@ -120,17 +139,13 @@ $hover-background: #f0f0f0;
   width: fit-content;
   padding: 4px;
   box-sizing: border-box;
-  @extend .ql-table-border-shadow;
-  &::before {
-    @extend .ql-table-triangle-common;
-    bottom: -20px;
-    border-top-color: #00000026 !important;
-  }
-  &::after {
-    @extend .ql-table-triangle-common;
-    bottom: -19px;
-    border-top-color: #fff !important;
-  } 
+  @extend .ql-table-border-shadow;  
+}
+.ql-table-menus-up {
+  @include triangle('bottom', 'top');
+}
+.ql-table-menus-down {
+  @include triangle('top', 'bottom');
 }
 .label-field-view {
   position: relative;
@@ -143,7 +158,7 @@ $hover-background: #f0f0f0;
       top: -50%;
       transform: translateY(50%) scale(0.75);
       color: #999;
-      background: #fff;
+      background: $color-white;
       display: none;
     }
     & > .property-input:focus + label {
@@ -228,18 +243,18 @@ $hover-background: #f0f0f0;
   width: 320px;
   position: absolute;
   left: 50%;
-  box-shadow: $box-shadow;
   padding-bottom: 12px;
-  background: #fff;
+  background: $color-white;
+  @include boxShadow($color-ccced1);
   &::before {
     @extend .ql-table-triangle-common;
     top: -20px;
-    border-bottom-color: #ccced1;
+    border-bottom-color: $color-ccced1;
   }
   &::after {
     @extend .ql-table-triangle-common;
     top: -19px;
-    border-bottom-color: #fff;
+    border-bottom-color: $color-white;
   }
   .properties-form-header {
     height: 40px;
@@ -291,7 +306,7 @@ $hover-background: #f0f0f0;
     justify-content: space-around;
     padding: 0 12px;
     & > button {
-      background: #fff;
+      background: $color-white;
       outline: none;
       border: none;
       display: flex;
@@ -359,9 +374,9 @@ $hover-background: #f0f0f0;
       bottom: 0;
       width: 156px;
       transform: translateY(100%);
-      box-shadow: $box-shadow;
-      background: #fff;
+      background: $color-white;
       z-index: 10;
+      @include boxShadow($color-ccced1);
       .erase-container {
         display: flex;
         height: 30px;
@@ -406,7 +421,7 @@ $hover-background: #f0f0f0;
       left: 0;
       top: 0;
       z-index: 1;
-      background: #fff;
+      background: $color-white;
       .color-picker-wrap {
         width: 100%;
         height: 100%;
