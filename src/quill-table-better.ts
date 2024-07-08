@@ -54,6 +54,7 @@ class Table extends Module {
     this.tableMenus = new TableMenus(quill, this);
     document.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
+    quill.root.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   deleteTable() {
@@ -97,6 +98,11 @@ class Table extends Module {
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
     this.cellSelection.handleMousedown(e);
+  }
+
+  handleScroll() {
+    this.hideTools();
+    this.tableMenus?.updateScroll(true);
   }
 
   hideTools() {
