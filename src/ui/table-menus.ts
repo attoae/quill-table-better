@@ -217,6 +217,7 @@ class TableMenus {
   root: HTMLElement;
   prevList: HTMLUListElement | null;
   prevTooltip: HTMLDivElement | null;
+  scroll: boolean;
   tableBetter: any;
   tablePropertiesForm: any;
   constructor(quill: any, tableBetter?: any) {
@@ -224,6 +225,7 @@ class TableMenus {
     this.table = null;
     this.prevList = null;
     this.prevTooltip = null;
+    this.scroll = false;
     this.tableBetter = tableBetter;
     this.tablePropertiesForm = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
@@ -347,13 +349,13 @@ class TableMenus {
     return offset;
   }
 
-  getCorrectBounds(table: HTMLTableElement) {
+  getCorrectBounds(table: HTMLTableElement): CorrectBound[] {
     const bounds = this.quill.container.getBoundingClientRect();
     const tableBounds = getCorrectBounds(table, this.quill.container);
     return (
       tableBounds.width >= bounds.width
-       ? { ...tableBounds, left: bounds.left, right: bounds.right }
-       : tableBounds
+       ? [{ ...tableBounds, left: 0, right: bounds.width }, bounds]
+       : [tableBounds, bounds]
     );
   }
 
@@ -525,8 +527,12 @@ class TableMenus {
     } else {
       if (this.tablePropertiesForm) return;
       this.showMenus();
-      if (table && !table.isEqualNode(this.table)) {
+      if (
+        (table && !table.isEqualNode(this.table)) ||
+        this.scroll
+      ) {
         this.updateMenus(table);
+        this.updateScroll(false);
       }
       this.table = table;
     }
@@ -708,12 +714,32 @@ class TableMenus {
   }
 
   updateMenus(table: HTMLTableElement = this.table) {
-    const { left, right, top } = this.getCorrectBounds(table);
+    const [tableBounds, containerBounds] = this.getCorrectBounds(table);
+    const { left, right, top, bottom } = tableBounds;
     const { height, width } = this.root.getBoundingClientRect();
+    const toolbar = this.quill.getModule('toolbar');
+    const computedStyle = getComputedStyle(toolbar.container);
+    let correctTop = top - height - 10;
+    if (
+      correctTop < -parseInt(computedStyle.paddingBottom) &&
+      containerBounds.bottom > bottom
+    ) {
+      correctTop = bottom + 10;
+      this.root.classList.add('ql-table-menus-down');
+      this.root.classList.remove('ql-table-menus-up');
+    } else {
+      correctTop = top - height - 10;
+      this.root.classList.add('ql-table-menus-up');
+      this.root.classList.remove('ql-table-menus-down');
+    }
     setElementProperty(this.root, {
       left: `${(left + right - width) >> 1}px`,
-      top: `${top - height - 10}px`
+      top: `${correctTop}px`
     });
+  }
+
+  updateScroll(scroll: boolean) {
+    this.scroll = scroll;
   }
 
   updateTable(table: HTMLTableElement) {
