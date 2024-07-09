@@ -128,7 +128,7 @@ class OperateLine {
       height: `${DRAG_BLOCK_HEIGHT}px`,
       top: `${tableRect.bottom - containerRect.top}px`,
       left: `${tableRect.right - containerRect.left}px`,
-      display: 'block'
+      display: tableRect.bottom > containerRect.bottom ? 'none' : 'block'
     }
     if (Math.abs(x - clientX) <= 5) {
       this.direction = 'level';
