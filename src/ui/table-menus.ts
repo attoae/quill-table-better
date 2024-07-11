@@ -55,12 +55,12 @@ enum Alignment {
   right = 'margin-right'
 }
 
-function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
-  return {
+function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefaults {
+  const DEFAULT: MenusDefaults = {
     column: {
       content: useLanguage('col'),
       icon: columnIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         this.toggleAttribute(list, tooltip);
       },
       children: {
@@ -102,7 +102,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
     row: {
       content: useLanguage('row'),
       icon: rowIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         this.toggleAttribute(list, tooltip);
       },
       children: {
@@ -142,7 +142,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
     merge: {
       content: useLanguage('mCells'),
       icon: mergeIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         this.toggleAttribute(list, tooltip);
       },
       children: {
@@ -163,7 +163,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
     table: {
       content: useLanguage('tblProps'),
       icon: tableIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         const attribute = {
           ...getElementStyle(this.table, TABLE_PROPERTIES),
           'align': this.getTableAlignment(this.table)
@@ -176,7 +176,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
     cell: {
       content: useLanguage('cellProps'),
       icon: cellIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         const { selectedTds } = this.tableBetter.cellSelection;
         const attribute =
           selectedTds.length > 1
@@ -190,7 +190,7 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
     wrap: {
       content: useLanguage('insParaOTbl'),
       icon: wrapIcon,
-      handler(list, tooltip) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         this.toggleAttribute(list, tooltip);
       },
       children: {
@@ -209,6 +209,13 @@ function getMenusConfig(useLanguage: _useLanguage): MenusDefaults {
       }
     }
   };
+  if (menus?.length) {
+    return Object.values(menus).reduce((config: MenusDefaults, key: string) => {
+      config[key] = DEFAULT[key];
+      return config;
+    }, {});
+  }
+  return DEFAULT;
 }
 
 class TableMenus {
@@ -261,11 +268,12 @@ class TableMenus {
   }
 
   createMenus() {
-    const { language } = this.tableBetter;
+    const { language, options = {} } = this.tableBetter;
+    const { menus } = options;
     const useLanguage = language.useLanguage.bind(language);
     const container = document.createElement('div');
     container.classList.add('ql-table-menus-container', 'ql-hidden');
-    for (const [, val] of Object.entries(getMenusConfig(useLanguage))) {
+    for (const [, val] of Object.entries(getMenusConfig(useLanguage, menus))) {
       const { content, icon, children, handler } = val;
       const list = this.createList(children);
       const tooltip = createTooltip(content);

@@ -29,6 +29,7 @@ interface Options {
     name: string
     content: Props
   }
+  menus?: string[]
 }
 
 const Module = Quill.import('core/module');
