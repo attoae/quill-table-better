@@ -24,8 +24,11 @@ import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
 
-interface Options extends Props {
-  language: string
+interface Options {
+  language?: string | {
+    name: string
+    content: Props
+  }
 }
 
 const Module = Quill.import('core/module');
