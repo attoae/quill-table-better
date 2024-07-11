@@ -75,14 +75,45 @@ cdn
 ```
 
 ## Conifg
+
+### language
 There are two types of language:
 1. string, 'en_US' or 'zh_CN', default 'en_US'
 2. Used to register a new language, such as:
   { name: 'en_UK', content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
 
+### menus
+'menus' are used to configure the action bar, and those not in the array are not displayed.
+Empty array or no configuration default all display.
+
+The functions of the operation bar are as follows:
+1. column
+  - Insert column left
+  - Insert column right
+  - Delete column
+2. row
+  - Insert row above
+  - Insert row below
+  - Delete row
+3. merge
+  - Merge cells
+  - Split cell
+4. table
+  - Table properties
+5. cell
+  - Cell properties
+6. wrap (Insert paragraph outside the table)
+  - Insert before
+  - Insert after
+
+```html
+const menus = ['column', 'row', 'merge', 'table', 'cell', 'wrap'];
+```
+
 ```html
 'table-better': {
-  language: 'en_US'
+  language: 'en_US',
+  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap']
 }
 ```
 
