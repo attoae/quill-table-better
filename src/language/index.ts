@@ -5,30 +5,49 @@ interface Config {
   [propName: string]: Props
 }
 
+interface LanguageConfig {
+  name: string
+  content: Props
+}
+
 class Language {
   config: Config;
-  language: string;
-  constructor(language: string = 'en_US') {
+  language: string | LanguageConfig;
+  name: string;
+  constructor(language?: string | LanguageConfig) {
     this.config = {
       'en_US': en_US,
       'zh_CN': zh_CN
     };
-    this.language = language;
+    this.init(language);
   }
 
-  changeLanguage(language: string) {
-    this.language = language;
+  changeLanguage(name: string) {
+    this.name = name;
   }
 
-  registry(language: string, content: Props) {
+  init(language: string | LanguageConfig) {
+    if (
+      typeof language === 'undefined' ||
+      typeof language === 'string'
+    ) {
+      this.changeLanguage(language || 'en_US');
+    } else {
+      const { name, content } = language;
+      content && this.registry(name, content);
+      name && this.changeLanguage(name);
+    }
+  }
+
+  registry(name: string, content: Props) {
     this.config = {
       ...this.config,
-      [language]: content
+      [name]: content
     }
   }
 
   useLanguage(name: string) {
-    return this.config[this.language][name];
+    return this.config[this.name][name];
   }
 }
 
