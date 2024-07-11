@@ -107,10 +107,6 @@ The functions of the operation bar are as follows:
   - Insert after
 
 ```html
-const menus = ['column', 'row', 'merge', 'table', 'cell', 'wrap'];
-```
-
-```html
 'table-better': {
   language: 'en_US',
   menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap']
