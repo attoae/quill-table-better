@@ -117,6 +117,7 @@ class Table extends Module {
   insertTable(rows: number, columns: number) {
     const range = this.quill.getSelection();
     if (range == null) return;
+    if (this.isTable(range)) return;
     const formats = this.quill.getFormat(range.index - 1);
     const offset = formats[TableCellBlock.blotName] ? 2 : 1;
     const base = new Delta()
@@ -139,6 +140,12 @@ class Table extends Module {
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(range.index + offset, Quill.sources.SILENT);
     this.showTools();
+  }
+
+  // Inserting tables within tables is currently not supported
+  private isTable(range: any) {
+    const formats = this.quill.getFormat(range.index);
+    return !!formats[TableCellBlock.blotName];
   }
 
   private showTools() {
