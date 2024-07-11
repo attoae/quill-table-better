@@ -75,9 +75,14 @@ cdn
 ```
 
 ## Conifg
+There are two types of language:
+1. string, 'en_US' or 'zh_CN', default 'en_US'
+2. Used to register a new language, such as:
+  { name: 'en_UK', content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
+
 ```html
 'table-better': {
-  language: 'en_US' // 'en_US' or 'zh_CN', default 'en_US'
+  language: 'en_US'
 }
 ```
 
@@ -112,18 +117,6 @@ module.getTable();
 ### insertTable(rows: number, columns: number)
 ```html
 module.insertTable(3, 3);
-```
-### module.language methods
-#### registry(language: string, content: Props)
-Register a new language,
-content can be referenced 'src/language/zh_CN.ts'.
-```html
-module.language.registry('zh_CN', {});
-```
-#### changeLanguage(language: string)
-Use when registering a new language.
-```html
-module.language.changeLanguage('zh_CN');
 ```
 
 ## Download
