@@ -441,3 +441,15 @@ $border: 1px solid $color-ccced1;
   background: #f2f2f2;
   pointer-events: none;
 }
+.ql-table-button-disabled {
+  background: #f2f2f2 !important;
+  pointer-events: none;
+  svg {
+    .ql-fill {
+      fill: #999 !important;
+    }
+    .ql-stroke {
+      stroke: #999 !important;
+    }
+  }
+}

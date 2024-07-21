@@ -7,17 +7,63 @@ import {
 import { TableCellBlock } from '../formats/table';
 import { DEVIATION } from '../config';
 
+const WHITE_LIST = [
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'size',
+  'color',
+  'background',
+  'font'
+];
+
 class CellSelection {
   quill: any;
   selectedTds: Element[];
   startTd: Element;
   endTd: Element;
+  disabledList: HTMLElement[];
   constructor(quill: any) {
     this.quill = quill;
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
+    this.disabledList = [];
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
+    this.listen();
+  }
+
+  attach(input: HTMLElement) {
+    let format = Array.from(input.classList).find(className => {
+      return className.indexOf('ql-') === 0;
+    });
+    if (!format) return;
+    format = format.slice('ql-'.length);
+    if (!WHITE_LIST.includes(format)) {
+      this.disabledList.push(input);
+      return;
+    }
+    const eventName = input.tagName === 'SELECT' ? 'change' : 'click';
+    input.addEventListener(eventName, e => {
+      if (this.selectedTds.length < 2) return;
+      if (input.tagName === 'SELECT') {
+        // @ts-ignore
+        if (input.selectedIndex < 0) return;
+        // @ts-ignore
+        const selected = input.options[input.selectedIndex];
+        const val =
+          typeof selected?.value === 'string'
+            ? selected?.value
+            : true;
+        const value = this.getCorrectValue(format, val);
+        this.setSelectedTdsFormat(format, value);
+      } else {
+        const value = this.getCorrectValue(format, true);
+        this.setSelectedTdsFormat(format, value);
+        e.preventDefault();
+      }
+    });
   }
 
   clearSelected() {
@@ -25,6 +71,22 @@ class CellSelection {
       td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
     }
     this.selectedTds = [];
+  }
+
+  getCorrectValue(format: string, value: boolean | string) {
+    this.removeCursor();
+    for (const td of this.selectedTds) {
+      const html = td.outerHTML;
+      const delta = this.quill.clipboard.convert({
+        html,
+        text: '\n'
+      })
+      for (const op of delta.ops) {
+        const val = (op?.attributes && op?.attributes[format]) || false;
+        if (value != val) return value;
+      }
+    }
+    return !value;
   }
 
   handleClick(e: MouseEvent) {
@@ -91,6 +153,17 @@ class CellSelection {
     this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
+  listen() {
+    const toolbar = this.quill.getModule('toolbar');
+    const selectors = 'button, select, .ql-header, .ql-align';
+    Array.from(toolbar.container.querySelectorAll(selectors)).forEach(
+      input => {
+        // @ts-ignore
+        this.attach(input);
+      }
+    );
+  }
+
   makeTableArrowLevelHandler(key: string) {
     const _key = key === 'ArrowLeft' ? 'prev' : 'next';
     const td = key === 'ArrowLeft' ? this.startTd : this.endTd;
@@ -139,6 +212,16 @@ class CellSelection {
     }
   }
 
+  removeCursor() {
+    const range = this.quill.getSelection(true);
+    if (range && range.length === 0) {
+      // The attach function of the toolbar module generated extra cursor
+      // when clicked, which needs to be removed.
+      this.quill.selection.cursor.remove();
+      this.quill.blur();
+    }
+  }
+
   removeSelectedTdsContent() {
     if (this.selectedTds.length < 2) return;
     for (const td of this.selectedTds) {
@@ -153,6 +236,16 @@ class CellSelection {
       }
     }
     this.quill.selection.setNativeRange(this.endTd);
+  }
+
+  setDisabled(disabled: boolean) {
+    for (const input of this.disabledList) {
+      if (disabled) {
+        input.classList.add('ql-table-button-disabled');
+      } else {
+        input.classList.remove('ql-table-button-disabled');
+      }
+    }
   }
 
   setSelected(target: Element) {
@@ -177,6 +270,14 @@ class CellSelection {
     for (const td of this.selectedTds) {
       td.classList && td.classList.add('ql-cell-selected');
     }
+  }
+
+  setSelectedTdsFormat(format: string, value: boolean | string) {
+    for (const td of this.selectedTds) {
+      window.getSelection().selectAllChildren(td);
+      this.quill.format(format, value, Quill.sources.USER);
+    }
+    this.quill.blur();
   }
 
   updateSelected(type: string) {
