@@ -102,6 +102,7 @@ class Table extends Module {
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
     this.cellSelection.handleMousedown(e);
+    this.cellSelection.setDisabled(true);
   }
 
   handleScroll() {
@@ -111,6 +112,7 @@ class Table extends Module {
 
   hideTools() {
     this.cellSelection?.clearSelected();
+    this.cellSelection?.setDisabled(false);
     this.operateLine?.hideDragBlock();
     this.operateLine?.hideDragTable();
     this.operateLine?.hideLine();
@@ -154,6 +156,8 @@ class Table extends Module {
 
   private showTools() {
     const [table, , cell] = this.getTable();
+    if (!table || !cell) return;
+    this.cellSelection.setDisabled(true);
     this.cellSelection.setSelected(cell.domNode);
     this.tableMenus.showMenus();
     this.tableMenus.updateMenus(table.domNode);
