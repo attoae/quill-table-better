@@ -25,7 +25,8 @@ const toolbarOptions = [
   [{ 'font': [] }],
   [{ 'align': [] }],
 
-  ['clean']                                         // remove formatting button
+  ['clean'],                                        // remove formatting button
+  ['table-better']
 ];
 
 const options = {
@@ -33,7 +34,9 @@ const options = {
   modules: {
     toolbar: toolbarOptions,
     table: false,
-    'table-better': {},
+    'table-better': {
+      toolbarTable: true
+    },
     keyboard: {
       bindings: QuillTableBetter.keyboardBindings
     }

@@ -23,6 +23,7 @@ import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
+import ToolbarTable from './ui/toolbar-table';
 
 interface Options {
   language?: string | {
@@ -30,6 +31,7 @@ interface Options {
     content: Props
   }
   menus?: string[]
+  toolbarTable?: boolean
 }
 
 const Module = Quill.import('core/module');
@@ -59,6 +61,7 @@ class Table extends Module {
     document.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
+    this.registerToolbarTable(options?.toolbarTable);
   }
 
   deleteTable() {
@@ -99,6 +102,7 @@ class Table extends Module {
   }
 
   handleMousedown(e: MouseEvent) {
+    ToolbarTable.hide(ToolbarTable.root);
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
     this.cellSelection.handleMousedown(e);
@@ -162,6 +166,19 @@ class Table extends Module {
     this.tableMenus.showMenus();
     this.tableMenus.updateMenus(table.domNode);
     this.tableMenus.updateTable(table.domNode);
+  }
+
+  private registerToolbarTable(toolbarTable: boolean) {
+    if (!toolbarTable) return;
+    Quill.register('formats/table-better', ToolbarTable, true);
+    const toolbar = this.quill.getModule('toolbar');
+    const button = toolbar.container.querySelector('button.ql-table-better');
+    if (!button) return;
+    const selectContainer = ToolbarTable.createContainer();
+    button.appendChild(selectContainer);
+    button.addEventListener('click', (e: MouseEvent) => {
+      ToolbarTable.handleClick(e, this.insertTable.bind(this));
+    });
   }
 }
 
