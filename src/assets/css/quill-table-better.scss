@@ -92,14 +92,17 @@ $border: 1px solid $color-ccced1;
 .ql-table-temporary {
   display: none;
 }
+.ql-table-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 /*style*/
 .ql-operate-line-container {
   position: absolute;
   z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  @extend .ql-table-center;
   .ql-operate-line {
     background-color: $line-color;
   }
@@ -309,11 +312,9 @@ $border: 1px solid $color-ccced1;
       background: $color-white;
       outline: none;
       border: none;
-      display: flex;
       height: 30px;
-      justify-content: center;
-      align-items: center;
       cursor: pointer;
+      @extend .ql-table-center;
       flex: 1;
       & > span {
         margin: 0 2px;
@@ -339,13 +340,11 @@ $border: 1px solid $color-ccced1;
     }
   }
   .color-picker {
-    display: flex;
     width: 30px;
     border-left: $border;
     box-sizing: border-box;
-    justify-content: center;
-    align-items: center;
     position: relative;
+    @extend .ql-table-center;
     .color-button {
       width: 20px;
       height: 20px;
@@ -429,9 +428,7 @@ $border: 1px solid $color-ccced1;
         flex-direction: column;
         .iro-container {
           flex: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+          @extend .ql-table-center;
         }
       }
     }
@@ -451,5 +448,37 @@ $border: 1px solid $color-ccced1;
     .ql-stroke {
       stroke: #999 !important;
     }
+  }
+}
+button.ql-table-better {
+  position: relative;
+}
+.ql-table-select-container {
+  flex-direction: column;
+  width: 190px;
+  padding: 2px;
+  position: absolute;
+  top: 24px;
+  z-index: 10;
+  box-sizing: border-box;
+  @extend .ql-table-center;
+  @extend .ql-table-border-shadow;
+  .ql-table-select-list {
+    flex-wrap: wrap;
+    @extend .ql-table-center;
+  }
+  .ql-table-select-label {
+    width: 100%;
+    line-height: 16px;
+    text-align: center;
+    color: #222f3eb3;
+    margin-top: 2px;
+  }
+  span {
+    width: 16px;
+    height: 16px;
+    border: 1px solid black;
+    box-sizing: border-box;
+    margin: 1px;
   }
 }
