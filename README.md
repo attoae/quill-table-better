@@ -60,11 +60,19 @@ cdn
     'modules/table-better': QuillTableBetter
   }, true);
 
+  const toolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['table-better']
+  ];
+
   const options = {
     theme: 'snow',
     modules: {
       table: false,
-      'table-better': {},
+      toolbar: toolbarOptions,
+      'table-better': {
+        toolbarTable: true
+      },
       keyboard: {
         bindings: QuillTableBetter.keyboardBindings
       }
@@ -106,10 +114,21 @@ The functions of the operation bar are as follows:
   - Insert before
   - Insert after
 
+### toolbarTable (next version)
+'toolbarTable' is used to add a button to insert a table on the toolbar (true or false).
+And 'table-better' needs to be added to toolbarOptions, for example: 
+```html
+const toolbarOptions = [
+  ['bold', 'italic', 'underline', 'strike'],
+  ['table-better']
+];
+```
+
 ```html
 'table-better': {
   language: 'en_US',
-  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap']
+  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap'],
+  toolbarTable: true
 }
 ```
 

@@ -17,3 +17,5 @@ declare interface Props {
 declare type _Map = Map<string, HTMLTableCellElement[]>;
 
 declare type _useLanguage = (name: string) => string
+
+declare type _insertTable = (rows: number, columns: number) => void;
