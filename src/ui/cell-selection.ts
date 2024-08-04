@@ -1,11 +1,16 @@
 import Quill from 'quill';
 import {
-  getCorrectBounds,
   getComputeBounds,
-  getComputeSelectedTds
+  getComputeSelectedTds,
+  getCorrectBounds,
+  getCorrectCellBlot
 } from '../utils';
-import { TableCellBlock } from '../formats/table';
+import { TableCellBlock, TableCell } from '../formats/table';
 import { DEVIATION } from '../config';
+
+const Block = Quill.import('blots/block');
+const { BlockEmbed } = Quill.import('blots/block');
+const Container = Quill.import('blots/container');
 
 const WHITE_LIST = [
   'bold',
@@ -15,8 +20,14 @@ const WHITE_LIST = [
   'size',
   'color',
   'background',
-  'font'
+  'font',
+  'list'
 ];
+
+// @ts-ignore
+function isLine(blot: unknown): blot is Block | BlockEmbed {
+  return blot instanceof Block || blot instanceof BlockEmbed;
+}
 
 class CellSelection {
   quill: any;
@@ -59,7 +70,9 @@ class CellSelection {
         const value = this.getCorrectValue(format, val);
         this.setSelectedTdsFormat(format, value);
       } else {
-        const value = this.getCorrectValue(format, true);
+        // @ts-ignore
+        const val = input?.value || true;
+        const value = this.getCorrectValue(format, val);
         this.setSelectedTdsFormat(format, value);
         e.preventDefault();
       }
@@ -76,17 +89,35 @@ class CellSelection {
   getCorrectValue(format: string, value: boolean | string) {
     this.removeCursor();
     for (const td of this.selectedTds) {
-      const html = td.outerHTML;
+      const blot = Quill.find(td);
+      const html = blot.html() || td.outerHTML;
       const delta = this.quill.clipboard.convert({
         html,
         text: '\n'
       })
       for (const op of delta.ops) {
+        if (!op.attributes && op.insert === '\n') continue;
         const val = (op?.attributes && op?.attributes[format]) || false;
         if (value != val) return value;
       }
     }
     return !value;
+  }
+
+  lines(blot: TableCell) {
+    const getLines = (blot: TableCell) => {
+      // @ts-ignore
+      let lines: (Block | BlockEmbed)[] = [];
+      blot.children.forEach((child: any) => {
+        if (child instanceof Container) {
+          lines = lines.concat(getLines(child));
+        } else if (isLine(child)) {
+          lines.push(child);
+        }
+      });
+      return lines;
+    };
+    return getLines(blot);
   }
 
   handleClick(e: MouseEvent) {
@@ -273,11 +304,20 @@ class CellSelection {
   }
 
   setSelectedTdsFormat(format: string, value: boolean | string) {
+    const selectedTds = [];
+    const toolbar = this.quill.getModule('toolbar');
     for (const td of this.selectedTds) {
-      window.getSelection().selectAllChildren(td);
-      this.quill.format(format, value, Quill.sources.USER);
+      if (toolbar.handlers[format] != null) {
+        const cellBlot = Quill.find(td);
+        const lines = this.lines(cellBlot);
+        const blot = toolbar.handlers[format].call(toolbar, value, lines);
+        blot && selectedTds.push(getCorrectCellBlot(blot).domNode);
+      } else {
+        this.quill.format(format, value, Quill.sources.USER);
+      }
     }
     this.quill.blur();
+    selectedTds.length && this.setSelectedTds(selectedTds);
   }
 
   updateSelected(type: string) {

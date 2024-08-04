@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import { getElementStyle, filterWordStyle } from '../utils';
+import { filterWordStyle, getCellChildBlot } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
 import { CELL_DEFAULT_WIDTH } from '../config';
@@ -34,6 +34,7 @@ class TableCellBlock extends Block {
   }
 
   format(name: string, value: string | Props) {
+    const cellId = this.formats()[this.statics.blotName];
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
       return this.wrap(name, value);
@@ -42,7 +43,8 @@ class TableCellBlock extends Block {
     } else if (name === 'header') {
       super.format('table-header', value);
     } else if (name === 'list') {
-      super.format('table-list', value);
+      this.wrap(ListContainer.blotName, cellId);
+      return this.replaceWith('table-list', value);
     } else {
       super.format(name, value);
     }
@@ -134,6 +136,15 @@ class TableCell extends Container {
     return false;
   }
 
+  html() {
+    const reg = /<(ol)[^>]*><li[^>]* data-list="bullet">(?:.*?)<\/li><\/(ol)>/gi;
+    return this.domNode.outerHTML.replace(reg, (
+      match: string, $1: string, $2: string
+    ) => {
+      return match.replace($1, 'ul').replace($2, 'ul');
+    });
+  }
+
   row() {
     return this.parent;
   }
@@ -156,11 +167,7 @@ class TableCell extends Container {
   optimize(...args: unknown[]) {
     super.optimize(...args);
     this.children.forEach((child: TableCellBlock) => {
-      if (
-        child.next == null ||
-        child.next instanceof ListContainer ||
-        child.next instanceof TableHeader
-      ) return;
+      if (child.next == null) return;
       const childFormats = child.formats()[child.statics.blotName];
       const nextFormats = child.next.formats()[child.next.statics.blotName];
       if (
@@ -532,13 +539,13 @@ class TableContainer extends Container {
     const blotName = cell.statics.blotName;
     const formats = cell.formats()[blotName];
     const colspan = (~~formats['colspan'] || 1) + offset;
-    const [block] = cell.descendant(TableCellBlock);
+    const childBlot = getCellChildBlot(cell);
     if (colspan > 1) {
       Object.assign(formats, { colspan });
     } else {
       delete formats['colspan'];
     }
-    block.format(blotName, formats);
+    childBlot.format(blotName, formats);
   }
 
   setCellRowspan(parentElement: Element) {
@@ -550,13 +557,13 @@ class TableContainer extends Container {
           const blotName = cell.statics.blotName;
           const formats = cell.formats()[blotName];
           const rowspan = (~~formats['rowspan'] || 1) - 1;
-          const [block] = cell.descendant(TableCellBlock);
+          const childBlot = getCellChildBlot(cell);
           if (rowspan > 1) {
             Object.assign(formats, { rowspan });
           } else {
             delete formats['rowspan'];
           }
-          block.format(blotName, formats);
+          childBlot.format(blotName, formats);
         }
         break;
       }
