@@ -24,6 +24,11 @@ import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable from './ui/toolbar-table';
+import { getCorrectCellBlot } from './utils';
+
+interface Context {
+  [propName: string]: any
+}
 
 interface Options {
   language?: string | {
@@ -153,9 +158,55 @@ class Table extends Module {
   }
 
   // Inserting tables within tables is currently not supported
-  private isTable(range: any) {
+  private isTable(range: Range) {
     const formats = this.quill.getFormat(range.index);
     return !!formats[TableCellBlock.blotName];
+  }
+
+  private list(value: string, lines?: any[]) {
+    const range = this.quill.getSelection();
+    const selectedTds = this.cellSelection.selectedTds;
+    if (selectedTds.length) {
+      if (!lines) {
+        if (!range.length && selectedTds.length === 1) {
+          const [line] = this.quill.getLine(range.index);
+          lines = [line];
+        } else {
+          lines = this.quill.getLines(range);
+        }
+      }
+      return this.setTableListFormat(range, selectedTds, value, lines);
+    }
+
+    const formats = this.quill.getFormat(range);
+    if (value === 'check') {
+      if (formats.list === 'checked' || formats.list === 'unchecked') {
+        this.quill.format('list', false, Quill.sources.USER);
+      } else {
+        this.quill.format('list', 'unchecked', Quill.sources.USER);
+      }
+    } else {
+      this.quill.format('list', value, Quill.sources.USER);
+    }
+  }
+
+  private setTableListFormat(
+    range: Range,
+    selectedTds: Element[],
+    value: string,
+    lines: any[]
+  ) {
+    let blot = null;
+    const isReplace = !!(selectedTds.length > 1);
+    for (const line of lines) {
+      blot = line.format('list', value, isReplace);
+    }
+    if (selectedTds.length < 2) {
+      const cell = getCorrectCellBlot(blot);
+      cell && this.cellSelection.setSelected(cell.domNode);
+      this.quill.setSelection(range, Quill.sources.SILENT);
+    }
+    return blot;
   }
 
   private showTools() {
@@ -173,6 +224,7 @@ class Table extends Module {
     Quill.register('formats/table-better', ToolbarTable, true);
     const toolbar = this.quill.getModule('toolbar');
     const button = toolbar.container.querySelector('button.ql-table-better');
+    toolbar.addHandler('list', this.list.bind(this));
     if (!button) return;
     const selectContainer = ToolbarTable.createContainer();
     button.appendChild(selectContainer);
@@ -184,7 +236,21 @@ class Table extends Module {
 
 const keyboardBindings = {
   'table-cell-block backspace': makeCellBlockHandler('Backspace'),
-  'table-cell-block delete':  makeCellBlockHandler('Delete')
+  'table-cell-block delete':  makeCellBlockHandler('Delete'),
+  'table-list empty enter': {
+    key: 'Enter',
+    collapsed: true,
+    format: ['table-list'],
+    empty: true,
+    handler(range: Range, context: Context) {
+      const { line } = context;
+      const cellId = line.parent.formats()[line.parent.statics.blotName];
+      const blot = line.replaceWith(TableCellBlock.blotName, cellId);
+      const tableModule = this.quill.getModule('table-better');
+      const cell = getCorrectCellBlot(blot);
+      cell && tableModule.cellSelection.setSelected(cell.domNode);
+    }
+  }
 }
 
 function makeCellBlockHandler(key: string) {
@@ -192,7 +258,7 @@ function makeCellBlockHandler(key: string) {
     key,
     format: ['table-cell-block'],
     collapsed: true,
-    handler(range: any, context: any) {
+    handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
       const { offset, suffix } = context;
       if (
