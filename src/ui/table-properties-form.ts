@@ -10,6 +10,7 @@ import {
   addDimensionsUnit,
   createTooltip,
   debounce,
+  getCellChildBlot,
   getClosestElement,
   getComputeSelectedCols,
   getCorrectBounds,
@@ -544,13 +545,13 @@ class TablePropertiesForm {
       const blotName = tdBlot.statics.blotName;
       const formats = tdBlot.formats()[blotName];
       const style = this.getCellStyle(td, attrs);
-      const [block] = tdBlot.descendant(TableCellBlock);
+      const childBlot = getCellChildBlot(tdBlot);
       if (align) {
         tdBlot.children.forEach((child: TableCellBlock) => {
           child.format('align', align === 'left' ? '' : align);
         });
       }
-      const parent: TableCell = block.format(blotName, { ...formats, style });
+      const parent: TableCell = childBlot.format(blotName, { ...formats, style });
       newSelectedTds.push(parent.domNode);
     }
     this.tableMenus.tableBetter.cellSelection.setSelectedTds(newSelectedTds);

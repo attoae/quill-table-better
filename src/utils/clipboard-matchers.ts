@@ -44,7 +44,7 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
   const row =
     (node.parentNode as HTMLTableRowElement).getAttribute('data-row') ||
     rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
-  const cell = cells.indexOf(node) + 1;
+  const cellId = node.firstElementChild.getAttribute('data-cell') || cells.indexOf(node) + 1;
   if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
   delta.ops.forEach(op => {
     if (op.attributes && op.attributes['table-cell']) {
@@ -52,7 +52,7 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
       op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
     }
   });
-  return applyFormat(matchTableTh(node, delta, row), 'table-cell-block', cell);
+  return applyFormat(matchTableTh(node, delta, row), 'table-cell-block', cellId);
 }
 
 function matchTableCol(node: HTMLElement, delta: Delta) {

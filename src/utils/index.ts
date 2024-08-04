@@ -4,6 +4,8 @@ import {
   TableCellBlock,
   TableCol
 } from '../formats/table';
+import { ListContainer } from '../formats/list';
+import TableHeader from '../formats/header';
 import { COLORS, DEVIATION } from '../config';
 
 function addDimensionsUnit(value: string) {
@@ -46,14 +48,21 @@ function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
 }
 
+function getCellChildBlot(cellBlot: TableCell) {
+  const [block] = cellBlot.descendant(TableCellBlock);
+  const [list] = cellBlot.descendant(ListContainer);
+  const [header] = cellBlot.descendant(TableHeader);
+  return block || list || header;
+}
+
 function getCellFormats(cellBlot: TableCell): [Props, string] {
   const formats = TableCell.formats(cellBlot.domNode);
-  const [block] = cellBlot.descendant(TableCellBlock);
-  if (!block) {
+  const childBlot = getCellChildBlot(cellBlot);
+  if (!childBlot) {
     const row = formats['data-row'].split('-')[1];
     return [formats, `cell-${row}`];
   } else {
-    const cellId = block.formats()[block.statics.blotName];
+    const cellId = childBlot.formats()[childBlot.statics.blotName];
     return [formats, cellId];
   }
 }
@@ -153,6 +162,16 @@ function getCorrectBounds(target: Element, container: Element) {
     right: left + width,
     bottom: top + height
   }
+}
+
+function getCorrectCellBlot(blot: TableCell) {
+  while (blot) {
+    if (blot.statics.blotName === TableCell.blotName) {
+      return blot;
+    }
+    blot = blot.parent;
+  }
+  return null;
 }
 
 function getElementStyle(node: HTMLElement, rules: string[]) {
@@ -308,12 +327,14 @@ export {
   createTooltip,
   debounce,
   filterWordStyle,
+  getCellChildBlot,
   getCellFormats,
   getClosestElement,
   getComputeBounds,
   getComputeSelectedCols,
   getComputeSelectedTds,
   getCorrectBounds,
+  getCorrectCellBlot,
   getElementStyle,
   isDimensions,
   isValidColor,
