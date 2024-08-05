@@ -39,6 +39,7 @@ interface Options {
   toolbarTable?: boolean
 }
 
+const Container = Quill.import('blots/container');
 const Module = Quill.import('core/module');
 
 class Table extends Module {
@@ -69,6 +70,36 @@ class Table extends Module {
     this.registerToolbarTable(options?.toolbarTable);
   }
 
+  private containers(
+    blot: TableCell,
+    index = 0,
+    length = Number.MAX_VALUE
+  ) {
+    const getContainers = (
+      blot: TableCell,
+      blotIndex: number,
+      blotLength: number
+    ) => {
+      // @ts-ignore
+      let containers: Container[] = [];
+      let lengthLeft = blotLength;
+      blot.children.forEachAt(
+        blotIndex,
+        blotLength,
+        // @ts-ignore
+        (child, childIndex, childLength) => {
+          if (child instanceof Container) {
+            containers.push(child);
+            containers = containers.concat(getContainers(child, childIndex, lengthLeft));
+          } 
+          lengthLeft -= childLength;
+        }
+      );
+      return containers;
+    };
+    return getContainers(blot, index, length);
+  }
+
   deleteTable() {
     const [table] = this.getTable();
     if (table == null) return;
@@ -85,6 +116,12 @@ class Table extends Module {
       temporary.remove();
     }
     this.hideTools();
+  }
+
+  private getLength(blots: any[]): number {
+    return blots.reduce((sum, blot) => {
+      return sum += blot.length();
+    }, 0);
   }
 
   getTable(range = this.quill.getSelection()) {
@@ -157,6 +194,17 @@ class Table extends Module {
     this.showTools();
   }
 
+  private isReplace(range: Range, selectedTds: Element[], lines: any[]) {
+    if (selectedTds.length === 1) {
+      const cellBlot = Quill.find(selectedTds[0]);
+      const containers = this.containers(cellBlot, range.index, range.length);
+      const length = this.getLength(containers);
+      const _length = this.getLength(lines);
+      return length === _length;
+    }
+    return !!(selectedTds.length > 1);
+  }
+
   // Inserting tables within tables is currently not supported
   private isTable(range: Range) {
     const formats = this.quill.getFormat(range.index);
@@ -197,13 +245,15 @@ class Table extends Module {
     lines: any[]
   ) {
     let blot = null;
-    const isReplace = !!(selectedTds.length > 1);
+    const _isReplace = this.isReplace(range, selectedTds, lines);
     for (const line of lines) {
-      blot = line.format('list', value, isReplace);
+      blot = line.format('list', value, _isReplace);
     }
     if (selectedTds.length < 2) {
-      const cell = getCorrectCellBlot(blot);
-      cell && this.cellSelection.setSelected(cell.domNode);
+      if (_isReplace) {
+        const cell = getCorrectCellBlot(blot);
+        cell && this.cellSelection.setSelected(cell.domNode);
+      }
       this.quill.setSelection(range, Quill.sources.SILENT);
     }
     return blot;

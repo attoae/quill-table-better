@@ -599,7 +599,7 @@ TableCol.requiredContainer = TableColgroup;
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
 
-TableCell.allowedChildren = [TableCellBlock, TableContainer, TableHeader, ListContainer];
+TableCell.allowedChildren = [TableCellBlock, TableHeader, ListContainer];
 TableCellBlock.requiredContainer = TableCell;
 TableHeader.requiredContainer = TableCell;
 ListContainer.requiredContainer = TableCell;
