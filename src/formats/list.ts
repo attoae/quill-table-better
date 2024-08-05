@@ -38,6 +38,8 @@ class TableList extends List {
       if (!value || value === list) {
         if (isReplace) {
           this.parent.replaceWith(TableCell.blotName, formats);
+        } else {
+          this.wrap(TableCell.blotName, formats);
         }
         return this.replaceWith(TableCellBlock.blotName, cellId);
       } else if (value !== list) {
