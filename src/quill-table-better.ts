@@ -287,6 +287,8 @@ class Table extends Module {
 const keyboardBindings = {
   'table-cell-block backspace': makeCellBlockHandler('Backspace'),
   'table-cell-block delete':  makeCellBlockHandler('Delete'),
+  'table-list backspace': makeTableListHandler('Backspace'),
+  'table-list delete': makeTableListHandler('Delete'),
   'table-list empty enter': {
     key: 'Enter',
     collapsed: true,
@@ -311,13 +313,17 @@ function makeCellBlockHandler(key: string) {
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
       const { offset, suffix } = context;
+      if (offset === 0 && !line.prev) return false;
+      const blotName = line.prev?.statics.blotName;
       if (
         offset === 0 &&
         (
-          !line.prev ||
-          line.prev.statics.blotName !== 'table-cell-block'
+          blotName === 'table-list-container' ||
+          blotName === TableCellBlock.blotName
         )
       ) {
+        line.remove();
+        this.quill.setSelection(range.index - 1, Quill.sources.SILENT);
         return false;
       }
       // Delete isn't from the end
@@ -325,6 +331,20 @@ function makeCellBlockHandler(key: string) {
         return false;
       }
       return true;
+    }
+  }
+}
+
+function makeTableListHandler(key: string) {
+  return {
+    key,
+    format: ['table-list'],
+    collapsed: true,
+    empty: true,
+    handler(range: Range, context: Context) {
+      const [line] = this.quill.getLine(range.index);
+      const cellId = line.parent.formats()[line.parent.statics.blotName];
+      line.replaceWith(TableCellBlock.blotName, cellId);      
     }
   }
 }
