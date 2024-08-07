@@ -33,27 +33,39 @@ class TableList extends List {
   format(name: string, value: string, isReplace?:boolean) {
     const list = this.formats()[this.statics.blotName];
     if (name === 'list') {
-      const cellBlot = getCorrectCellBlot(this.parent);
-      const [formats, cellId] = getCellFormats(cellBlot);
+      const [formats, cellId] = this.getCellFormats(this.parent);
       if (!value || value === list) {
-        if (isReplace) {
-          this.parent.replaceWith(TableCell.blotName, formats);
-        } else {
-          this.wrap(TableCell.blotName, formats);
-        }
+        this.setReplace(isReplace, formats);
         return this.replaceWith(TableCellBlock.blotName, cellId);
       } else if (value !== list) {
         return this.replaceWith(this.statics.blotName, value);
       }
     } else if (name === ListContainer.blotName) {
       this.wrap(name, value);
+    } else if (name === 'header') {
+      const [formats, cellId] = this.getCellFormats(this.parent);
+      this.setReplace(isReplace, formats);
+      return this.replaceWith('table-header', { cellId, value });
     } else {
       super.format(name, value);
     }
   }
 
+  getCellFormats(parent: TableCell) {
+    const cellBlot = getCorrectCellBlot(parent);
+    return getCellFormats(cellBlot);
+  }
+
   static register() {
     Quill.register(ListContainer);
+  }
+
+  setReplace(isReplace: boolean, formats: Props) {
+    if (isReplace) {
+      this.parent.replaceWith(TableCell.blotName, formats);
+    } else {
+      this.wrap(TableCell.blotName, formats);
+    }
   }
 }
 TableList.blotName = 'table-list';

@@ -25,6 +25,7 @@ import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable from './ui/toolbar-table';
 import { getCorrectCellBlot } from './utils';
+import TableToolbar from './modules/toolbar';
 
 interface Context {
   [propName: string]: any
@@ -39,7 +40,6 @@ interface Options {
   toolbarTable?: boolean
 }
 
-const Container = Quill.import('blots/container');
 const Module = Quill.import('core/module');
 
 class Table extends Module {
@@ -52,6 +52,7 @@ class Table extends Module {
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
+    Quill.register('modules/toolbar', TableToolbar, true);
   }
 
   constructor(quill: any, options: Options) {
@@ -70,36 +71,6 @@ class Table extends Module {
     this.registerToolbarTable(options?.toolbarTable);
   }
 
-  private containers(
-    blot: TableCell,
-    index = 0,
-    length = Number.MAX_VALUE
-  ) {
-    const getContainers = (
-      blot: TableCell,
-      blotIndex: number,
-      blotLength: number
-    ) => {
-      // @ts-ignore
-      let containers: Container[] = [];
-      let lengthLeft = blotLength;
-      blot.children.forEachAt(
-        blotIndex,
-        blotLength,
-        // @ts-ignore
-        (child, childIndex, childLength) => {
-          if (child instanceof Container) {
-            containers.push(child);
-            containers = containers.concat(getContainers(child, childIndex, lengthLeft));
-          } 
-          lengthLeft -= childLength;
-        }
-      );
-      return containers;
-    };
-    return getContainers(blot, index, length);
-  }
-
   deleteTable() {
     const [table] = this.getTable();
     if (table == null) return;
@@ -116,12 +87,6 @@ class Table extends Module {
       temporary.remove();
     }
     this.hideTools();
-  }
-
-  private getLength(blots: any[]): number {
-    return blots.reduce((sum, blot) => {
-      return sum += blot.length();
-    }, 0);
   }
 
   getTable(range = this.quill.getSelection()) {
@@ -194,69 +159,10 @@ class Table extends Module {
     this.showTools();
   }
 
-  private isReplace(range: Range, selectedTds: Element[], lines: any[]) {
-    if (selectedTds.length === 1) {
-      const cellBlot = Quill.find(selectedTds[0]);
-      const containers = this.containers(cellBlot, range.index, range.length);
-      const length = this.getLength(containers);
-      const _length = this.getLength(lines);
-      return length === _length;
-    }
-    return !!(selectedTds.length > 1);
-  }
-
   // Inserting tables within tables is currently not supported
   private isTable(range: Range) {
     const formats = this.quill.getFormat(range.index);
     return !!formats[TableCellBlock.blotName];
-  }
-
-  private list(value: string, lines?: any[]) {
-    const range = this.quill.getSelection();
-    const selectedTds = this.cellSelection.selectedTds;
-    if (selectedTds.length) {
-      if (!lines) {
-        if (!range.length && selectedTds.length === 1) {
-          const [line] = this.quill.getLine(range.index);
-          lines = [line];
-        } else {
-          lines = this.quill.getLines(range);
-        }
-      }
-      return this.setTableListFormat(range, selectedTds, value, lines);
-    }
-
-    const formats = this.quill.getFormat(range);
-    if (value === 'check') {
-      if (formats.list === 'checked' || formats.list === 'unchecked') {
-        this.quill.format('list', false, Quill.sources.USER);
-      } else {
-        this.quill.format('list', 'unchecked', Quill.sources.USER);
-      }
-    } else {
-      this.quill.format('list', value, Quill.sources.USER);
-    }
-  }
-
-  private setTableListFormat(
-    range: Range,
-    selectedTds: Element[],
-    value: string,
-    lines: any[]
-  ) {
-    let blot = null;
-    const _isReplace = this.isReplace(range, selectedTds, lines);
-    for (const line of lines) {
-      blot = line.format('list', value, _isReplace);
-    }
-    if (selectedTds.length < 2) {
-      if (_isReplace) {
-        const cell = getCorrectCellBlot(blot);
-        cell && this.cellSelection.setSelected(cell.domNode);
-      }
-      this.quill.setSelection(range, Quill.sources.SILENT);
-    }
-    return blot;
   }
 
   private showTools() {
@@ -274,7 +180,6 @@ class Table extends Module {
     Quill.register('formats/table-better', ToolbarTable, true);
     const toolbar = this.quill.getModule('toolbar');
     const button = toolbar.container.querySelector('button.ql-table-better');
-    toolbar.addHandler('list', this.list.bind(this));
     if (!button) return;
     const selectContainer = ToolbarTable.createContainer();
     button.appendChild(selectContainer);
