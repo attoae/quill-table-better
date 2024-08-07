@@ -21,7 +21,8 @@ const WHITE_LIST = [
   'color',
   'background',
   'font',
-  'list'
+  'list',
+  'header'
 ];
 
 // @ts-ignore
@@ -42,7 +43,7 @@ class CellSelection {
     this.endTd = null;
     this.disabledList = [];
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
-    this.listen();
+    this.initWhiteList();
   }
 
   attach(input: HTMLElement) {
@@ -53,30 +54,7 @@ class CellSelection {
     format = format.slice('ql-'.length);
     if (!WHITE_LIST.includes(format)) {
       this.disabledList.push(input);
-      return;
-    }
-    const eventName = input.tagName === 'SELECT' ? 'change' : 'click';
-    input.addEventListener(eventName, e => {
-      if (this.selectedTds.length < 2) return;
-      if (input.tagName === 'SELECT') {
-        // @ts-ignore
-        if (input.selectedIndex < 0) return;
-        // @ts-ignore
-        const selected = input.options[input.selectedIndex];
-        const val =
-          typeof selected?.value === 'string'
-            ? selected?.value
-            : true;
-        const value = this.getCorrectValue(format, val);
-        this.setSelectedTdsFormat(format, value);
-      } else {
-        // @ts-ignore
-        const val = input?.value || true;
-        const value = this.getCorrectValue(format, val);
-        this.setSelectedTdsFormat(format, value);
-        e.preventDefault();
-      }
-    });
+    }   
   }
 
   clearSelected() {
@@ -87,7 +65,7 @@ class CellSelection {
   }
 
   getCorrectValue(format: string, value: boolean | string) {
-    this.removeCursor();
+    // this.removeCursor();
     for (const td of this.selectedTds) {
       const blot = Quill.find(td);
       const html = blot.html() || td.outerHTML;
@@ -184,9 +162,9 @@ class CellSelection {
     this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
-  listen() {
+  initWhiteList() {
     const toolbar = this.quill.getModule('toolbar');
-    const selectors = 'button, select, .ql-header, .ql-align';
+    const selectors = 'button, select, .ql-align';
     Array.from(toolbar.container.querySelectorAll(selectors)).forEach(
       input => {
         // @ts-ignore
@@ -313,7 +291,10 @@ class CellSelection {
         const blot = toolbar.handlers[format].call(toolbar, value, lines);
         blot && selectedTds.push(getCorrectCellBlot(blot).domNode);
       } else {
+        const selection = window.getSelection();
+        selection.selectAllChildren(td);
         this.quill.format(format, value, Quill.sources.USER);
+        selection.removeAllRanges();
       }
     }
     this.quill.blur();
