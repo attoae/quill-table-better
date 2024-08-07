@@ -41,7 +41,7 @@ class TableCellBlock extends Block {
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
     } else if (name === 'header') {
-      super.format('table-header', value);
+      return this.replaceWith('table-header', { cellId, value });
     } else if (name === 'list') {
       this.wrap(ListContainer.blotName, cellId);
       return this.replaceWith('table-list', value);
