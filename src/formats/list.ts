@@ -46,6 +46,8 @@ class TableList extends List {
       const [formats, cellId] = this.getCellFormats(this.parent);
       this.setReplace(isReplace, formats);
       return this.replaceWith('table-header', { cellId, value });
+    } else if (name === TableCell.blotName) {
+      this.wrap(name, value);
     } else {
       super.format(name, value);
     }
