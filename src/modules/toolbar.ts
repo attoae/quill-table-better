@@ -67,36 +67,20 @@ class TableToolbar extends Toolbar {
     return cellSelection;
   }
 
-  setTableHeaderFormat(
+  setTableFormat(
     range: Range,
     selectedTds: Element[],
     value: string,
+    name: string,
     lines: any[]
   ) {
     let blot = null;
     const _isReplace = isReplace(range, selectedTds, lines);
     for (const line of lines) {
-      blot = line.format('header', value, _isReplace);
+      blot = line.format(name, value, _isReplace);
     }
     if (selectedTds.length < 2) {
-      this.quill.setSelection(range, Quill.sources.SILENT);
-    }
-    return blot;
-  }
-
-  setTableListFormat(
-    range: Range,
-    selectedTds: Element[],
-    value: string,
-    lines: any[]
-  ) {
-    let blot = null;
-    const _isReplace = isReplace(range, selectedTds, lines);
-    for (const line of lines) {
-      blot = line.format('list', value, _isReplace);
-    }
-    if (selectedTds.length < 2) {
-      if (_isReplace) {
+      if (_isReplace && name === 'list') {
         const cellSelection = this.getCellSelection();
         const cell = getCorrectCellBlot(blot);
         cell && cellSelection.setSelected(cell.domNode);
@@ -197,43 +181,44 @@ function isReplace(range: Range, selectedTds: Element[], lines: any[]) {
   return !!(selectedTds.length > 1);
 }
 
+function tablehandler(
+  value: string,
+  selectedTds: Element[],
+  name: string,
+  lines?: any[]
+) {
+  const range = this.quill.getSelection();
+  if (!lines) {
+    if (!range.length && selectedTds.length === 1) {
+      const [line] = this.quill.getLine(range.index);
+      lines = [line];
+    } else {
+      lines = this.quill.getLines(range);
+    }
+  }
+  return this.setTableFormat(range, selectedTds, value, name, lines);
+}
+
 TableToolbar.DEFAULTS = {
   container: null,
   handlers: {
     ...Toolbar.DEFAULTS.handlers,
     header(value: string, lines?: any[]) {
-      const range = this.quill.getSelection();
       const cellSelection = this.getCellSelection(); 
       const selectedTds = cellSelection.selectedTds;
       if (selectedTds.length) {
-        if (!lines) {
-          if (!range.length && selectedTds.length === 1) {
-            const [line] = this.quill.getLine(range.index);
-            lines = [line];
-          } else {
-            lines = this.quill.getLines(range);
-          }
-        }
-        return this.setTableHeaderFormat(range, selectedTds, value, lines);
+        return tablehandler.call(this, value, selectedTds, 'header', lines);
       }
       this.quill.format('header', value, Quill.sources.USER);
     },
     list(value: string, lines?: any[]) {
-      const range = this.quill.getSelection(true);
       const cellSelection = this.getCellSelection();
       const selectedTds = cellSelection.selectedTds;
       if (selectedTds.length) {
-        if (!lines) {
-          if (!range.length && selectedTds.length === 1) {
-            const [line] = this.quill.getLine(range.index);
-            lines = [line];
-          } else {
-            lines = this.quill.getLines(range);
-          }
-        }
-        return this.setTableListFormat(range, selectedTds, value, lines);
+        return tablehandler.call(this, value, selectedTds, 'list', lines);
       }
-  
+      
+      const range = this.quill.getSelection(true);
       const formats = this.quill.getFormat(range);
       if (value === 'check') {
         if (formats.list === 'checked' || formats.list === 'unchecked') {

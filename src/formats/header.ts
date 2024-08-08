@@ -33,6 +33,8 @@ class TableHeader extends Header {
         this.wrap(TableCell.blotName, formats);
       }
       return this.replaceWith('table-list', value);
+    } else if (name === TableCell.blotName) {
+      this.wrap(name, value);
     } else {
       super.format(name, value);
     }
@@ -45,11 +47,8 @@ class TableHeader extends Header {
   }
 
   formats() {
-    const { cellId, value } = this.statics.formats(this.domNode, this.scroll);
-    return {
-      [this.statics.blotName]: cellId,
-      [Header.blotName]: value
-    };
+    const formats = this.statics.formats(this.domNode, this.scroll);
+    return { [this.statics.blotName]: formats };
   }
 
   getCellFormats(parent: TableCell) {

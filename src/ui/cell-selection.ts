@@ -22,7 +22,8 @@ const WHITE_LIST = [
   'background',
   'font',
   'list',
-  'header'
+  'header',
+  'align'
 ];
 
 // @ts-ignore
@@ -164,8 +165,7 @@ class CellSelection {
 
   initWhiteList() {
     const toolbar = this.quill.getModule('toolbar');
-    const selectors = 'button, select, .ql-align';
-    Array.from(toolbar.container.querySelectorAll(selectors)).forEach(
+    Array.from(toolbar.container.querySelectorAll('button, select')).forEach(
       input => {
         // @ts-ignore
         this.attach(input);
