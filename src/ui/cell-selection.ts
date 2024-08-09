@@ -76,11 +76,28 @@ class CellSelection {
       })
       for (const op of delta.ops) {
         if (!op.attributes && op.insert === '\n') continue;
+        value = this.getListCorrectValue(format, value, op?.attributes);
         const val = (op?.attributes && op?.attributes[format]) || false;
         if (value != val) return value;
       }
     }
     return !value;
+  }
+
+  getListCorrectValue(
+    format: string,
+    value: boolean | string,
+    formats: any = {}
+  ) {
+    if (format !== 'list') return value;
+    if (value === 'check') {
+      if (formats[format] === 'checked' || formats[format] === 'unchecked') {
+        return false;
+      } else {
+        return 'unchecked';
+      }
+    }
+    return value;
   }
 
   lines(blot: TableCell) {
