@@ -62,9 +62,14 @@ function getCellFormats(cellBlot: TableCell): [Props, string] {
     const row = formats['data-row'].split('-')[1];
     return [formats, `cell-${row}`];
   } else {
-    const cellId = childBlot.formats()[childBlot.statics.blotName];
+    const _formats = childBlot.formats()[childBlot.statics.blotName];
+    const cellId = getCellId(_formats);
     return [formats, cellId];
   }
+}
+
+function getCellId(formats: string | Props) {
+  return formats instanceof Object ? formats['cellId'] : formats;
 }
 
 function getClosestElement(element: HTMLElement, selector: string) {
@@ -329,6 +334,7 @@ export {
   filterWordStyle,
   getCellChildBlot,
   getCellFormats,
+  getCellId,
   getClosestElement,
   getComputeBounds,
   getComputeSelectedCols,
