@@ -82,11 +82,9 @@ class TableToolbar extends Toolbar {
       blot = line.format(name, value, isReplace);
     }
     if (selectedTds.length < 2) {
-      if (_isReplace && name === 'list') {
-        const cellSelection = this.getCellSelection();
-        const cell = getCorrectCellBlot(blot);
-        cell && cellSelection.setSelected(cell.domNode);
-      }
+      const cellSelection = this.getCellSelection();
+      const cell = getCorrectCellBlot(blot);
+      cell && cellSelection.setSelected(cell.domNode);
       this.quill.setSelection(range, Quill.sources.SILENT);
     }
     return blot;
@@ -233,6 +231,11 @@ TableToolbar.DEFAULTS = {
       const cellSelection = this.getCellSelection();
       const selectedTds = cellSelection.selectedTds;
       if (selectedTds.length) {
+        if (selectedTds.length === 1) {
+          const range = this.quill.getSelection(true);
+          const formats = this.quill.getFormat(range);
+          value = cellSelection.getListCorrectValue('list', value, formats);
+        }
         return tablehandler.call(this, value, selectedTds, 'list', lines);
       }
       
