@@ -3,6 +3,7 @@ import Delta from 'quill-delta';
 import { EmbedBlot } from 'parchment';
 import { getCorrectCellBlot } from '../utils';
 import { TableCell } from '../formats/table';
+import TableHeader from '../formats/header';
 
 const Container = Quill.import('blots/container');
 const Toolbar = Quill.import('modules/toolbar');
@@ -77,7 +78,8 @@ class TableToolbar extends Toolbar {
     let blot = null;
     const _isReplace = isReplace(range, selectedTds, lines);
     for (const line of lines) {
-      blot = line.format(name, value, _isReplace);
+      const isReplace = getHeaderReplace(selectedTds, name, line, _isReplace);
+      blot = line.format(name, value, isReplace);
     }
     if (selectedTds.length < 2) {
       if (_isReplace && name === 'list') {
@@ -162,6 +164,22 @@ function containers(
     return containers;
   };
   return getContainers(blot, index, length);
+}
+
+function getHeaderReplace(
+  selectedTds: Element[],
+  name: string,
+  line: TableHeader,
+  _isReplace: boolean
+) {
+  if (
+    selectedTds.length === 1 &&
+    name === 'list' &&
+    line.statics.blotName === TableHeader.blotName
+  ) {
+    return true;
+  }
+  return _isReplace;
 }
 
 function getLength(blots: any[]): number {

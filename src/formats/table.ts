@@ -1,5 +1,9 @@
 import Quill from 'quill';
-import { filterWordStyle, getCellChildBlot } from '../utils';
+import {
+  filterWordStyle,
+  getCellChildBlot,
+  getCellId
+} from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
 import { CELL_DEFAULT_WIDTH } from '../config';
@@ -69,10 +73,14 @@ class TableCell extends Container {
       const thisTail = this.children.tail.formats()[this.children.tail.statics.blotName];
       const nextHead = this.next.children.head.formats()[this.next.children.head.statics.blotName];
       const nextTail = this.next.children.tail.formats()[this.next.children.tail.statics.blotName];
+      const _thisHead = getCellId(thisHead);
+      const _thisTail = getCellId(thisTail);
+      const _nextHead = getCellId(nextHead);
+      const _nextTail = getCellId(nextTail);
       return (
-        thisHead === thisTail &&
-        thisHead === nextHead &&
-        thisHead === nextTail
+        _thisHead === _thisTail &&
+        _thisHead === _nextHead &&
+        _thisHead === _nextTail
       );
     }
     return false;
@@ -166,14 +174,11 @@ class TableCell extends Container {
 
   optimize(...args: unknown[]) {
     super.optimize(...args);
-    this.children.forEach((child: TableCellBlock) => {
+    this.children.forEach((child: TableCellBlock | TableHeader | ListContainer) => {
       if (child.next == null) return;
-      const childFormats = child.formats()[child.statics.blotName];
-      const nextFormats = child.next.formats()[child.next.statics.blotName];
-      if (
-        childFormats !== nextFormats &&
-        child.statics.blotName === TableCellBlock.blotName
-      ) {
+      const childFormats = getCellId(child.formats()[child.statics.blotName]);
+      const nextFormats = getCellId(child.next.formats()[child.next.statics.blotName]);
+      if (childFormats !== nextFormats) {
         const next = this.splitAfter(child);
         if (next) next.optimize();
         // We might be able to merge with prev now
