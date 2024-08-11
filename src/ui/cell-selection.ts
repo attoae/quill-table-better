@@ -126,6 +126,7 @@ class CellSelection {
   }
 
   handleKeyup(e: KeyboardEvent) {
+    if (!this.selectedTds.length) return;
     switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowRight':
