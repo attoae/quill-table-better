@@ -83,8 +83,12 @@ class TableToolbar extends Toolbar {
     }
     if (selectedTds.length < 2) {
       const cellSelection = this.getCellSelection();
-      const cell = getCorrectCellBlot(blot);
-      cell && cellSelection.setSelected(cell.domNode);
+      if (_isReplace || lines.length === 1) {
+        const cell = getCorrectCellBlot(blot);
+        cell && cellSelection.setSelected(cell.domNode);
+      } else {
+        cellSelection.setSelected(selectedTds[0]);
+      }
       this.quill.setSelection(range, Quill.sources.SILENT);
     }
     return blot;
