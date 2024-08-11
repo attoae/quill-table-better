@@ -482,3 +482,6 @@ button.ql-table-better {
     margin: 1px;
   }
 }
+ol.table-list-container {
+  counter-reset: list-0; // reset counter
+}
