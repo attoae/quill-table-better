@@ -66,7 +66,6 @@ class CellSelection {
   }
 
   getCorrectValue(format: string, value: boolean | string) {
-    // this.removeCursor();
     for (const td of this.selectedTds) {
       const blot = Quill.find(td);
       const html = blot.html() || td.outerHTML;
@@ -75,7 +74,7 @@ class CellSelection {
         text: '\n'
       })
       for (const op of delta.ops) {
-        if (!op.attributes && op.insert === '\n') continue;
+        if (this.isContinue(op)) continue;
         value = this.getListCorrectValue(format, value, op?.attributes);
         const val = (op?.attributes && op?.attributes[format]) || false;
         if (value != val) return value;
@@ -98,22 +97,6 @@ class CellSelection {
       }
     }
     return value;
-  }
-
-  lines(blot: TableCell) {
-    const getLines = (blot: TableCell) => {
-      // @ts-ignore
-      let lines: (Block | BlockEmbed)[] = [];
-      blot.children.forEach((child: any) => {
-        if (child instanceof Container) {
-          lines = lines.concat(getLines(child));
-        } else if (isLine(child)) {
-          lines.push(child);
-        }
-      });
-      return lines;
-    };
-    return getLines(blot);
   }
 
   handleClick(e: MouseEvent) {
@@ -189,6 +172,41 @@ class CellSelection {
         this.attach(input);
       }
     );
+  }
+
+  insertWith(insert: string) {
+    if (typeof insert !== 'string') return false;
+    return insert.startsWith('\n') && insert.endsWith('\n');
+  }
+
+  isContinue(op: any) {
+    if (
+      this.insertWith(op.insert) &&
+      (
+        !op.attributes ||
+        op.attributes['table-list'] ||
+        op.attributes['table-header']
+      )
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  lines(blot: TableCell) {
+    const getLines = (blot: TableCell) => {
+      // @ts-ignore
+      let lines: (Block | BlockEmbed)[] = [];
+      blot.children.forEach((child: any) => {
+        if (child instanceof Container) {
+          lines = lines.concat(getLines(child));
+        } else if (isLine(child)) {
+          lines.push(child);
+        }
+      });
+      return lines;
+    };
+    return getLines(blot);
   }
 
   makeTableArrowLevelHandler(key: string) {

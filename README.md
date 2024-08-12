@@ -114,7 +114,7 @@ The functions of the operation bar are as follows:
   - Insert before
   - Insert after
 
-### toolbarTable (next version)
+### toolbarTable
 'toolbarTable' is used to add a button to insert a table on the toolbar (true or false).
 And 'table-better' needs to be added to toolbarOptions, for example: 
 ```html
@@ -130,6 +130,24 @@ const toolbarOptions = [
   menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap'],
   toolbarTable: true
 }
+```
+
+## Formats supported by table
+The table supports the following formats and supports simultaneous operations on multiple cells：
+```html
+const WHITE_LIST = [
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'size',
+  'color',
+  'background',
+  'font',
+  'list',
+  'header',
+  'align'
+];
 ```
 
 ## Methods

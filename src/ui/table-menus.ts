@@ -725,6 +725,7 @@ class TableMenus {
   }
 
   updateMenus(table: HTMLTableElement = this.table) {
+    if (!table) return;
     const [tableBounds, containerBounds] = this.getCorrectBounds(table);
     const { left, right, top, bottom } = tableBounds;
     const { height, width } = this.root.getBoundingClientRect();
