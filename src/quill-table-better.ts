@@ -106,6 +106,9 @@ class Table extends Module {
     if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
       this.hideTools();
     }
+    if (e.key === 'Enter' && this.cellSelection.selectedTds.length) {
+      this.tableMenus.updateMenus();
+    }
   }
 
   handleMousedown(e: MouseEvent) {
@@ -227,7 +230,9 @@ function makeCellBlockHandler(key: string) {
           blotName === TableCellBlock.blotName
         )
       ) {
+        const tableModule = this.quill.getModule('table-better');
         line.remove();
+        tableModule?.tableMenus.updateMenus();
         this.quill.setSelection(range.index - 1, Quill.sources.SILENT);
         return false;
       }
