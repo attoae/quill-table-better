@@ -23,7 +23,9 @@ const WHITE_LIST = [
   'font',
   'list',
   'header',
-  'align'
+  'align',
+  'link',
+  'image'
 ];
 
 // @ts-ignore
