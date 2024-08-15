@@ -62,7 +62,7 @@ class Table extends Module {
     quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
     this.language = new Language(options?.language);
-    this.cellSelection = new CellSelection(quill);
+    this.cellSelection = new CellSelection(quill, this);
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
     document.addEventListener('keyup', this.handleKeyup.bind(this));
@@ -168,11 +168,11 @@ class Table extends Module {
     return !!formats[TableCellBlock.blotName];
   }
 
-  private showTools() {
+  private showTools(force?: boolean) {
     const [table, , cell] = this.getTable();
     if (!table || !cell) return;
     this.cellSelection.setDisabled(true);
-    this.cellSelection.setSelected(cell.domNode);
+    this.cellSelection.setSelected(cell.domNode, force);
     this.tableMenus.showMenus();
     this.tableMenus.updateMenus(table.domNode);
     this.tableMenus.updateTable(table.domNode);
@@ -193,6 +193,8 @@ class Table extends Module {
 }
 
 const keyboardBindings = {
+  'table-cell down': makeTableArrowHandler(false),
+  'table-cell up': makeTableArrowHandler(true),
   'table-cell-block backspace': makeCellBlockHandler('Backspace'),
   'table-cell-block delete':  makeCellBlockHandler('Delete'),
   'table-list backspace': makeTableListHandler('Backspace'),
@@ -243,6 +245,19 @@ function makeCellBlockHandler(key: string) {
       return true;
     }
   }
+}
+
+// Prevent table default up and down keyboard events.
+// Implemented by the makeTableArrowVerticalHandler function.
+function makeTableArrowHandler(up: boolean) {
+  return {
+    key: up ? 'ArrowUp' : 'ArrowDown',
+    collapsed: true,
+    format: ['table-cell'],
+    handler() {
+      return false;
+    }
+  };
 }
 
 function makeTableListHandler(key: string) {
