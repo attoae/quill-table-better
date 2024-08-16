@@ -28,6 +28,9 @@ const WHITE_LIST = [
   'image'
 ];
 
+// Only supports formatting for a single cell.
+const SINGLE_WHITE_LIST = ['link', 'image'];
+
 // @ts-ignore
 function isLine(blot: unknown): blot is Block | BlockEmbed {
   return blot instanceof Block || blot instanceof BlockEmbed;
@@ -39,6 +42,7 @@ class CellSelection {
   startTd: Element;
   endTd: Element;
   disabledList: HTMLElement[];
+  singleList: HTMLElement[];
   tableBetter: any;
   constructor(quill: any, tableBetter: any) {
     this.quill = quill;
@@ -46,6 +50,7 @@ class CellSelection {
     this.startTd = null;
     this.endTd = null;
     this.disabledList = [];
+    this.singleList = [];
     this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
     this.initWhiteList();
@@ -59,7 +64,10 @@ class CellSelection {
     format = format.slice('ql-'.length);
     if (!WHITE_LIST.includes(format)) {
       this.disabledList.push(input);
-    }   
+    }
+    if (SINGLE_WHITE_LIST.includes(format)) {
+      this.singleList.push(input);
+    }
   }
 
   clearSelected() {
@@ -162,6 +170,7 @@ class CellSelection {
     }
 
     const handleMouseup = (e: MouseEvent) => {
+      this.setSingleDisabled();
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
@@ -302,7 +311,7 @@ class CellSelection {
         head = head.next;
       }
     }
-    this.quill.selection.setNativeRange(this.endTd);
+    Promise.resolve().then(() => this.tableBetter.tableMenus.updateMenus());
   }
 
   setDisabled(disabled: boolean) {
@@ -313,6 +322,7 @@ class CellSelection {
         input.classList.remove('ql-table-button-disabled');
       }
     }
+    this.setSingleDisabled();
   }
 
   setSelected(target: Element, force: boolean = true) {
@@ -357,6 +367,16 @@ class CellSelection {
     }
     this.quill.blur();
     selectedTds.length && this.setSelectedTds(selectedTds);
+  }
+
+  setSingleDisabled() {
+    for (const input of this.singleList) {
+      if (this.selectedTds.length > 1) {
+        input.classList.add('ql-table-button-disabled');
+      } else {
+        input.classList.remove('ql-table-button-disabled');
+      }
+    }
   }
 
   tableArrowSelection(up: boolean, cellBlot: TableCell) {
