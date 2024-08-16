@@ -1,6 +1,13 @@
 # quill-table-better
 A module that enhances the table functionality of [Quill](https://quilljs.com/).
 
+## Compare the advantages of other table plugins
+1. Supports multiple formats (include list).
+2. Supports simultaneous operations on multiple cells.
+3. Undo/History not break table.
+4. Support language switching.
+5. The toolbar provides button for inserting table.
+
 ## Demo
 [quill-table-better Codepen Demo](https://codepen.io/attoae/pen/WNBGjZp)
 
@@ -148,6 +155,10 @@ const WHITE_LIST = [
   'header',
   'align'
 ];
+```
+Only supports formatting for a single cell.
+```html
+const SINGLE_WHITE_LIST = ['link', 'image'];
 ```
 
 ## Methods
