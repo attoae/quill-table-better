@@ -23,8 +23,13 @@ const WHITE_LIST = [
   'font',
   'list',
   'header',
-  'align'
+  'align',
+  'link',
+  'image'
 ];
+
+// Only supports formatting for a single cell.
+const SINGLE_WHITE_LIST = ['link', 'image'];
 
 // @ts-ignore
 function isLine(blot: unknown): blot is Block | BlockEmbed {
@@ -37,12 +42,16 @@ class CellSelection {
   startTd: Element;
   endTd: Element;
   disabledList: HTMLElement[];
-  constructor(quill: any) {
+  singleList: HTMLElement[];
+  tableBetter: any;
+  constructor(quill: any, tableBetter: any) {
     this.quill = quill;
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
     this.disabledList = [];
+    this.singleList = [];
+    this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
     this.initWhiteList();
   }
@@ -55,7 +64,10 @@ class CellSelection {
     format = format.slice('ql-'.length);
     if (!WHITE_LIST.includes(format)) {
       this.disabledList.push(input);
-    }   
+    }
+    if (SINGLE_WHITE_LIST.includes(format)) {
+      this.singleList.push(input);
+    }
   }
 
   clearSelected() {
@@ -63,6 +75,8 @@ class CellSelection {
       td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
     }
     this.selectedTds = [];
+    this.startTd = null;
+    this.endTd = null;
   }
 
   getCorrectValue(format: string, value: boolean | string) {
@@ -109,7 +123,6 @@ class CellSelection {
   }
 
   handleKeyup(e: KeyboardEvent) {
-    if (!this.selectedTds.length) return;
     switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowRight':
@@ -144,6 +157,7 @@ class CellSelection {
       const isEqualNode = startTd.isEqualNode(endTd);
       if (isEqualNode) return;
       this.clearSelected();
+      this.startTd = startTd;
       this.endTd = endTd;
       const startCorrectBounds = getCorrectBounds(startTd, this.quill.container);
       const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
@@ -156,6 +170,7 @@ class CellSelection {
     }
 
     const handleMouseup = (e: MouseEvent) => {
+      this.setSingleDisabled();
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
@@ -210,50 +225,66 @@ class CellSelection {
   }
 
   makeTableArrowLevelHandler(key: string) {
-    const _key = key === 'ArrowLeft' ? 'prev' : 'next';
     const td = key === 'ArrowLeft' ? this.startTd : this.endTd;
-    const cell = Quill.find(td);
-    if (cell[_key]) {
-      this.setSelected(cell[_key].domNode);
-    } else {
-      const targetRow = cell.parent[_key];
-      if (targetRow) {
-        const _key = key === 'ArrowLeft' ? 'tail' : 'head';
-        this.setSelected(targetRow.children[_key].domNode);
-      } else {
-        this.setSelected(td);
-      }
+    const range = this.quill.getSelection(true);
+    const [block] = this.quill.getLine(range.index);
+    const cell = getCorrectCellBlot(block);
+    if (!cell) return this.tableBetter.hideTools();
+    if (cell && (!td || !td.isEqualNode(cell.domNode))) {
+      this.setSelected(cell.domNode, false);
+      this.tableBetter.showTools(false);
     }
   }
 
   makeTableArrowVerticalHandler(key: string) {
-    const _key = key === 'ArrowUp' ? 'prev' : 'next';
-    const td = key === 'ArrowUp' ? this.startTd : this.endTd;
-    const cell = Quill.find(td);
-    const targetRow = cell.parent[_key];
-    const { left, right } = td.getBoundingClientRect();
-    const position = 'ArrowUp' ? left : right;
-    if (!targetRow) {
-      this.setSelected(td);
+    const up = key === 'ArrowUp' ? true : false;
+    const range = this.quill.getSelection(true);
+    const [block, offset] = this.quill.getLine(range.index);
+    const _key = up ? 'prev' : 'next';
+    if (block[_key] && this.selectedTds.length) {
+      const index =
+        block[_key].offset(this.quill.scroll) +
+        Math.min(offset, block[_key].length() - 1);
+      this.quill.setSelection(index, 0, Quill.sources.USER);
     } else {
-      let selected = null;
-      let row = targetRow;
-      while (row && !selected) {
-        let ref = row.children.head;
-        while (ref) {
-          const { left, right } = ref.domNode.getBoundingClientRect();
-          if (Math.abs(left - position) <= 2) {
-            selected = ref.domNode;
-            break;
-          } else if (Math.abs(right - position) <= 2 && !ref.next) {
-            selected = ref.domNode;
-            break;
-          }
-          ref = ref.next;
-        }
-        row = row[_key];
+      if (!this.selectedTds.length) {
+        const cellBlot = getCorrectCellBlot(block);
+        if (!cellBlot) return;
+        this.tableArrowSelection(up, cellBlot);
+        this.tableBetter.showTools(false);
+        return;
       }
-      this.setSelected(selected);
+      const td = up ? this.startTd : this.endTd;
+      const cell = Quill.find(td);
+      const targetRow = cell.parent[_key];
+      const { left: _left, right: _right } = td.getBoundingClientRect();
+      if (targetRow) {
+        let cellBlot = null;
+        let row = targetRow;
+        while (row && !cellBlot) {
+          let ref = row.children.head;
+          while (ref) {
+            const { left, right } = ref.domNode.getBoundingClientRect();
+            if (Math.abs(left - _left) <= 2) {
+              cellBlot = ref;
+              break;
+            } else if (Math.abs(right - _right) <= 2) {
+              cellBlot = ref;
+              break;
+            }
+            ref = ref.next;
+          }
+          row = row[_key];
+        }
+        this.tableArrowSelection(up, cellBlot);
+      } else {
+        const cell = getCorrectCellBlot(block);
+        const table = cell.table();
+        const offset = up ? -1 : table.length();
+        const index = table.offset(this.quill.scroll) + offset;
+        this.tableBetter.hideTools();
+        this.quill.setSelection(index, 0, Quill.sources.USER);
+      }
     }
   }
 
@@ -280,7 +311,7 @@ class CellSelection {
         head = head.next;
       }
     }
-    this.quill.selection.setNativeRange(this.endTd);
+    Promise.resolve().then(() => this.tableBetter.tableMenus.updateMenus());
   }
 
   setDisabled(disabled: boolean) {
@@ -291,16 +322,17 @@ class CellSelection {
         input.classList.remove('ql-table-button-disabled');
       }
     }
+    this.setSingleDisabled();
   }
 
-  setSelected(target: Element) {
+  setSelected(target: Element, force: boolean = true) {
     const cell = Quill.find(target);
     this.clearSelected();
     this.startTd = target;
     this.endTd = target;
     this.selectedTds = [target];
     target.classList.add('ql-cell-focused');
-    this.quill.setSelection(
+    force && this.quill.setSelection(
       cell.offset(this.quill.scroll) + cell.length() - 1,
       0,
       Quill.sources.USER
@@ -335,6 +367,24 @@ class CellSelection {
     }
     this.quill.blur();
     selectedTds.length && this.setSelectedTds(selectedTds);
+  }
+
+  setSingleDisabled() {
+    for (const input of this.singleList) {
+      if (this.selectedTds.length > 1) {
+        input.classList.add('ql-table-button-disabled');
+      } else {
+        input.classList.remove('ql-table-button-disabled');
+      }
+    }
+  }
+
+  tableArrowSelection(up: boolean, cellBlot: TableCell) {
+    const key = up ? 'tail' : 'head';
+    const offset = up ? cellBlot.children[key].length() - 1 : 0;
+    this.setSelected(cellBlot.domNode, false);
+    const index = cellBlot.children[key].offset(this.quill.scroll) + offset;
+    this.quill.setSelection(index, 0, Quill.sources.USER);
   }
 
   updateSelected(type: string) {
