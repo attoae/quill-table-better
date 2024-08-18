@@ -14,6 +14,7 @@ export default {
   'insParaOTbl': '在表格外插入段落',
   'insB4': '在表格前面插入',
   'insAft': '在表格后面插入',
+  'delTable': '删除表格',
   'border': '边框',
   'color': '颜色',
   'width': '宽度',

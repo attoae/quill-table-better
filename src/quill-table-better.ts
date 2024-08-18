@@ -12,6 +12,8 @@ import {
   TableCol,
   TableColgroup
 } from './formats/table';
+import TableHeader from './formats/header';
+import { ListContainer } from './formats/list';
 import { 
   matchTable,
   matchTableCell,
@@ -24,7 +26,7 @@ import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable from './ui/toolbar-table';
-import { getCorrectCellBlot } from './utils';
+import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
 
 interface Context {
@@ -39,6 +41,8 @@ interface Options {
   menus?: string[]
   toolbarTable?: boolean
 }
+
+type Line = TableCellBlock | TableHeader | ListContainer;
 
 const Module = Quill.import('core/module');
 
@@ -106,9 +110,7 @@ class Table extends Module {
     if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
       this.hideTools();
     }
-    if (e.key === 'Enter' && this.cellSelection.selectedTds.length) {
-      this.tableMenus.updateMenus();
-    }
+    this.updateMenus(e);
   }
 
   handleMousedown(e: MouseEvent) {
@@ -168,16 +170,6 @@ class Table extends Module {
     return !!formats[TableCellBlock.blotName];
   }
 
-  private showTools(force?: boolean) {
-    const [table, , cell] = this.getTable();
-    if (!table || !cell) return;
-    this.cellSelection.setDisabled(true);
-    this.cellSelection.setSelected(cell.domNode, force);
-    this.tableMenus.showMenus();
-    this.tableMenus.updateMenus(table.domNode);
-    this.tableMenus.updateTable(table.domNode);
-  }
-
   private registerToolbarTable(toolbarTable: boolean) {
     if (!toolbarTable) return;
     Quill.register('formats/table-better', ToolbarTable, true);
@@ -190,13 +182,52 @@ class Table extends Module {
       ToolbarTable.handleClick(e, this.insertTable.bind(this));
     });
   }
+
+  private showTools(force?: boolean) {
+    const [table, , cell] = this.getTable();
+    if (!table || !cell) return;
+    this.cellSelection.setDisabled(true);
+    this.cellSelection.setSelected(cell.domNode, force);
+    this.tableMenus.showMenus();
+    this.tableMenus.updateMenus(table.domNode);
+    this.tableMenus.updateTable(table.domNode);
+  }
+
+  private updateMenus(e: KeyboardEvent) {
+    if (!this.cellSelection.selectedTds.length) return;
+    if (
+      e.key === 'Enter' ||
+      (e.ctrlKey && e.key === 'v')
+    ) {
+      this.tableMenus.updateMenus();
+    }
+  }
 }
 
 const keyboardBindings = {
   'table-cell down': makeTableArrowHandler(false),
   'table-cell up': makeTableArrowHandler(true),
   'table-cell-block backspace': makeCellBlockHandler('Backspace'),
-  'table-cell-block delete':  makeCellBlockHandler('Delete'),
+  'table-cell-block delete': makeCellBlockHandler('Delete'),
+  'table-header backspace': makeTableHeaderHandler('Backspace'),
+  'table-header delete': makeTableHeaderHandler('Delete'),
+  'table-header enter': {
+    key: 'Enter',
+    collapsed: true,
+    format: ['table-header'],
+    suffix: /^$/,
+    handler(range: Range, context: Context) {
+      const [line, offset] = this.quill.getLine(range.index);
+      const delta = new Delta()
+        .retain(range.index)
+        .insert('\n', context.format)
+        .retain(line.length() - offset - 1)
+        .retain(1, { header: null });
+      this.quill.updateContents(delta, Quill.sources.USER);
+      this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
+      this.quill.scrollSelectionIntoView();
+    },
+  },
   'table-list backspace': makeTableListHandler('Backspace'),
   'table-list delete': makeTableListHandler('Delete'),
   'table-list empty enter': {
@@ -228,15 +259,12 @@ function makeCellBlockHandler(key: string) {
       if (
         offset === 0 &&
         (
-          blotName === 'table-list-container' ||
-          blotName === TableCellBlock.blotName
+          blotName === ListContainer.blotName ||
+          blotName === TableCellBlock.blotName ||
+          blotName === TableHeader.blotName
         )
       ) {
-        const tableModule = this.quill.getModule('table-better');
-        line.remove();
-        tableModule?.tableMenus.updateMenus();
-        this.quill.setSelection(range.index - 1, Quill.sources.SILENT);
-        return false;
+        return removeLine.call(this, line, range);
       }
       // Delete isn't from the end
       if (offset !== 0 && !suffix && key === 'Delete') {
@@ -260,6 +288,24 @@ function makeTableArrowHandler(up: boolean) {
   };
 }
 
+function makeTableHeaderHandler(key: string) {
+  return {
+    key,
+    format: ['table-header'],
+    collapsed: true,
+    empty: true,
+    handler(range: Range, context: Context) {
+      const [line] = this.quill.getLine(range.index);
+      if (line.prev) {
+        return removeLine.call(this, line, range);
+      } else {
+        const cellId = getCellId(line.formats()[line.statics.blotName]);
+        line.replaceWith(TableCellBlock.blotName, cellId);
+      }
+    }
+  }
+}
+
 function makeTableListHandler(key: string) {
   return {
     key,
@@ -272,6 +318,14 @@ function makeTableListHandler(key: string) {
       line.replaceWith(TableCellBlock.blotName, cellId);      
     }
   }
+}
+
+function removeLine(line: Line, range: Range) {
+  const tableModule = this.quill.getModule('table-better');
+  line.remove();
+  tableModule?.tableMenus.updateMenus();
+  this.quill.setSelection(range.index - 1, Quill.sources.SILENT);
+  return false;
 }
 
 Table.keyboardBindings = keyboardBindings;

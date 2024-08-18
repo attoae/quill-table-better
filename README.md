@@ -120,6 +120,8 @@ The functions of the operation bar are as follows:
 6. wrap (Insert paragraph outside the table)
   - Insert before
   - Insert after
+7. delete
+  - Delete table
 
 ### toolbarTable
 'toolbarTable' is used to add a button to insert a table on the toolbar (true or false).
@@ -134,7 +136,7 @@ const toolbarOptions = [
 ```html
 'table-better': {
   language: 'en_US',
-  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap'],
+  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
   toolbarTable: true
 }
 ```

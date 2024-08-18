@@ -14,6 +14,7 @@ export default {
   'insParaOTbl': 'Insert paragraph outside the table',
   'insB4': 'Insert before',
   'insAft': 'Insert after',
+  'delTable': 'Delete table',
   'border': 'Border',
   'color': 'Color',
   'width': 'Width',
