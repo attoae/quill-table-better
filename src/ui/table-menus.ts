@@ -20,6 +20,7 @@ import tableIcon from '../assets/icon/table.svg';
 import cellIcon from '../assets/icon/cell.svg';
 import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
+import deleteIcon from '../assets/icon/delete.svg';
 import {
   TableCell,
   TableCellBlock,
@@ -207,6 +208,18 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
             this.insertParagraph(1);
           }
         }
+      }
+    },
+    delete: {
+      content: useLanguage('delTable'),
+      icon: deleteIcon,
+      handler() {
+        const tableBlot = Quill.find(this.table);
+        if (!tableBlot) return;
+        const offset = tableBlot.offset(this.quill.scroll);
+        tableBlot.remove();
+        this.tableBetter.hideTools();
+        this.quill.setSelection(offset - 1, 0, Quill.sources.USER);
       }
     }
   };
