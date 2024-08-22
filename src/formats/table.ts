@@ -50,7 +50,7 @@ class TableCellBlock extends Block {
       this.wrap(ListContainer.blotName, cellId);
       return this.replaceWith('table-list', value);
     } else if (name === this.statics.blotName) {
-      this.replaceWith(name, cellId);
+      this.replaceWith(name, value || cellId);
     } else {
       super.format(name, value);
     }
