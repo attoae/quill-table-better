@@ -73,6 +73,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
             const bounds = this.table.getBoundingClientRect();
             this.insertColumn(leftTd, 0);
             updateTableWidth(this.table, bounds, CELL_DEFAULT_WIDTH);
+            this.updateMenus();
           }
         },
         right: {
@@ -82,6 +83,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
             const bounds = this.table.getBoundingClientRect();
             this.insertColumn(rightTd, 1);
             updateTableWidth(this.table, bounds, CELL_DEFAULT_WIDTH);
+            this.updateMenus();
           }
         },
         delete: {
@@ -113,6 +115,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
           handler() {
             const { leftTd } = this.getSelectedTdsInfo();
             this.insertRow(leftTd, 0);
+            this.updateMenus();
           }
         },
         below: {
@@ -120,6 +123,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
           handler() {
             const { rightTd } = this.getSelectedTdsInfo();
             this.insertRow(rightTd, 1);
+            this.updateMenus();
           }
         },
         delete: {
@@ -137,6 +141,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
             this.tableBetter.cellSelection.updateSelected('row');
             const tableBlot = Quill.find(selectedTds[0]).table();
             tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+            this.updateMenus();
           }
         }
       }
@@ -152,12 +157,14 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
           content: useLanguage('mCells'),
           handler() {
             this.mergeCells();
+            this.updateMenus();
           }
         },
         split: {
           content: useLanguage('sCell'),
           handler() {
             this.splitCell();
+            this.updateMenus();
           }
         }
       }
@@ -576,8 +583,7 @@ class TableMenus {
     } else {
       tableBlot.insertColumn(left, isLast, width);
     }
-    this.updateMenus();
-    this.quill.update(Quill.sources.USER);
+    // this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -607,7 +613,7 @@ class TableMenus {
     } else {
       tableBlot.insertRow(index + offset, offset);
     }
-    this.quill.update(Quill.sources.USER);
+    // this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -655,7 +661,7 @@ class TableMenus {
       blot.remove();
     }
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
-    this.quill.update(Quill.sources.USER);
+    // this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
@@ -720,7 +726,7 @@ class TableMenus {
         rowspan: null
       });
     }
-    this.quill.update(Quill.sources.USER);
+    // this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
