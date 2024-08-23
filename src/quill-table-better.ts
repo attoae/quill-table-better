@@ -28,6 +28,7 @@ import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
+import TableClipboard from './modules/clipboard';
 
 interface Context {
   [propName: string]: any
@@ -57,6 +58,7 @@ class Table extends Module {
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
     Quill.register('modules/toolbar', TableToolbar, true);
+    Quill.register('modules/clipboard', TableClipboard, true);
   }
 
   constructor(quill: any, options: Options) {
