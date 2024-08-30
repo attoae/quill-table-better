@@ -248,6 +248,7 @@ $border: 1px solid $color-ccced1;
   left: 50%;
   padding-bottom: 12px;
   background: $color-white;
+  z-index: 1;
   @include boxShadow($color-ccced1);
   &::before {
     @extend .ql-table-triangle-common;
