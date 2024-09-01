@@ -41,13 +41,19 @@ class TableList extends List {
         return this.replaceWith(this.statics.blotName, value);
       }
     } else if (name === ListContainer.blotName) {
-      this.wrap(name, value);
+      this.domNode.setAttribute('data-cell', value);
     } else if (name === 'header') {
       const [formats, cellId] = this.getCellFormats(this.parent);
       this.setReplace(isReplace, formats);
       return this.replaceWith('table-header', { cellId, value });
     } else if (name === TableCell.blotName) {
+      let cellId = this.domNode.getAttribute('data-cell');
+      this.domNode.removeAttribute('data-cell');
+      if (this.parent.statics.blotName === ListContainer.blotName) {
+        cellId = this.parent.formats()[this.parent.statics.blotName] || cellId;
+      }
       this.wrap(name, value);
+      cellId && this.wrap(ListContainer.blotName, cellId);
     } else {
       super.format(name, value);
     }
