@@ -3,7 +3,7 @@ import merge from 'lodash.merge';
 import { filterWordStyle } from './';
 import { TableCell } from '../formats/table';
 
-const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
+const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style', 'class'];
 
 function applyFormat(delta: Delta, format: Props | string, value?: any): Delta {
   if (typeof format === 'object') {
@@ -69,7 +69,11 @@ function matchTableCol(node: HTMLElement, delta: Delta) {
 function matchTableTemporary(node: HTMLElement, delta: Delta) {
   const formats = TABLE_ATTRIBUTE.reduce((formats: Props, attr) => {
     if (node.hasAttribute(attr)) {
-      formats[attr] = filterWordStyle(node.getAttribute(attr));
+      if (attr === 'class') {
+        formats['data-class'] = node.getAttribute(attr);
+      } else {
+        formats[attr] = filterWordStyle(node.getAttribute(attr));
+      }
     }
     return formats;
   }, {});
