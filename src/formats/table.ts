@@ -13,7 +13,7 @@ const Break = Quill.import('blots/break');
 const Container = Quill.import('blots/container');
 
 const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
-const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style'];
+const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style', 'data-class'];
 const STYLE_RULES = ['color', 'border', 'width', 'height'];
 const COL_ATTRIBUTE = ['width'];
 
@@ -256,7 +256,11 @@ class TableTemporary extends Block {
       const formats = this.formats()[this.statics.blotName];
       for (const key of TABLE_ATTRIBUTE) {
         if (formats[key]) {
-          this.parent.domNode.setAttribute(key, formats[key]);
+          if (key === 'data-class') {
+            this.parent.domNode.setAttribute('class', formats[key]);
+          } else {
+            this.parent.domNode.setAttribute(key, formats[key]);
+          }
         } else {
           this.parent.domNode.removeAttribute(key);
         }
@@ -532,6 +536,7 @@ class TableContainer extends Container {
   optimize(...args: unknown[]) {
     super.optimize(...args);
     const temporaries = this.descendants(TableTemporary);
+    this.setClassName(temporaries);
     if (temporaries.length > 1) {
       temporaries.shift();
       for (const temporary of temporaries) {
@@ -576,6 +581,45 @@ class TableContainer extends Container {
     }
   }
 
+  private setClassName(temporaries: TableTemporary[]) {
+    const defaultClassName = this.statics.defaultClassName;
+    const _temporary = temporaries[0];
+    const _className = this.domNode.getAttribute('class');
+    const getClassName = (className: string) => {
+      const classNames = (className || '').split(/\s+/);
+      if (!classNames.find(className => className === defaultClassName)) {
+        classNames.unshift(defaultClassName);
+      }
+      return classNames.join(' ').trim();
+    }
+    const setClass = (temporary: TableTemporary, value: string) => {
+      temporary.domNode.setAttribute('data-class', value);
+    }
+    if (!_temporary) {
+      const container = this.prev;
+      if (!container) return;
+      const [cell] = container.descendant(TableCell);
+      const [temporary] = container.descendant(TableTemporary);
+      if (!cell && temporary) {
+        const className = temporary.domNode.getAttribute('data-class');
+        if (className !== _className && _className != null) {
+          setClass(temporary, getClassName(_className));
+        }
+        if (!_className && !className) {
+          setClass(temporary, defaultClassName);
+        }
+      }
+    } else {
+      const className = _temporary.domNode.getAttribute('data-class');
+      if (className !== _className && _className != null) {
+        setClass(_temporary, getClassName(_className));
+      }
+      if (!_className && !className) {
+        setClass(_temporary, defaultClassName);
+      }
+    }
+  }
+
   tbody() {
     const [body] = this.descendant(TableBody);
     return body || this.findChild('table-body');
@@ -587,7 +631,8 @@ class TableContainer extends Container {
   } 
 }
 TableContainer.blotName = 'table-container';
-TableContainer.className = 'ql-table-better';
+// TableContainer.className = 'ql-table-better';
+TableContainer.defaultClassName = 'ql-table-better';
 TableContainer.tagName = 'TABLE';
 
 TableContainer.allowedChildren = [TableBody, TableTemporary, TableColgroup];
