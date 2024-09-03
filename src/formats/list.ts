@@ -41,19 +41,24 @@ class TableList extends List {
         return this.replaceWith(this.statics.blotName, value);
       }
     } else if (name === ListContainer.blotName) {
-      this.domNode.setAttribute('data-cell', value);
+      const cellBlot = getCorrectCellBlot(this.parent);
+      if (cellBlot) {
+        const [formats] = getCellFormats(cellBlot);
+        this.wrap(TableCell.blotName, formats);
+      } else {
+        this.wrap(TableCell.blotName, {});
+      }
+      this.wrap(name, value);
     } else if (name === 'header') {
       const [formats, cellId] = this.getCellFormats(this.parent);
       this.setReplace(isReplace, formats);
       return this.replaceWith('table-header', { cellId, value });
     } else if (name === TableCell.blotName) {
-      let cellId = this.domNode.getAttribute('data-cell');
-      this.domNode.removeAttribute('data-cell');
-      if (this.parent.statics.blotName === ListContainer.blotName) {
-        cellId = this.parent.formats()[this.parent.statics.blotName] || cellId;
-      }
       this.wrap(name, value);
-      cellId && this.wrap(ListContainer.blotName, cellId);
+      if (this.parent.statics.blotName === ListContainer.blotName) {
+        const cellId = this.parent.formats()[this.parent.statics.blotName];
+        cellId && this.wrap(ListContainer.blotName, cellId);
+      }
     } else {
       super.format(name, value);
     }
