@@ -2,7 +2,9 @@ import Quill from 'quill';
 import {
   filterWordStyle,
   getCellChildBlot,
-  getCellId
+  getCellFormats,
+  getCellId,
+  getCorrectCellBlot
 } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
@@ -46,7 +48,14 @@ class TableCellBlock extends Block {
       this.wrap(name, value);
     } else if (name === 'header') {
       return this.replaceWith('table-header', { cellId, value });
+    } else if (name === 'table-header' && value) {
+      this.wrapTableCell(this.parent);
+      return this.replaceWith(name, value);
     } else if (name === 'list') {
+      this.wrap(ListContainer.blotName, cellId);
+      return this.replaceWith('table-list', value);
+    } else if (name === 'table-list' && value) {
+      this.wrapTableCell(this.parent);
       this.wrap(ListContainer.blotName, cellId);
       return this.replaceWith('table-list', value);
     } else {
@@ -56,6 +65,13 @@ class TableCellBlock extends Block {
 
   formats() {
     return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
+  }
+
+  wrapTableCell(parent: TableCell) {
+    const cellBlot = getCorrectCellBlot(parent);
+    if (!cellBlot) return;
+    const [formats] = getCellFormats(cellBlot);
+    this.wrap(TableCell.blotName, formats);
   }
 }
 TableCellBlock.blotName = 'table-cell-block';
