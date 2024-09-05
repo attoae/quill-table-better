@@ -6,16 +6,23 @@ const icons = Quill.import('ui/icons');
 icons['table-better'] = tableIcon;
 const SUM = 10;
  
-class ToolbarTable extends Inline {
-  static computeChildren: Element[] = [];
-  
-  static clearSelected(children: Element[]) {
+class ToolbarTable extends Inline {};
+
+class TableSelect {
+  computeChildren: Element[];
+  root: HTMLDivElement;
+  constructor() {
+    this.computeChildren = [];
+    this.root = this.createContainer();
+  }
+
+  clearSelected(children: NodeListOf<Element>) {
     for (const child of children) {
       child.classList && child.classList.remove('ql-cell-selected');
     }
   }
 
-  static createContainer() {
+  createContainer() {
     const container = document.createElement('div');
     const list = document.createElement('div');
     const label = document.createElement('div');
@@ -36,11 +43,10 @@ class ToolbarTable extends Inline {
     container.appendChild(list);
     container.appendChild(label);
     container.addEventListener('mousemove', e => this.handleMouseMove(e, container));
-    this.root = container;
     return container;
   }
 
-  static getComputeChildren(children: Element[], e: MouseEvent): Element[] {
+  getComputeChildren(children: Element[], e: MouseEvent): Element[] {
     const computeChildren = [];
     const { clientX, clientY } = e;
     for (const child of children) {
@@ -52,13 +58,13 @@ class ToolbarTable extends Inline {
     return computeChildren;
   }
 
-  static getSelectAttrs(element: Element) {
+  getSelectAttrs(element: Element) {
     const row = ~~element.getAttribute('row');
     const column = ~~element.getAttribute('column');
     return [row, column];
   }
 
-  static handleClick(e: MouseEvent, insertTable: _insertTable) {
+  handleClick(e: MouseEvent, insertTable: _insertTable) {
     this.toggle(this.root);
     const span = (e.target as Element).closest('span[row]');
     if (!span) {
@@ -70,7 +76,7 @@ class ToolbarTable extends Inline {
     this.insertTable(span, insertTable);
   }
 
-  static handleMouseMove(e: MouseEvent, container: Element) {
+  handleMouseMove(e: MouseEvent, container: Element) {
     const children = container.firstElementChild.children;
     // @ts-ignore
     this.clearSelected(children);
@@ -83,19 +89,22 @@ class ToolbarTable extends Inline {
     this.setLabelContent(container.lastElementChild, computeChildren[computeChildren.length - 1]);
   }
 
-  static hide(element: Element) {
+  hide(element: Element) {
     element && element.classList.add('ql-hidden');
   }
 
-  static insertTable(child: Element, insertTable: _insertTable) {
+  insertTable(child: Element, insertTable: _insertTable) {
     const [row, column] = this.getSelectAttrs(child);
     insertTable(row, column);
-    this.root && this.clearSelected(this.root.firstElementChild.children);
+    if (this.root) {
+      const children = this.root.querySelectorAll('.ql-table-select-list span');
+      this.clearSelected(children);
+    }
     this.hide(this.root);
     this.computeChildren = [];
   }
 
-  static setLabelContent(label: Element, child: Element) {
+  setLabelContent(label: Element, child: Element) {
     if (!child) {
       label.innerHTML = '0 x 0';
     } else {
@@ -104,13 +113,13 @@ class ToolbarTable extends Inline {
     }
   }
 
-  static show(element: Element) {
+  show(element: Element) {
     element && element.classList.remove('ql-hidden');
   }
 
-  static toggle(element: Element) {
+  toggle(element: Element) {
     element && element.classList.toggle('ql-hidden');
   }
-};
+}
 
-export default ToolbarTable;
+export { TableSelect, ToolbarTable as default };
