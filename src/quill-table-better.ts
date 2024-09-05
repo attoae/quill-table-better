@@ -140,18 +140,18 @@ class Table extends Module {
   }
 
   insertTable(rows: number, columns: number) {
-    const range = this.quill.getSelection();
+    const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
     const formats = this.quill.getFormat(range.index - 1);
-    const offset = formats[TableCellBlock.blotName] ? 2 : 1;
+    const [, offset] = this.quill.getLine(range.index);
+    const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
+    const _offset = isExtra ? 2 : 1;
+    const extraDelta = isExtra ? new Delta().insert('\n') : new Delta();
     const base = new Delta()
       .retain(range.index)
-      .concat(
-        formats[TableCellBlock.blotName]
-         ? new Delta().insert('\n')
-         : new Delta()
-      )
+      .delete(range.length)
+      .concat(extraDelta)
       .insert('\n', { [TableTemporary.blotName]: {} });
     const delta = new Array(rows).fill(0).reduce(memo => {
       const id = tableId();
@@ -163,7 +163,7 @@ class Table extends Module {
       }, memo);
     }, base);
     this.quill.updateContents(delta, Quill.sources.USER);
-    this.quill.setSelection(range.index + offset, Quill.sources.SILENT);
+    this.quill.setSelection(range.index + _offset, Quill.sources.SILENT);
     this.showTools();
   }
 
