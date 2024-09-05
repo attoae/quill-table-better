@@ -8,13 +8,12 @@ import {
 } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
-import { CELL_DEFAULT_WIDTH } from '../config';
+import { CELL_ATTRIBUTE, CELL_DEFAULT_WIDTH } from '../config';
 
 const Block = Quill.import('blots/block');
 const Break = Quill.import('blots/break');
 const Container = Quill.import('blots/container');
 
-const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style', 'data-class'];
 const STYLE_RULES = ['color', 'border', 'width', 'height'];
 const COL_ATTRIBUTE = ['width'];
@@ -51,12 +50,9 @@ class TableCellBlock extends Block {
     } else if (name === 'table-header' && value) {
       this.wrapTableCell(this.parent);
       return this.replaceWith(name, value);
-    } else if (name === 'list') {
-      this.wrap(ListContainer.blotName, cellId);
-      return this.replaceWith('table-list', value);
-    } else if (name === 'table-list' && value) {
-      this.wrapTableCell(this.parent);
-      this.wrap(ListContainer.blotName, cellId);
+    } else if (name === 'list' || (name === 'table-list' && value)) {
+      const formats = this.getCellFormats(this.parent);
+      this.wrap(ListContainer.blotName, { ...formats, cellId });
       return this.replaceWith('table-list', value);
     } else {
       super.format(name, value);
@@ -65,6 +61,13 @@ class TableCellBlock extends Block {
 
   formats() {
     return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
+  }
+
+  getCellFormats(parent: TableCell) {
+    const cellBlot = getCorrectCellBlot(parent);
+    if (!cellBlot) return {};
+    const [formats] = getCellFormats(cellBlot);
+    return formats;
   }
 
   wrapTableCell(parent: TableCell) {

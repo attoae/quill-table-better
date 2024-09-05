@@ -239,7 +239,7 @@ const keyboardBindings = {
     empty: true,
     handler(range: Range, context: Context) {
       const { line } = context;
-      const cellId = line.parent.formats()[line.parent.statics.blotName];
+      const { cellId } = line.parent.formats()[line.parent.statics.blotName];
       const blot = line.replaceWith(TableCellBlock.blotName, cellId);
       const tableModule = this.quill.getModule('table-better');
       const cell = getCorrectCellBlot(blot);
