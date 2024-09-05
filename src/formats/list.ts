@@ -22,7 +22,7 @@ class ListContainer extends Container {
     return node;
   }
   
-  format(name: string, value: string) {
+  format(name: string, value: string | Props) {
     return this.wrap(name, value);
   }
 
@@ -96,8 +96,9 @@ class TableList extends List {
     } else {
       const [formats, cellId] = getCellFormats(cellBlot);
       const _formats = { ...formats, ...value };
+      const _cellId = _formats['cellId'] || cellId;
       delete _formats['cellId'];
-      return [_formats, cellId];
+      return [_formats, _cellId];
     }
   }
 
