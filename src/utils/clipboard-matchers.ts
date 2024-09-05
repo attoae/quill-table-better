@@ -42,7 +42,7 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
   const tagName = node.tagName;
   const cells = Array.from(node.parentNode.querySelectorAll(tagName));
   const row =
-    (node.parentNode as HTMLTableRowElement).getAttribute('data-row') ||
+    node.getAttribute('data-row') ||
     rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
   const cellId = node?.firstElementChild?.getAttribute('data-cell') || cells.indexOf(node) + 1;
   if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
