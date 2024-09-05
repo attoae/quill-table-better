@@ -25,7 +25,7 @@ import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
-import ToolbarTable from './ui/toolbar-table';
+import ToolbarTable, { TableSelect } from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
@@ -71,7 +71,8 @@ class Table extends Module {
     this.cellSelection = new CellSelection(quill, this);
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
-    document.addEventListener('keyup', this.handleKeyup.bind(this));
+    this.tableSelect = new TableSelect();
+    quill.root.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
     this.registerToolbarTable(options?.toolbarTable);
@@ -116,7 +117,7 @@ class Table extends Module {
   }
 
   handleMousedown(e: MouseEvent) {
-    ToolbarTable.hide(ToolbarTable.root);
+    this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
     this.cellSelection.handleMousedown(e);
@@ -177,11 +178,10 @@ class Table extends Module {
     Quill.register('formats/table-better', ToolbarTable, true);
     const toolbar = this.quill.getModule('toolbar');
     const button = toolbar.container.querySelector('button.ql-table-better');
-    if (!button) return;
-    const selectContainer = ToolbarTable.createContainer();
-    button.appendChild(selectContainer);
+    if (!button || !this.tableSelect.root) return;
+    button.appendChild(this.tableSelect.root);
     button.addEventListener('click', (e: MouseEvent) => {
-      ToolbarTable.handleClick(e, this.insertTable.bind(this));
+      this.tableSelect.handleClick(e, this.insertTable.bind(this));
     });
   }
 
