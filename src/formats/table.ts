@@ -60,7 +60,12 @@ class TableCellBlock extends Block {
   }
 
   formats() {
-    return { [this.statics.blotName]: this.domNode.getAttribute('data-cell') };
+    const formats = this.attributes.values();
+    const format = this.domNode.getAttribute('data-cell');
+    if (format != null) {
+      formats[this.statics.blotName] = format;
+    }
+    return formats;
   }
 
   getCellFormats(parent: TableCell) {
