@@ -28,7 +28,7 @@ class TableHeader extends Header {
     } else if (name === 'list') {
       const [formats, cellId] = this.getCellFormats(this.parent);
       if (isReplace) {
-        this.wrap(ListContainer.blotName, cellId);
+        this.wrap(ListContainer.blotName, { ...formats, cellId });
       } else {
         this.wrap(TableCell.blotName, formats);
       }
