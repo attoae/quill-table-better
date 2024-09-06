@@ -12,6 +12,8 @@ interface Options {
   attribute: Props
 }
 
+const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
+
 const CELL_DEFAULT_VALUES: Props = {
   'border-style': 'none',
   'border-color': '',
@@ -425,6 +427,7 @@ function getProperties({ type, attribute }: Options, useLanguage: _useLanguage) 
 }
 
 export {
+  CELL_ATTRIBUTE,
   CELL_DEFAULT_VALUES,
   CELL_DEFAULT_WIDTH,
   CELL_PROPERTIES,

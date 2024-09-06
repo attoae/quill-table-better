@@ -25,7 +25,7 @@ import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import { CELL_DEFAULT_WIDTH } from './config';
-import ToolbarTable from './ui/toolbar-table';
+import ToolbarTable, { TableSelect } from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
@@ -71,7 +71,8 @@ class Table extends Module {
     this.cellSelection = new CellSelection(quill, this);
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
-    document.addEventListener('keyup', this.handleKeyup.bind(this));
+    this.tableSelect = new TableSelect();
+    quill.root.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
     this.registerToolbarTable(options?.toolbarTable);
@@ -116,7 +117,7 @@ class Table extends Module {
   }
 
   handleMousedown(e: MouseEvent) {
-    ToolbarTable.hide(ToolbarTable.root);
+    this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
     this.cellSelection.handleMousedown(e);
@@ -139,18 +140,18 @@ class Table extends Module {
   }
 
   insertTable(rows: number, columns: number) {
-    const range = this.quill.getSelection();
+    const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
     const formats = this.quill.getFormat(range.index - 1);
-    const offset = formats[TableCellBlock.blotName] ? 2 : 1;
+    const [, offset] = this.quill.getLine(range.index);
+    const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
+    const _offset = isExtra ? 2 : 1;
+    const extraDelta = isExtra ? new Delta().insert('\n') : new Delta();
     const base = new Delta()
       .retain(range.index)
-      .concat(
-        formats[TableCellBlock.blotName]
-         ? new Delta().insert('\n')
-         : new Delta()
-      )
+      .delete(range.length)
+      .concat(extraDelta)
       .insert('\n', { [TableTemporary.blotName]: {} });
     const delta = new Array(rows).fill(0).reduce(memo => {
       const id = tableId();
@@ -162,7 +163,7 @@ class Table extends Module {
       }, memo);
     }, base);
     this.quill.updateContents(delta, Quill.sources.USER);
-    this.quill.setSelection(range.index + offset, Quill.sources.SILENT);
+    this.quill.setSelection(range.index + _offset, Quill.sources.SILENT);
     this.showTools();
   }
 
@@ -177,11 +178,10 @@ class Table extends Module {
     Quill.register('formats/table-better', ToolbarTable, true);
     const toolbar = this.quill.getModule('toolbar');
     const button = toolbar.container.querySelector('button.ql-table-better');
-    if (!button) return;
-    const selectContainer = ToolbarTable.createContainer();
-    button.appendChild(selectContainer);
+    if (!button || !this.tableSelect.root) return;
+    button.appendChild(this.tableSelect.root);
     button.addEventListener('click', (e: MouseEvent) => {
-      ToolbarTable.handleClick(e, this.insertTable.bind(this));
+      this.tableSelect.handleClick(e, this.insertTable.bind(this));
     });
   }
 
@@ -239,7 +239,7 @@ const keyboardBindings = {
     empty: true,
     handler(range: Range, context: Context) {
       const { line } = context;
-      const cellId = line.parent.formats()[line.parent.statics.blotName];
+      const { cellId } = line.parent.formats()[line.parent.statics.blotName];
       const blot = line.replaceWith(TableCellBlock.blotName, cellId);
       const tableModule = this.quill.getModule('table-better');
       const cell = getCorrectCellBlot(blot);
