@@ -226,7 +226,8 @@ class CellSelection {
 
   makeTableArrowLevelHandler(key: string) {
     const td = key === 'ArrowLeft' ? this.startTd : this.endTd;
-    const range = this.quill.getSelection(true);
+    const range = this.quill.getSelection();
+    if (!range) return;
     const [block] = this.quill.getLine(range.index);
     const cell = getCorrectCellBlot(block);
     if (!cell) return this.tableBetter.hideTools();
@@ -238,7 +239,8 @@ class CellSelection {
 
   makeTableArrowVerticalHandler(key: string) {
     const up = key === 'ArrowUp' ? true : false;
-    const range = this.quill.getSelection(true);
+    const range = this.quill.getSelection();
+    if (!range) return;
     const [block, offset] = this.quill.getLine(range.index);
     const _key = up ? 'prev' : 'next';
     if (block[_key] && this.selectedTds.length) {

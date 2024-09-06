@@ -28,6 +28,8 @@ import {
   TableRow
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
+import TableList, { ListContainer } from '../formats/list';
+import TableHeader from '../formats/header';
 import {
   CELL_DEFAULT_VALUES,
   CELL_DEFAULT_WIDTH,
@@ -654,8 +656,22 @@ class TableMenus {
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
       const blot = Quill.find(td);
-      blot.children.forEach((child: TableCellBlock) => {
-        child.format && child.format(child.statics.blotName, cellId);
+      blot.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
+        const blotName = child.statics.blotName;
+        switch (blotName) {
+          case ListContainer.blotName:
+            child.children.forEach((ch: TableList) => {
+              ch.format && ch.format(blotName, { ...formats, cellId });
+            });
+            break;
+          case TableHeader.blotName:
+            const _formats = child.formats()[blotName];
+            child.format && child.format(blotName, { ..._formats, cellId });
+            break;
+          default:
+            child.format && child.format(blotName, cellId);
+            break;
+        }
       });
       blot.moveChildren(leftTdBlot);
       blot.remove();
