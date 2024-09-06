@@ -45,7 +45,41 @@ const options = {
 
 const editor = new Quill('#root', options);
 const tableModule = editor.getModule('table-better');
-const btn = document.getElementById('btn');
-btn.onclick = () => {
+const btn1 = document.getElementById('btn1');
+const btn2 = document.getElementById('btn2');
+const btn3 = document.getElementById('btn3');
+const btn4 = document.getElementById('btn4');
+const btn5 = document.getElementById('btn5');
+const deltaData = document.getElementById('deltaData');
+let delta = null;
+let html = '';
+btn1.onclick = () => {
   tableModule.insertTable(3, 3);
+}
+btn2.onclick = () => {
+  html = editor.getSemanticHTML();
+  delta = editor.getContents();
+  deltaData.innerHTML = JSON.stringify(delta);
+}
+btn3.onclick = () => {
+  if (!delta) return;
+  editor.setContents(delta, Quill.sources.USER);
+}
+btn4.onclick = () => {
+  if (!html) return;
+  delta = editor.clipboard.convert({
+    html,
+    text: '\n'
+  })
+  editor.setContents(delta, Quill.sources.USER);
+}
+btn5.onclick = () => {
+  if (!delta) return;
+  const [range] = editor.selection.getRange();
+  editor.updateContents(delta, Quill.sources.USER);
+  editor.setSelection(
+    delta.length() - range.length,
+    Quill.sources.SILENT,
+  );
+  editor.scrollIntoView();
 }

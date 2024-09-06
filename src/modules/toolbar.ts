@@ -85,7 +85,13 @@ class TableToolbar extends Toolbar {
       const cellSelection = this.getCellSelection();
       if (_isReplace || lines.length === 1) {
         const cell = getCorrectCellBlot(blot);
-        cell && cellSelection.setSelected(cell.domNode);
+        Promise.resolve().then(() => {
+          if (cell && this.quill.root.contains(cell.domNode)) {
+            cellSelection.setSelected(cell.domNode);
+          } else {
+            cellSelection.setSelected(selectedTds[0]);
+          }
+        });
       } else {
         cellSelection.setSelected(selectedTds[0]);
       }

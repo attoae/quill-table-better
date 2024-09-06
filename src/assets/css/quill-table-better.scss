@@ -142,6 +142,7 @@ $border: 1px solid $color-ccced1;
   width: fit-content;
   padding: 4px;
   box-sizing: border-box;
+  z-index: 1;
   @extend .ql-table-border-shadow;  
 }
 .ql-table-menus-up {

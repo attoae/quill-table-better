@@ -28,7 +28,7 @@ class TableHeader extends Header {
     } else if (name === 'list') {
       const [formats, cellId] = this.getCellFormats(this.parent);
       if (isReplace) {
-        this.wrap(ListContainer.blotName, cellId);
+        this.wrap(ListContainer.blotName, { ...formats, cellId });
       } else {
         this.wrap(TableCell.blotName, formats);
       }
@@ -47,8 +47,12 @@ class TableHeader extends Header {
   }
 
   formats() {
-    const formats = this.statics.formats(this.domNode, this.scroll);
-    return { [this.statics.blotName]: formats };
+    const formats = this.attributes.values();
+    const format = this.statics.formats(this.domNode, this.scroll);
+    if (format != null) {
+      formats[this.statics.blotName] = format;
+    }
+    return formats;
   }
 
   getCellFormats(parent: TableCell) {
