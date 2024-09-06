@@ -143,7 +143,11 @@ class TableCell extends Container {
   static getEmptyRowspan(domNode: Element) {
     let nextNode = domNode.parentElement.nextElementSibling;
     let rowspan = 0;
-    while (nextNode && !nextNode.innerHTML.replace(/\s/g, '')) {
+    while (
+      nextNode &&
+      nextNode.tagName === 'TR' &&
+      !nextNode.innerHTML.replace(/\s/g, '')
+    ) {
       rowspan++;
       nextNode = nextNode.nextElementSibling;
     }
@@ -371,7 +375,16 @@ class TableContainer extends Container {
         prev && prev.children.forEach((child: TableCell) => {
           const rowspan = ~~child.domNode.getAttribute('rowspan');
           if (rowspan > 1) {
-            child.domNode.setAttribute('rowspan', rowspan - 1);
+            const [formats, cellId] = getCellFormats(child);
+            let head = child.children.head;
+            if (head.statics.blotName === ListContainer.blotName) {
+              head = head.children.head;
+              Object.assign(formats, { cellId });
+            }
+            head.format && head.format(
+              child.statics.blotName,
+              { ...formats, rowspan: rowspan - 1 }
+            );
           }
         });
         row.remove();
