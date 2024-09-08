@@ -19,6 +19,8 @@ import {
   setElementAttribute
 } from '../utils';
 import { TableCellBlock, TableCell } from '../formats/table';
+import TableList, { ListContainer } from '../formats/list';
+import TableHeader from '../formats/header';
 import iro from '@jaames/iro';
 
 interface Child {
@@ -547,8 +549,15 @@ class TablePropertiesForm {
       const style = this.getCellStyle(td, attrs);
       const childBlot = getCellChildBlot(tdBlot);
       if (align) {
-        tdBlot.children.forEach((child: TableCellBlock) => {
-          child.format('align', align === 'left' ? '' : align);
+        const _align = align === 'left' ? '' : align;
+        tdBlot.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
+          if (child.statics.blotName === ListContainer.blotName) {
+            child.children.forEach((ch: TableList) => {
+              ch.format && ch.format('align', _align);
+            });
+          } else {
+            child.format('align', _align);
+          }
         });
       }
       const parent: TableCell = childBlot.format(blotName, { ...formats, style });
