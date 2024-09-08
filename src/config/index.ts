@@ -22,7 +22,7 @@ const CELL_DEFAULT_VALUES: Props = {
   'width': '',
   'height': '',
   'padding': '',
-  'text-align': 'center',
+  'text-align': 'left',
   'vertical-align': 'middle'
 };
 
