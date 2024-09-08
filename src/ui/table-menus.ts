@@ -3,6 +3,7 @@ import Delta from 'quill-delta';
 import merge from 'lodash.merge';
 import {
   createTooltip,
+  getAlign,
   getCellChildBlot,
   getCellFormats,
   getCorrectBounds,
@@ -469,8 +470,7 @@ class TableMenus {
 
   getSelectedTdAttrs(td: HTMLElement) {
     const cellBlot = Quill.find(td);
-    const childBlot = getCellChildBlot(cellBlot);
-    const align = childBlot?.getAlign && childBlot.getAlign();
+    const align = getAlign(cellBlot);
     const attr: Props =
       align
         ? { ...getElementStyle(td, CELL_PROPERTIES), 'text-align': align }
