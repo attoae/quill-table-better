@@ -12,10 +12,12 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 [quill-table-better Codepen Demo](https://codepen.io/attoae/pen/WNBGjZp)
 
 ## Dependencies
-[quill.js](https://quilljs.com/) ">= v2.0.0"
+[quill.js](https://quilljs.com/) `>= v2.0.0`
 
 ## Quickstart
-$\color{red}{notice}$
+> **Note**: `setContents` causes the table to not display properly, replace with `updateContents`.
+> The method is as follows (`Used when initializing data`): 
+
 ```html
 const delta = quill.clipboard.convert({
   html,
@@ -92,13 +94,20 @@ cdn
 ## Conifg
 
 ### language
-The 'language' parameter has two types:
-1. string, 'en_US' or 'zh_CN', default 'en_US'
+The `language` parameter has two types:
+1. string, default `en_US`
+
+| Language | Code |
+| ---- | ---- |
+| Chinese | zh_CN |
+| English | en_US |
+| French | fr_FR |
+
 2. Used to register a new language, such as:
-  { name: 'en_UK', content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
+  { name: `'en_UK'`, content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
 
 ### menus
-'menus' are used to configure the action bar, and those not in the array are not displayed.
+`menus` are used to configure the action bar, and those not in the array are not displayed.
 Empty array or no configuration default all display.
 
 The functions of the operation bar are as follows:
@@ -124,8 +133,8 @@ The functions of the operation bar are as follows:
   - Delete table
 
 ### toolbarTable
-'toolbarTable' is used to add a button to insert a table on the toolbar (true or false).
-And 'table-better' needs to be added to toolbarOptions, for example: 
+`toolbarTable` is used to add a button to insert a table on the toolbar (true or false).
+And `table-better` needs to be added to toolbarOptions, for example: 
 ```html
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'],
@@ -165,14 +174,14 @@ const SINGLE_WHITE_LIST = ['link', 'image'];
 
 ## Methods
 ```html
- const module = quill.getModule('table-better');
+const module = quill.getModule('table-better');
 ```
 ### deleteTable
 ```
 module.deleteTable();
 ```
 ### deleteTableTemporary、hideTools
-When you need to submit data(html or delta) to the server, you should use this function,for example：
+When you need to submit data(html or delta) to the server, you should use this function, for example：
 ```html
 // Delta
 module.hideTools();
@@ -187,7 +196,7 @@ const html = quill.getSemanticHTML();
 axios.post(url, html);
 ```
 ### getTable(range = this.quill.getSelection())
-Function return '[table, row, cell, offset]'
+Function return `[table, row, cell, offset]`
 ```html
 module.getTable();
 ```
@@ -203,9 +212,6 @@ npm i quill-table-better
 
 ### CDN
 ```html
-<link
-  href="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.css"
-  rel="stylesheet"
-/>
+<link href="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.js"></script>
 ```
