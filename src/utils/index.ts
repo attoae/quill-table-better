@@ -4,7 +4,7 @@ import {
   TableCellBlock,
   TableCol
 } from '../formats/table';
-import { ListContainer } from '../formats/list';
+import TableList, { ListContainer } from '../formats/list';
 import TableHeader from '../formats/header';
 import { COLORS, DEVIATION } from '../config';
 
@@ -46,6 +46,35 @@ function debounce(cb: Function, delay: number) {
 
 function filterWordStyle(s: string) {
   return s.replace(/mso.*?;/g, '');
+}
+
+function getAlign(cellBlot: TableCell) {
+  const DEFAULT = 'left';
+  let align = null;
+  const blocks = cellBlot.descendants(TableCellBlock);
+  const lists = cellBlot.descendants(TableList);
+  const headers = cellBlot.descendants(TableHeader);
+  function getChildAlign(child: TableCellBlock | TableHeader | TableList): string {
+    for (const name of child.domNode.classList) {
+      if (/ql-align-/.test(name)) {
+        return name.split('ql-align-')[1];
+      }
+    }
+    return DEFAULT;
+  }
+  function isSameValue(prev: string | null, cur: string) {
+    if (prev == null) return true;
+    return prev === cur;
+  }
+  for (const child of [...blocks, ...lists, ...headers]) {
+    const _align = getChildAlign(child);
+    if (isSameValue(align, _align)) {
+      align = _align;
+    } else {
+      return DEFAULT;
+    }
+  }
+  return align != null ? align : DEFAULT;
 }
 
 function getCellChildBlot(cellBlot: TableCell) {
@@ -332,6 +361,7 @@ export {
   createTooltip,
   debounce,
   filterWordStyle,
+  getAlign,
   getCellChildBlot,
   getCellFormats,
   getCellId,

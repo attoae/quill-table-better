@@ -183,6 +183,13 @@ class Table extends Module {
     button.addEventListener('click', (e: MouseEvent) => {
       this.tableSelect.handleClick(e, this.insertTable.bind(this));
     });
+    document.addEventListener('click', (e: MouseEvent) => {
+      const visible = e.composedPath().includes(button);
+      if (visible) return;
+      if (!this.tableSelect.root.classList.contains('ql-hidden')) {
+        this.tableSelect.hide(this.tableSelect.root);
+      }
+    });
   }
 
   private showTools(force?: boolean) {
