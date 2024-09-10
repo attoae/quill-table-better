@@ -34,7 +34,7 @@ class TableHeader extends Header {
       }
       return this.replaceWith('table-list', value);
     } else if (name === TableCell.blotName) {
-      this.wrap(name, value);
+      return this.wrap(name, value);
     } else {
       super.format(name, value);
     }

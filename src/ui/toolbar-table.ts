@@ -16,10 +16,12 @@ class TableSelect {
     this.root = this.createContainer();
   }
 
-  clearSelected(children: NodeListOf<Element>) {
+  clearSelected(children: NodeListOf<Element> | Element[]) {
     for (const child of children) {
       child.classList && child.classList.remove('ql-cell-selected');
     }
+    this.computeChildren = [];
+    this.root && this.setLabelContent(this.root.lastElementChild, null);
   }
 
   createContainer() {
@@ -46,7 +48,7 @@ class TableSelect {
     return container;
   }
 
-  getComputeChildren(children: Element[], e: MouseEvent): Element[] {
+  getComputeChildren(children: HTMLCollection, e: MouseEvent): Element[] {
     const computeChildren = [];
     const { clientX, clientY } = e;
     for (const child of children) {
@@ -78,9 +80,7 @@ class TableSelect {
 
   handleMouseMove(e: MouseEvent, container: Element) {
     const children = container.firstElementChild.children;
-    // @ts-ignore
-    this.clearSelected(children);
-    // @ts-ignore
+    this.clearSelected(this.computeChildren);
     const computeChildren = this.getComputeChildren(children, e);
     for (const child of computeChildren) {
       child.classList && child.classList.add('ql-cell-selected');
@@ -90,18 +90,14 @@ class TableSelect {
   }
 
   hide(element: Element) {
+    this.clearSelected(this.computeChildren);
     element && element.classList.add('ql-hidden');
   }
 
   insertTable(child: Element, insertTable: _insertTable) {
     const [row, column] = this.getSelectAttrs(child);
     insertTable(row, column);
-    if (this.root) {
-      const children = this.root.querySelectorAll('.ql-table-select-list span');
-      this.clearSelected(children);
-    }
     this.hide(this.root);
-    this.computeChildren = [];
   }
 
   setLabelContent(label: Element, child: Element) {
@@ -114,10 +110,12 @@ class TableSelect {
   }
 
   show(element: Element) {
+    this.clearSelected(this.computeChildren);
     element && element.classList.remove('ql-hidden');
   }
 
   toggle(element: Element) {
+    this.clearSelected(this.computeChildren);
     element && element.classList.toggle('ql-hidden');
   }
 }
