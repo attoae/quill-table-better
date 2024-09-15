@@ -456,16 +456,20 @@ class TableMenus {
   }
 
   getRefInfo(row: TableRow, right: number) {
+    let ref = null;
     let td = row.children.head;
     const id = td.domNode.getAttribute('data-row');
     while (td) {
       const { left } = td.domNode.getBoundingClientRect();
       if (Math.abs(left - right) <= 2) {
         return { id, ref: td };
+        // The nearest cell of a multi-row cell
+      } else if (Math.abs(left - right) >= 2 && !ref) {
+        ref = td;
       }
       td = td.next;
     }
-    return { id, ref: null };
+    return { id, ref };
   }
 
   getSelectedTdAttrs(td: HTMLElement) {
@@ -703,6 +707,8 @@ class TableMenus {
     for (const td of selectedTds) {
       const colspan = ~~td.getAttribute('colspan') || 1;
       const rowspan = ~~td.getAttribute('rowspan') || 1;
+      if (colspan === 1 && rowspan === 1) continue;
+      const columnCells: [TableRow, string, TableCell | null][] = [];
       const { width, right } = td.getBoundingClientRect();
       const blot = Quill.find(td);
       const tableBlot = blot.table();
@@ -714,7 +720,7 @@ class TableMenus {
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
             for (let j = 0; j < colspan; j++) {
-              tableBlot.insertColumnCell(nextRowBlot, id, ref);
+              columnCells.push([nextRowBlot, id, ref]);
             }
             nextRowBlot = nextRowBlot.next;
           }
@@ -722,7 +728,7 @@ class TableMenus {
           let nextRowBlot = rowBlot.next;
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
-            tableBlot.insertColumnCell(nextRowBlot, id, ref);
+            columnCells.push([nextRowBlot, id, ref]);
             nextRowBlot = nextRowBlot.next;
           }
         }
@@ -730,8 +736,11 @@ class TableMenus {
       if (colspan > 1) {
         const id = td.getAttribute('data-row');
         for (let i = 1; i < colspan; i++) {
-          tableBlot.insertColumnCell(rowBlot, id, nextBlot);
+          columnCells.push([rowBlot, id, nextBlot]);
         }
+      }
+      for (const [row, id, ref] of columnCells) {
+        tableBlot.insertColumnCell(row, id, ref);
       }
       const [formats] = getCellFormats(blot);
       const childBlot = getCellChildBlot(blot);
