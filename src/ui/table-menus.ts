@@ -461,10 +461,10 @@ class TableMenus {
     const id = td.domNode.getAttribute('data-row');
     while (td) {
       const { left } = td.domNode.getBoundingClientRect();
-      if (Math.abs(left - right) <= 2) {
+      if (Math.abs(left - right) <= DEVIATION) {
         return { id, ref: td };
         // The nearest cell of a multi-row cell
-      } else if (Math.abs(left - right) >= 2 && !ref) {
+      } else if (Math.abs(left - right) >= DEVIATION && !ref) {
         ref = td;
       }
       td = td.next;
