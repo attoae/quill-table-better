@@ -313,7 +313,7 @@ class CellSelection {
         head = head.next;
       }
     }
-    Promise.resolve().then(() => this.tableBetter.tableMenus.updateMenus());
+    this.tableBetter.tableMenus.updateMenus();
   }
 
   setDisabled(disabled: boolean) {

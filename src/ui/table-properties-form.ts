@@ -99,7 +99,7 @@ class TablePropertiesForm {
     }
     this.removePropertiesForm();
     this.tableMenus.showMenus();
-    Promise.resolve().then(() => this.tableMenus.updateMenus());
+    this.tableMenus.updateMenus();
   }
 
   createActionBtns(listener: EventListener, showLabel: boolean) {
