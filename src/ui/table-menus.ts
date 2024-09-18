@@ -564,11 +564,11 @@ class TableMenus {
     } else {
       if (this.tablePropertiesForm) return;
       this.showMenus();
+      this.updateMenus(table);
       if (
         (table && !table.isEqualNode(this.table)) ||
         this.scroll
       ) {
-        this.updateMenus(table);
         this.updateScroll(false);
       }
       this.table = table;
@@ -770,27 +770,29 @@ class TableMenus {
 
   updateMenus(table: HTMLTableElement = this.table) {
     if (!table) return;
-    const [tableBounds, containerBounds] = this.getCorrectBounds(table);
-    const { left, right, top, bottom } = tableBounds;
-    const { height, width } = this.root.getBoundingClientRect();
-    const toolbar = this.quill.getModule('toolbar');
-    const computedStyle = getComputedStyle(toolbar.container);
-    let correctTop = top - height - 10;
-    if (
-      correctTop < -parseInt(computedStyle.paddingBottom) &&
-      containerBounds.bottom > bottom
-    ) {
-      correctTop = bottom + 10;
-      this.root.classList.add('ql-table-menus-down');
-      this.root.classList.remove('ql-table-menus-up');
-    } else {
-      correctTop = top - height - 10;
-      this.root.classList.add('ql-table-menus-up');
-      this.root.classList.remove('ql-table-menus-down');
-    }
-    setElementProperty(this.root, {
-      left: `${(left + right - width) >> 1}px`,
-      top: `${correctTop}px`
+    requestAnimationFrame(() => {
+      const [tableBounds, containerBounds] = this.getCorrectBounds(table);
+      const { left, right, top, bottom } = tableBounds;
+      const { height, width } = this.root.getBoundingClientRect();
+      const toolbar = this.quill.getModule('toolbar');
+      const computedStyle = getComputedStyle(toolbar.container);
+      let correctTop = top - height - 10;
+      if (
+        correctTop < -parseInt(computedStyle.paddingBottom) &&
+        containerBounds.bottom > bottom
+      ) {
+        correctTop = bottom + 10;
+        this.root.classList.add('ql-table-menus-down');
+        this.root.classList.remove('ql-table-menus-up');
+      } else {
+        correctTop = top - height - 10;
+        this.root.classList.add('ql-table-menus-up');
+        this.root.classList.remove('ql-table-menus-down');
+      }
+      setElementProperty(this.root, {
+        left: `${(left + right - width) >> 1}px`,
+        top: `${correctTop}px`
+      });
     });
   }
 
