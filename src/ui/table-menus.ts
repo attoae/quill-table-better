@@ -4,7 +4,6 @@ import merge from 'lodash.merge';
 import {
   createTooltip,
   getAlign,
-  getCellChildBlot,
   getCellFormats,
   getCorrectBounds,
   getComputeBounds,
@@ -743,8 +742,7 @@ class TableMenus {
         tableBlot.insertColumnCell(row, id, ref);
       }
       const [formats] = getCellFormats(blot);
-      const childBlot = getCellChildBlot(blot);
-      childBlot.format(blot.statics.blotName, {
+      blot.replaceWith(blot.statics.blotName, {
         ...formats,
         width: ~~(width / colspan),
         colspan: null,
