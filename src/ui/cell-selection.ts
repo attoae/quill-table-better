@@ -145,6 +145,7 @@ class CellSelection {
     this.clearSelected();
     const table = (e.target as Element).closest('table');
     if (!table) return;
+    this.tableBetter.tableMenus.destroyTablePropertiesForm();
     const startTd = (e.target as Element).closest('td');
     this.startTd = startTd;
     this.endTd = startTd;
