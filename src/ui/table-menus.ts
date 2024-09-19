@@ -456,16 +456,20 @@ class TableMenus {
   }
 
   getRefInfo(row: TableRow, right: number) {
+    let ref = null;
     let td = row.children.head;
     const id = td.domNode.getAttribute('data-row');
     while (td) {
       const { left } = td.domNode.getBoundingClientRect();
-      if (Math.abs(left - right) <= 2) {
+      if (Math.abs(left - right) <= DEVIATION) {
         return { id, ref: td };
+        // The nearest cell of a multi-row cell
+      } else if (Math.abs(left - right) >= DEVIATION && !ref) {
+        ref = td;
       }
       td = td.next;
     }
-    return { id, ref: null };
+    return { id, ref };
   }
 
   getSelectedTdAttrs(td: HTMLElement) {
@@ -560,11 +564,11 @@ class TableMenus {
     } else {
       if (this.tablePropertiesForm) return;
       this.showMenus();
+      this.updateMenus(table);
       if (
         (table && !table.isEqualNode(this.table)) ||
         this.scroll
       ) {
-        this.updateMenus(table);
         this.updateScroll(false);
       }
       this.table = table;
@@ -703,6 +707,8 @@ class TableMenus {
     for (const td of selectedTds) {
       const colspan = ~~td.getAttribute('colspan') || 1;
       const rowspan = ~~td.getAttribute('rowspan') || 1;
+      if (colspan === 1 && rowspan === 1) continue;
+      const columnCells: [TableRow, string, TableCell | null][] = [];
       const { width, right } = td.getBoundingClientRect();
       const blot = Quill.find(td);
       const tableBlot = blot.table();
@@ -714,7 +720,7 @@ class TableMenus {
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
             for (let j = 0; j < colspan; j++) {
-              tableBlot.insertColumnCell(nextRowBlot, id, ref);
+              columnCells.push([nextRowBlot, id, ref]);
             }
             nextRowBlot = nextRowBlot.next;
           }
@@ -722,7 +728,7 @@ class TableMenus {
           let nextRowBlot = rowBlot.next;
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
-            tableBlot.insertColumnCell(nextRowBlot, id, ref);
+            columnCells.push([nextRowBlot, id, ref]);
             nextRowBlot = nextRowBlot.next;
           }
         }
@@ -730,8 +736,11 @@ class TableMenus {
       if (colspan > 1) {
         const id = td.getAttribute('data-row');
         for (let i = 1; i < colspan; i++) {
-          tableBlot.insertColumnCell(rowBlot, id, nextBlot);
+          columnCells.push([rowBlot, id, nextBlot]);
         }
+      }
+      for (const [row, id, ref] of columnCells) {
+        tableBlot.insertColumnCell(row, id, ref);
       }
       const [formats] = getCellFormats(blot);
       const childBlot = getCellChildBlot(blot);
@@ -761,27 +770,29 @@ class TableMenus {
 
   updateMenus(table: HTMLTableElement = this.table) {
     if (!table) return;
-    const [tableBounds, containerBounds] = this.getCorrectBounds(table);
-    const { left, right, top, bottom } = tableBounds;
-    const { height, width } = this.root.getBoundingClientRect();
-    const toolbar = this.quill.getModule('toolbar');
-    const computedStyle = getComputedStyle(toolbar.container);
-    let correctTop = top - height - 10;
-    if (
-      correctTop < -parseInt(computedStyle.paddingBottom) &&
-      containerBounds.bottom > bottom
-    ) {
-      correctTop = bottom + 10;
-      this.root.classList.add('ql-table-menus-down');
-      this.root.classList.remove('ql-table-menus-up');
-    } else {
-      correctTop = top - height - 10;
-      this.root.classList.add('ql-table-menus-up');
-      this.root.classList.remove('ql-table-menus-down');
-    }
-    setElementProperty(this.root, {
-      left: `${(left + right - width) >> 1}px`,
-      top: `${correctTop}px`
+    requestAnimationFrame(() => {
+      const [tableBounds, containerBounds] = this.getCorrectBounds(table);
+      const { left, right, top, bottom } = tableBounds;
+      const { height, width } = this.root.getBoundingClientRect();
+      const toolbar = this.quill.getModule('toolbar');
+      const computedStyle = getComputedStyle(toolbar.container);
+      let correctTop = top - height - 10;
+      if (
+        correctTop < -parseInt(computedStyle.paddingBottom) &&
+        containerBounds.bottom > bottom
+      ) {
+        correctTop = bottom + 10;
+        this.root.classList.add('ql-table-menus-down');
+        this.root.classList.remove('ql-table-menus-up');
+      } else {
+        correctTop = top - height - 10;
+        this.root.classList.add('ql-table-menus-up');
+        this.root.classList.remove('ql-table-menus-down');
+      }
+      setElementProperty(this.root, {
+        left: `${(left + right - width) >> 1}px`,
+        top: `${correctTop}px`
+      });
     });
   }
 
