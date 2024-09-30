@@ -19,19 +19,12 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 > The method is as follows (`Used when initializing data`): 
 
 ```html
-const delta = quill.clipboard.convert({
-  html,
-  text: '\n'
-})
-quill.setContents(delta, Quill.sources.USER);
-
-// The above method causes the table to not display properly
-// Please use the following method instead
+const delta = quill.clipboard.convert({ html });
 const [range] = quill.selection.getRange();
 quill.updateContents(delta, Quill.sources.USER);
 quill.setSelection(
-  delta.length() - range.length,
-  Quill.sources.SILENT,
+  delta.length() - (range?.length || 0),
+  Quill.sources.SILENT
 );
 quill.scrollIntoView();
 ```
@@ -45,16 +38,28 @@ Quill.register({
   'modules/table-better': QuillTableBetter
 }, true);
 
+const toolbarOptions = [
+  ['bold', 'italic', 'underline', 'strike'],
+  ['table-better']
+];
+
 const options = {
   theme: 'snow',
   modules: {
     table: false,
-    'table-better': {},
+    toolbar: toolbarOptions,
+    'table-better': {
+      language: 'en_US',
+      menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
+      toolbarTable: true
+    },
     keyboard: {
       bindings: QuillTableBetter.keyboardBindings
     }
   }
 };
+
+const quill = new Quill('#root', options);
 ```
 cdn
 ```html
@@ -80,6 +85,8 @@ cdn
       table: false,
       toolbar: toolbarOptions,
       'table-better': {
+        language: 'en_US',
+        menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
         toolbarTable: true
       },
       keyboard: {
