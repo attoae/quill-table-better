@@ -61,11 +61,12 @@ class CellSelection {
       return className.indexOf('ql-') === 0;
     });
     if (!format) return;
+    const [whiteList, singleWhiteList] = this.getButtonsWhiteList();
     format = format.slice('ql-'.length);
-    if (!WHITE_LIST.includes(format)) {
+    if (!whiteList.includes(format)) {
       this.disabledList.push(input);
     }
-    if (SINGLE_WHITE_LIST.includes(format)) {
+    if (singleWhiteList.includes(format)) {
       this.singleList.push(input);
     }
   }
@@ -77,6 +78,16 @@ class CellSelection {
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
+  }
+
+  getButtonsWhiteList(): [string[], string[]] {
+    const { options = {} } = this.tableBetter;
+    const { toolbarButtons = {} } = options;
+    const {
+      whiteList = WHITE_LIST,
+      singleWhiteList = SINGLE_WHITE_LIST
+    } = toolbarButtons;
+    return [whiteList, singleWhiteList];
   }
 
   getCorrectValue(format: string, value: boolean | string) {

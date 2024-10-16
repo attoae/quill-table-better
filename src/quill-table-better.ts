@@ -40,6 +40,10 @@ interface Options {
     content: Props
   }
   menus?: string[]
+  toolbarButtons?: {
+    whiteList?: string[]
+    singleWhiteList?: string[]
+  }
   toolbarTable?: boolean
 }
 
