@@ -1,7 +1,6 @@
 import en_US from './en_US';
 import zh_CN from './zh_CN';
 import fr_FR from './fr_FR';
-import pl_PL from './pl_PL';
 
 interface Config {
   [propName: string]: Props
@@ -18,10 +17,9 @@ class Language {
   name: string;
   constructor(language?: string | LanguageConfig) {
     this.config = {
-      en_US,
-      zh_CN,
-      fr_FR,
-      pl_PL
+      'en_US': en_US,
+      'zh_CN': zh_CN,
+      'fr_FR': fr_FR
     };
     this.init(language);
   }

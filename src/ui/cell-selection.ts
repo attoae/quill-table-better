@@ -268,10 +268,10 @@ class CellSelection {
           let ref = row.children.head;
           while (ref) {
             const { left, right } = ref.domNode.getBoundingClientRect();
-            if (Math.abs(left - _left) <= DEVIATION) {
+            if (Math.abs(left - _left) <= 2) {
               cellBlot = ref;
               break;
-            } else if (Math.abs(right - _right) <= DEVIATION) {
+            } else if (Math.abs(right - _right) <= 2) {
               cellBlot = ref;
               break;
             }
@@ -314,7 +314,7 @@ class CellSelection {
         head = head.next;
       }
     }
-    this.tableBetter.tableMenus.updateMenus();
+    Promise.resolve().then(() => this.tableBetter.tableMenus.updateMenus());
   }
 
   setDisabled(disabled: boolean) {

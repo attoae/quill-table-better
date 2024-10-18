@@ -8,11 +8,7 @@ import {
 } from '../utils';
 import TableHeader from './header';
 import { ListContainer } from './list';
-import {
-  CELL_ATTRIBUTE,
-  CELL_DEFAULT_WIDTH,
-  DEVIATION
-} from '../config';
+import { CELL_ATTRIBUTE, CELL_DEFAULT_WIDTH } from '../config';
 
 const Block = Quill.import('blots/block');
 const Break = Quill.import('blots/break');
@@ -473,14 +469,14 @@ class TableContainer extends Container {
         while (ref) {
           const { left, right } = ref.domNode.getBoundingClientRect();
           const id = ref.domNode.getAttribute('data-row');
-          if (Math.abs(left - position) <= DEVIATION) {
+          if (Math.abs(left - position) <= 2) {
             columnCells.push([row, id, ref]);
             break;
-          } else if (Math.abs(right - position) <= DEVIATION && !ref.next) {
+          } else if (Math.abs(right - position) <= 2 && !ref.next) {
             columnCells.push([row, id, null]);
             break;
           // rowspan > 1 (insertLeft, position + w is left)
-          } else if (Math.abs(left - position - w) <= DEVIATION) {
+          } else if (Math.abs(left - position - w) <= 2) {
             columnCells.push([row, id, ref]);
             break;
           // rowspan > 1 (position between left and right, rowspan++)
@@ -504,10 +500,10 @@ class TableContainer extends Container {
           const { left, width } = col.domNode.getBoundingClientRect();
           correctLeft = correctLeft ? correctLeft : left;
           correctRight = correctLeft + width;
-          if (Math.abs(correctLeft - position) <= DEVIATION) {
+          if (Math.abs(correctLeft - position) <= 2) {
             cols.push([colgroup, col]);
             break;
-          } else if (Math.abs(correctRight - position) <= DEVIATION && !col.next) {
+          } else if (Math.abs(correctRight - position) <= 2 && !col.next) {
             cols.push([colgroup, null]);
             break;
           }
