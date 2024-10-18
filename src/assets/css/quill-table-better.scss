@@ -8,6 +8,7 @@ $border-color-simple: #00000026;
 $color-white: #fff;
 $color-ccced1: #ccced1;
 $border: 1px solid $color-ccced1;
+$focused-border: 1px solid $focused-border-color;
 
 /*mixin*/
 @mixin boxShadow($color) {
@@ -88,6 +89,16 @@ $border: 1px solid $color-ccced1;
   &:focus::placeholder {
     color: transparent;
   }
+  &:focus {
+    border: $focused-border;
+    box-shadow: 0 0 0 3px #cae1fc;
+  }
+  &:focus + label {
+    display: block;
+  }
+  &:not(:placeholder-shown) + label {
+    display: block;
+  }
 }
 .ql-table-temporary {
   display: none;
@@ -125,7 +136,7 @@ $border: 1px solid $color-ccced1;
   position: relative;
   &::after {
     @extend .ql-cell-selected-after;
-    border: 1px solid $focused-border-color;
+    border: $focused-border;
   }
 }
 .ql-cell-selected {
@@ -164,9 +175,6 @@ $border: 1px solid $color-ccced1;
       color: #999;
       background: $color-white;
       display: none;
-    }
-    & > .property-input:focus + label {
-      display: block;
     }
   }
   &-status {
