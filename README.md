@@ -152,8 +152,11 @@ const toolbarOptions = [
 ```
 
 ### toolbarButtons
-`toolbarButtons` is used when focusing on the table, you can specify which buttons to disable and which not.  
-`whiteList` supports simultaneous operations on multiple cells, default `WHITE_LIST`.  
+`toolbarButtons` is used when focusing on the table, you can specify which buttons to disable and which not.
+
+`whiteList` supports simultaneous operations on multiple cells, default `WHITE_LIST`. 
+> **Note**: The configured `whiteList` is preferably a subset of `WHITE_LIST`, other formats may have problems.
+
 `singleWhiteList` only supports formatting for a single cell, default `SINGLE_WHITE_LIST`.  
 > **Note**: `singleWhiteList` must be a subset of `whiteList`.
 
