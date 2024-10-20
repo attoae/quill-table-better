@@ -345,7 +345,7 @@ $focused-border: 1px solid $focused-border-color;
     flex: 1;
     .property-input {
       @extend .ql-table-input;
-      border: none;
+      border: 1px solid transparent;
       height: 100%;
     }
   }
