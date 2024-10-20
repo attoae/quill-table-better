@@ -15,10 +15,10 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 [quill.js](https://quilljs.com/) `>= v2.0.0`
 
 ## Quickstart
-> **Note**: `setContents` causes the table to not display properly, replace with `updateContents`.
+> **Note**: `setContents` causes the table to not display properly, replace with `updateContents`.  
 > The method is as follows (`Used when initializing data`): 
 
-```html
+```JavaScript
 const delta = quill.clipboard.convert({ html });
 const [range] = quill.selection.getRange();
 quill.updateContents(delta, Quill.sources.USER);
@@ -30,7 +30,7 @@ quill.scrollIntoView();
 ```
 
 npm
-```html
+```JavaScript
 import QuillTableBetter from 'quill-table-better';
 import 'quill-table-better/dist/quill-table-better.css'
 
@@ -61,6 +61,7 @@ const options = {
 
 const quill = new Quill('#root', options);
 ```
+
 cdn
 ```html
 <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
@@ -101,7 +102,7 @@ cdn
 ## Conifg
 
 ### language
-The `language` parameter has two types:
+The `language` parameter has two types:  
 1. string, default `en_US`
 
 | Language | Code |
@@ -111,13 +112,12 @@ The `language` parameter has two types:
 | French | fr_FR |
 | Polish | pl_PL |
 
-2. Used to register a new language, such as:
+2. Used to register a new language, such as:  
   { name: `'en_UK'`, content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
 
 ### menus
-`menus` are used to configure the action bar, and those not in the array are not displayed.
-Empty array or no configuration default all display.
-
+`menus` are used to configure the action bar, and those not in the array are not displayed.  
+Empty array or no configuration default all display.  
 The functions of the operation bar are as follows:
 1. column
   - Insert column left
@@ -141,26 +141,48 @@ The functions of the operation bar are as follows:
   - Delete table
 
 ### toolbarTable
-`toolbarTable` is used to add a button to insert a table on the toolbar (true or false).
-And `table-better` needs to be added to toolbarOptions, for example: 
-```html
+`toolbarTable` is used to add a button to insert a table on the toolbar (true or false).  
+And `table-better` needs to be added to toolbarOptions, for example:
+ 
+```JavaScript
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'],
   ['table-better']
 ];
 ```
 
-```html
+### toolbarButtons
+`toolbarButtons` is used when focusing on the table, you can specify which buttons to disable and which not.
+
+`whiteList` supports simultaneous operations on multiple cells, default `WHITE_LIST`. 
+> **Note**: The configured `whiteList` is preferably a subset of `WHITE_LIST`, other formats may have problems.
+
+`singleWhiteList` only supports formatting for a single cell, default `SINGLE_WHITE_LIST`.  
+> **Note**: `singleWhiteList` must be a subset of `whiteList`.
+
+```JavaScript
+toolbarButtons: {
+  whiteList: ['link', 'image'],
+  singleWhiteList: ['link', 'image']
+};
+```
+
+```JavaScript
 'table-better': {
   language: 'en_US',
   menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
+  toolbarButtons: {
+    whiteList: ['link', 'image'],
+    singleWhiteList: ['link', 'image']
+  },
   toolbarTable: true
 }
 ```
 
 ## Formats supported by table
 The table supports the following formats and supports simultaneous operations on multiple cells：
-```html
+
+```JavaScript
 const WHITE_LIST = [
   'bold',
   'italic',
@@ -172,32 +194,39 @@ const WHITE_LIST = [
   'font',
   'list',
   'header',
-  'align'
+  'align',
+  'link',
+  'image'
 ];
 ```
+
 Only supports formatting for a single cell.
-```html
+
+```JavaScript
 const SINGLE_WHITE_LIST = ['link', 'image'];
 ```
 
 ## Methods
-```html
+
+```JavaScript
 const module = quill.getModule('table-better');
 ```
 ### deleteTable
-```
+
+```JavaScript
 module.deleteTable();
 ```
 ### deleteTableTemporary、hideTools
 When you need to submit data(html or delta) to the server, you should use this function, for example：
-```html
+
+```JavaScript
 // Delta
 module.hideTools();
 const delta = quill.getContents();
 axios.post(url, delta);
 ```
 
-```html
+```JavaScript
 // HTML
 module.deleteTableTemporary();
 const html = quill.getSemanticHTML();
@@ -205,16 +234,17 @@ axios.post(url, html);
 ```
 ### getTable(range = this.quill.getSelection())
 Function return `[table, row, cell, offset]`
-```html
+
+```JavaScript
 module.getTable();
 ```
 ### insertTable(rows: number, columns: number)
-```html
+```JavaScript
 module.insertTable(3, 3);
 ```
 
 ## Download
-```html
+```JavaScript
 npm i quill-table-better
 ```
 

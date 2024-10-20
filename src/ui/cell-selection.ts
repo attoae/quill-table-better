@@ -1,4 +1,5 @@
 import Quill from 'quill';
+import type { Op } from 'quill-delta';
 import {
   getComputeBounds,
   getComputeSelectedTds,
@@ -41,8 +42,8 @@ class CellSelection {
   selectedTds: Element[];
   startTd: Element;
   endTd: Element;
-  disabledList: HTMLElement[];
-  singleList: HTMLElement[];
+  disabledList: Array<HTMLElement | Element>;
+  singleList: Array<HTMLElement | Element>;
   tableBetter: any;
   constructor(quill: any, tableBetter: any) {
     this.quill = quill;
@@ -61,12 +62,14 @@ class CellSelection {
       return className.indexOf('ql-') === 0;
     });
     if (!format) return;
+    const [whiteList, singleWhiteList] = this.getButtonsWhiteList();
+    const correctDisabled = this.getCorrectDisabled(input, format);
     format = format.slice('ql-'.length);
-    if (!WHITE_LIST.includes(format)) {
-      this.disabledList.push(input);
+    if (!whiteList.includes(format)) {
+      this.disabledList.push(...correctDisabled);
     }
-    if (SINGLE_WHITE_LIST.includes(format)) {
-      this.singleList.push(input);
+    if (singleWhiteList.includes(format)) {
+      this.singleList.push(...correctDisabled);
     }
   }
 
@@ -77,6 +80,24 @@ class CellSelection {
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
+  }
+
+  getButtonsWhiteList(): [string[], string[]] {
+    const { options = {} } = this.tableBetter;
+    const { toolbarButtons = {} } = options;
+    const {
+      whiteList = WHITE_LIST,
+      singleWhiteList = SINGLE_WHITE_LIST
+    } = toolbarButtons;
+    return [whiteList, singleWhiteList];
+  }
+
+  getCorrectDisabled(input: HTMLElement, format: string) {
+    if (input.tagName !== 'SELECT') return [input];
+    const parentElement = input.closest('span.ql-formats');
+    if (!parentElement) return [input];
+    const child = parentElement.querySelectorAll(`span.${format}.ql-picker`);
+    return [...child, input];
   }
 
   getCorrectValue(format: string, value: boolean | string) {
@@ -190,12 +211,12 @@ class CellSelection {
     );
   }
 
-  insertWith(insert: string) {
+  insertWith(insert: string | Record<string, unknown>) {
     if (typeof insert !== 'string') return false;
     return insert.startsWith('\n') && insert.endsWith('\n');
   }
 
-  isContinue(op: any) {
+  isContinue(op: Op) {
     if (
       this.insertWith(op.insert) &&
       (
