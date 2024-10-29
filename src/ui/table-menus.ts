@@ -769,12 +769,14 @@ class TableMenus {
   updateMenus(table: HTMLTableElement = this.table) {
     if (!table) return;
     requestAnimationFrame(() => {
+      this.root.classList.remove('ql-table-triangle-none');
       const [tableBounds, containerBounds] = this.getCorrectBounds(table);
       const { left, right, top, bottom } = tableBounds;
       const { height, width } = this.root.getBoundingClientRect();
       const toolbar = this.quill.getModule('toolbar');
       const computedStyle = getComputedStyle(toolbar.container);
       let correctTop = top - height - 10;
+      let correctLeft = (left + right - width) >> 1;
       if (
         correctTop < -parseInt(computedStyle.paddingBottom) &&
         containerBounds.bottom > bottom
@@ -787,8 +789,15 @@ class TableMenus {
         this.root.classList.add('ql-table-menus-up');
         this.root.classList.remove('ql-table-menus-down');
       }
+      if (correctLeft < containerBounds.left) {
+        correctLeft = 0;
+        this.root.classList.add('ql-table-triangle-none');
+      } else if (correctLeft + width > containerBounds.right) {
+        correctLeft = containerBounds.right - width;
+        this.root.classList.add('ql-table-triangle-none');
+      }
       setElementProperty(this.root, {
-        left: `${(left + right - width) >> 1}px`,
+        left: `${correctLeft}px`,
         top: `${correctTop}px`
       });
     });

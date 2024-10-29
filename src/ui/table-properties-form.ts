@@ -280,7 +280,6 @@ class TablePropertiesForm {
     container.classList.add('label-field-view');
     wrapper.classList.add('label-field-view-input-wrapper');
     label.innerText = placeholder;
-    // if (value) setElementProperty(label, { display: 'block' });
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
     input.value = value;
@@ -645,10 +644,20 @@ class TablePropertiesForm {
   }
 
   updatePropertiesForm(container: HTMLElement, type: string) {
+    container.classList.remove('ql-table-triangle-none');
     const { width } = container.getBoundingClientRect();
+    const bounds = this.tableMenus.quill.container.getBoundingClientRect();
     const { left, right, bottom } = this.getComputeBounds(type);
+    let correctLeft = (left + right - width) >> 1;
+    if (correctLeft < bounds.left) {
+      correctLeft = 0;
+      container.classList.add('ql-table-triangle-none');
+    } else if (correctLeft + width > bounds.right) {
+      correctLeft = bounds.right - width;
+      container.classList.add('ql-table-triangle-none');
+    }
     setElementProperty(container, {
-      left: `${(left + right - width) >> 1}px`,
+      left: `${correctLeft}px`,
       top: `${bottom + 10}px`
     });
   }

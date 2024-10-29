@@ -259,12 +259,12 @@ $focused-border: 1px solid $focused-border-color;
   background: $color-white;
   z-index: 1;
   @include boxShadow($color-ccced1);
-  &::before {
+  &:not(.ql-table-triangle-none)::before {
     @extend .ql-table-triangle-common;
     top: -20px;
     border-bottom-color: $color-ccced1;
   }
-  &::after {
+  &:not(.ql-table-triangle-none)::after {
     @extend .ql-table-triangle-common;
     top: -19px;
     border-bottom-color: $color-white;
