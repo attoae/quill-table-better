@@ -782,12 +782,12 @@ class TableMenus {
         containerBounds.bottom > bottom
       ) {
         correctTop = bottom + 10;
-        this.root.classList.add('ql-table-menus-down');
-        this.root.classList.remove('ql-table-menus-up');
+        this.root.classList.add('ql-table-triangle-down');
+        this.root.classList.remove('ql-table-triangle-up');
       } else {
         correctTop = top - height - 10;
-        this.root.classList.add('ql-table-menus-up');
-        this.root.classList.remove('ql-table-menus-down');
+        this.root.classList.add('ql-table-triangle-up');
+        this.root.classList.remove('ql-table-triangle-down');
       }
       if (correctLeft < containerBounds.left) {
         correctLeft = 0;
