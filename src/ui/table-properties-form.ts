@@ -280,7 +280,6 @@ class TablePropertiesForm {
     container.classList.add('label-field-view');
     wrapper.classList.add('label-field-view-input-wrapper');
     label.innerText = placeholder;
-    // if (value) setElementProperty(label, { display: 'block' });
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
     input.value = value;
@@ -493,6 +492,13 @@ class TablePropertiesForm {
     return useLanguage;
   }
 
+  getViewportSize() {
+    return {
+      viewWidth: document.documentElement.clientWidth,
+      viewHeight: document.documentElement.clientHeight
+    }
+  }
+
   hiddenSelectList(element: HTMLElement) {
     const listClassName = '.ql-table-dropdown-properties';
     const colorClassName = '.color-picker';
@@ -645,11 +651,36 @@ class TablePropertiesForm {
   }
 
   updatePropertiesForm(container: HTMLElement, type: string) {
-    const { width } = container.getBoundingClientRect();
-    const { left, right, bottom } = this.getComputeBounds(type);
+    container.classList.remove('ql-table-triangle-none');
+    const { height, width } = container.getBoundingClientRect();
+    const containerBounds = this.tableMenus.quill.container.getBoundingClientRect();
+    const { top, left, right, bottom } = this.getComputeBounds(type);
+    const { viewHeight } = this.getViewportSize();
+    let correctTop = bottom + 10;
+    let correctLeft = (left + right - width) >> 1;
+    if (correctTop + containerBounds.top + height > viewHeight) {
+      correctTop = top - height - 10;
+      if (correctTop < 0) {
+        correctTop = (containerBounds.height - height) >> 1;
+        container.classList.add('ql-table-triangle-none');
+      } else {
+        container.classList.add('ql-table-triangle-up');
+        container.classList.remove('ql-table-triangle-down');
+      }
+    } else {
+      container.classList.add('ql-table-triangle-down');
+      container.classList.remove('ql-table-triangle-up');
+    }
+    if (correctLeft < containerBounds.left) {
+      correctLeft = 0;
+      container.classList.add('ql-table-triangle-none');
+    } else if (correctLeft + width > containerBounds.right) {
+      correctLeft = containerBounds.right - width;
+      container.classList.add('ql-table-triangle-none');
+    }
     setElementProperty(container, {
-      left: `${(left + right - width) >> 1}px`,
-      top: `${bottom + 10}px`
+      left: `${correctLeft}px`,
+      top: `${correctTop}px`
     });
   }
 

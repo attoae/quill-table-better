@@ -42,16 +42,16 @@ $focused-border: 1px solid $focused-border-color;
   }
 }
 
-@mixin triangle($direction1, $direction2) {
-  &::before {
+@mixin triangle($direction1, $direction2, $color1, $color2) {
+  &:not(.ql-table-triangle-none)::before {
     @extend .ql-table-triangle-common;
     #{$direction1}: -20px;
-    border-#{$direction2}-color: $border-color-simple !important;
+    border-#{$direction2}-color: $color1 !important;
   }
-  &::after {
+  &:not(.ql-table-triangle-none)::after {
     @extend .ql-table-triangle-common;
     #{$direction1}: -19px;
-    border-#{$direction2}-color: $color-white !important;
+    border-#{$direction2}-color: $color2 !important;
   }
 }
 
@@ -156,11 +156,11 @@ $focused-border: 1px solid $focused-border-color;
   z-index: 1;
   @extend .ql-table-border-shadow;  
 }
-.ql-table-menus-up {
-  @include triangle('bottom', 'top');
+.ql-table-triangle-up {
+  @include triangle('bottom', 'top', $border-color-simple, $color-white);
 }
-.ql-table-menus-down {
-  @include triangle('top', 'bottom');
+.ql-table-triangle-down {
+  @include triangle('top', 'bottom', $border-color-simple, $color-white);
 }
 .label-field-view {
   position: relative;
@@ -255,20 +255,10 @@ $focused-border: 1px solid $focused-border-color;
   width: 320px;
   position: absolute;
   left: 50%;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   background: $color-white;
   z-index: 1;
   @include boxShadow($color-ccced1);
-  &::before {
-    @extend .ql-table-triangle-common;
-    top: -20px;
-    border-bottom-color: $color-ccced1;
-  }
-  &::after {
-    @extend .ql-table-triangle-common;
-    top: -19px;
-    border-bottom-color: $color-white;
-  }
   .properties-form-header {
     height: 40px;
     line-height: 40px;
@@ -282,7 +272,7 @@ $focused-border: 1px solid $focused-border-color;
   .properties-form-row {
     display: flex;
     flex-wrap: wrap;
-    padding: 12px;
+    padding: 8px 12px;
     justify-content: space-between;
     .ql-table-check-container {
       display: flex;
