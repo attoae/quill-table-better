@@ -653,15 +653,15 @@ class TablePropertiesForm {
   updatePropertiesForm(container: HTMLElement, type: string) {
     container.classList.remove('ql-table-triangle-none');
     const { height, width } = container.getBoundingClientRect();
-    const bounds = this.tableMenus.quill.container.getBoundingClientRect();
+    const containerBounds = this.tableMenus.quill.container.getBoundingClientRect();
     const { top, left, right, bottom } = this.getComputeBounds(type);
     const { viewHeight } = this.getViewportSize();
     let correctTop = bottom + 10;
     let correctLeft = (left + right - width) >> 1;
-    if (correctTop + bounds.top + height > viewHeight) {
+    if (correctTop + containerBounds.top + height > viewHeight) {
       correctTop = top - height - 10;
       if (correctTop < 0) {
-        correctTop = (bounds.height - height) >> 1;
+        correctTop = (containerBounds.height - height) >> 1;
         container.classList.add('ql-table-triangle-none');
       } else {
         container.classList.add('ql-table-triangle-up');
@@ -671,11 +671,11 @@ class TablePropertiesForm {
       container.classList.add('ql-table-triangle-down');
       container.classList.remove('ql-table-triangle-up');
     }
-    if (correctLeft < bounds.left) {
+    if (correctLeft < containerBounds.left) {
       correctLeft = 0;
       container.classList.add('ql-table-triangle-none');
-    } else if (correctLeft + width > bounds.right) {
-      correctLeft = bounds.right - width;
+    } else if (correctLeft + width > containerBounds.right) {
+      correctLeft = containerBounds.right - width;
       container.classList.add('ql-table-triangle-none');
     }
     setElementProperty(container, {

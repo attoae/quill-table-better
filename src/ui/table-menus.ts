@@ -777,17 +777,17 @@ class TableMenus {
       const computedStyle = getComputedStyle(toolbar.container);
       let correctTop = top - height - 10;
       let correctLeft = (left + right - width) >> 1;
-      if (
-        correctTop < -parseInt(computedStyle.paddingBottom) &&
-        containerBounds.bottom > bottom
-      ) {
-        correctTop = bottom + 10;
-        this.root.classList.add('ql-table-triangle-down');
-        this.root.classList.remove('ql-table-triangle-up');
-      } else {
-        correctTop = top - height - 10;
+      if (correctTop > -parseInt(computedStyle.paddingBottom)) {
         this.root.classList.add('ql-table-triangle-up');
         this.root.classList.remove('ql-table-triangle-down');
+      } else {
+        if (bottom > containerBounds.height) {
+          correctTop = containerBounds.height + 10;
+        } else {
+          correctTop = bottom + 10;
+        }
+        this.root.classList.add('ql-table-triangle-down');
+        this.root.classList.remove('ql-table-triangle-up');
       }
       if (correctLeft < containerBounds.left) {
         correctLeft = 0;
