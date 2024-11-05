@@ -1,6 +1,5 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
-import merge from 'lodash.merge';
 import {
   createTooltip,
   getAlign,

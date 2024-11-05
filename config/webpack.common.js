@@ -1,4 +1,3 @@
-const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
@@ -20,6 +19,10 @@ module.exports = {
       {
         test: /\.tsx?$/,
         loader: 'ts-loader'
+      },
+      {
+        test: /\.png/,
+        type: 'asset/inline'
       },
       {
         test: /\.(html|svg)$/i,
