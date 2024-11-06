@@ -192,6 +192,18 @@ $focused-border: 1px solid $focused-border-color;
     max-width: 160px;
     width: max-content;
   }
+  &-error {
+    & > input {
+      &:focus {
+        box-shadow: 0 0 0 3px #ff401f4d !important;
+      }
+      border-color: $tooltip-color-error !important;
+      animation: ql-table-input-shake .3s ease both;
+    }
+    & > label {
+      color: $tooltip-color-error;
+    }
+  }
 }
 .ql-table-dropdown,.ql-table-dropdown-properties {
   display: flex;
@@ -334,6 +346,9 @@ $focused-border: 1px solid $focused-border-color;
       }
       &:hover {
         background: $hover-background;
+      }
+      &[disabled] {
+        background-color: transparent;
       }
     }
   }
@@ -504,4 +519,12 @@ button.ql-table-better {
 }
 ol.table-list-container {
   counter-reset: list-0; // reset counter
+}
+
+// animation
+@keyframes ql-table-input-shake {
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
 }

@@ -82,13 +82,15 @@ class TablePropertiesForm {
   options: Options;
   attrs: Props;
   borderForm: HTMLElement[];
+  saveButton: HTMLButtonElement;
   form: HTMLDivElement;
   constructor(tableMenus: any, options?: Options) {
     this.tableMenus = tableMenus;
     this.options = options;
     this.attrs = { ...options.attribute };
     this.borderForm = [];
-    this.form = this.createPropertiesForm(options);
+    this.saveButton = null;
+    this.form = this.createPropertiesForm(options); 
   }
 
   checkBtnsAction(status: string) {
@@ -191,6 +193,7 @@ class TablePropertiesForm {
           : target
       ).getAttribute('data-color');
       this.setAttribute(propertyName, value, container);
+      this.updateInputStatus(container, false, true);
     });
     return container;
   }
@@ -288,6 +291,7 @@ class TablePropertiesForm {
       // debounce
       const value = (e.target as HTMLInputElement).value;
       valid && this.switchHidden(status, valid(value));
+      this.updateInputStatus(wrapper, valid && !valid(value));
       this.setAttribute(propertyName, value, container);
     });
     status.classList.add('label-field-view-status', 'ql-hidden');
@@ -341,6 +345,7 @@ class TablePropertiesForm {
     const btns = this.createActionBtns(
       (e: MouseEvent) => {
         const target = (e.target as HTMLElement).closest('button');
+        if (!target) return;
         const label = target.getAttribute('label');
         if (label === 'save') {
           this.setAttribute(
@@ -348,6 +353,7 @@ class TablePropertiesForm {
             colorPicker.color.hexString,
             parent
           );
+          this.updateInputStatus(container, false, true);
         }
         palette.classList.add('ql-hidden');
         parent.classList.add('ql-hidden');
@@ -422,7 +428,7 @@ class TablePropertiesForm {
     const actions = this.createActionBtns(
       (e: MouseEvent) => {
         const target = (e.target as HTMLElement).closest('button');
-        this.checkBtnsAction(target.getAttribute('label'));
+        target && this.checkBtnsAction(target.getAttribute('label'));
       },
       true
     );
@@ -437,6 +443,7 @@ class TablePropertiesForm {
     this.setBorderDisabled();
     this.tableMenus.quill.container.appendChild(container);
     this.updatePropertiesForm(container, options.type);
+    this.setSaveButton(actions);
     container.addEventListener('click', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       this.hiddenSelectList(target);
@@ -614,6 +621,20 @@ class TablePropertiesForm {
     this.toggleBorderDisabled(borderStyle);
   }
 
+  setSaveButton(container: HTMLDivElement) {
+    const saveButton: HTMLButtonElement = container.querySelector('button[label="save"]');
+    this.saveButton = saveButton;
+  }
+
+  setSaveButtonDisabled(disabled: boolean) {
+    if (!this.saveButton) return;
+    if (disabled) {
+      this.saveButton.setAttribute('disabled', 'true');
+    } else {
+      this.saveButton.removeAttribute('disabled');
+    }
+  }
+
   switchButton(container: HTMLDivElement, target: HTMLSpanElement) {
     const children = container.querySelectorAll('span.ql-table-tooltip-hover');
     for (const child of children) {
@@ -652,6 +673,22 @@ class TablePropertiesForm {
   updateInputValue(element: Element, value: string) {
     const input: HTMLInputElement = element.querySelector('.property-input');
     input.value = value;
+  }
+
+  updateInputStatus(container: HTMLElement, status: boolean, isColor?: boolean) {
+    const closestContainer =
+      isColor
+        ? this.getColorClosest(container)
+        : getClosestElement(container, '.label-field-view');
+      const wrapper = closestContainer.querySelector('.label-field-view-input-wrapper');
+    if (status) {
+      wrapper.classList.add('label-field-view-error');
+      this.setSaveButtonDisabled(true);
+    } else { 
+      wrapper.classList.remove('label-field-view-error');
+      const wrappers = this.form.querySelectorAll('.label-field-view-error');
+      if (!wrappers.length) this.setSaveButtonDisabled(false);
+    }
   }
 
   updatePropertiesForm(container: HTMLElement, type: string) {
