@@ -1,6 +1,5 @@
 import Quill from 'quill';
 import eraseIcon from '../assets/icon/erase.svg';
-import checkIcon from '../assets/icon/check.svg';
 import downIcon from '../assets/icon/down.svg';
 import paletteIcon from '../assets/icon/palette.svg';
 import saveIcon from '../assets/icon/save.svg';
@@ -9,12 +8,11 @@ import { getProperties } from '../config';
 import {
   addDimensionsUnit,
   createTooltip,
-  debounce,
   getCellChildBlot,
   getClosestElement,
   getComputeSelectedCols,
-  getCorrectBounds,
   isDimensions,
+  isValidColor,
   setElementProperty,
   setElementAttribute
 } from '../utils';
@@ -84,13 +82,15 @@ class TablePropertiesForm {
   options: Options;
   attrs: Props;
   borderForm: HTMLElement[];
+  saveButton: HTMLButtonElement;
   form: HTMLDivElement;
   constructor(tableMenus: any, options?: Options) {
     this.tableMenus = tableMenus;
     this.options = options;
     this.attrs = { ...options.attribute };
     this.borderForm = [];
-    this.form = this.createPropertiesForm(options);
+    this.saveButton = null;
+    this.form = this.createPropertiesForm(options); 
   }
 
   checkBtnsAction(status: string) {
@@ -180,7 +180,7 @@ class TablePropertiesForm {
       const tooltip = createTooltip(useLanguage(describe));
       li.setAttribute('data-color', value);
       li.classList.add('ql-table-tooltip-hover');
-      setElementProperty(li, { background: value });
+      setElementProperty(li, { 'background-color': value });
       li.appendChild(tooltip);
       fragment.appendChild(li);
     }
@@ -193,6 +193,7 @@ class TablePropertiesForm {
           : target
       ).getAttribute('data-color');
       this.setAttribute(propertyName, value, container);
+      this.updateInputStatus(container, false, true);
     });
     return container;
   }
@@ -211,6 +212,9 @@ class TablePropertiesForm {
     const select = this.createColorPickerSelect(propertyName);
     colorButton.addEventListener('click', () => {
       this.toggleHidden(select);
+      const colorContainer = this.getColorClosest(container);
+      const input: HTMLInputElement = colorContainer?.querySelector('.property-input');
+      this.updateSelectedStatus(select, input?.value, 'color');
     });
     container.appendChild(colorButton);
     container.appendChild(select);
@@ -287,6 +291,7 @@ class TablePropertiesForm {
       // debounce
       const value = (e.target as HTMLInputElement).value;
       valid && this.switchHidden(status, valid(value));
+      this.updateInputStatus(wrapper, valid && !valid(value));
       this.setAttribute(propertyName, value, container);
     });
     status.classList.add('label-field-view-status', 'ql-hidden');
@@ -340,6 +345,7 @@ class TablePropertiesForm {
     const btns = this.createActionBtns(
       (e: MouseEvent) => {
         const target = (e.target as HTMLElement).closest('button');
+        if (!target) return;
         const label = target.getAttribute('label');
         if (label === 'save') {
           this.setAttribute(
@@ -347,6 +353,7 @@ class TablePropertiesForm {
             colorPicker.color.hexString,
             parent
           );
+          this.updateInputStatus(container, false, true);
         }
         palette.classList.add('ql-hidden');
         parent.classList.add('ql-hidden');
@@ -393,7 +400,10 @@ class TablePropertiesForm {
         const { dropdown, dropText } = this.createDropdown(value, category);
         const list = this.createList(child, dropText);
         dropdown.appendChild(list);
-        dropdown.addEventListener('click', () => this.toggleHidden(list));
+        dropdown.addEventListener('click', () => {
+          this.toggleHidden(list);
+          this.updateSelectedStatus(dropdown, dropText.innerText, 'dropdown');
+        });
         return dropdown;
       case 'color':
         const colorContainer = this.createColorContainer(child);
@@ -418,7 +428,7 @@ class TablePropertiesForm {
     const actions = this.createActionBtns(
       (e: MouseEvent) => {
         const target = (e.target as HTMLElement).closest('button');
-        this.checkBtnsAction(target.getAttribute('label'));
+        target && this.checkBtnsAction(target.getAttribute('label'));
       },
       true
     );
@@ -433,6 +443,7 @@ class TablePropertiesForm {
     this.setBorderDisabled();
     this.tableMenus.quill.container.appendChild(container);
     this.updatePropertiesForm(container, options.type);
+    this.setSaveButton(actions);
     container.addEventListener('click', (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       this.hiddenSelectList(target);
@@ -610,6 +621,20 @@ class TablePropertiesForm {
     this.toggleBorderDisabled(borderStyle);
   }
 
+  setSaveButton(container: HTMLDivElement) {
+    const saveButton: HTMLButtonElement = container.querySelector('button[label="save"]');
+    this.saveButton = saveButton;
+  }
+
+  setSaveButtonDisabled(disabled: boolean) {
+    if (!this.saveButton) return;
+    if (disabled) {
+      this.saveButton.setAttribute('disabled', 'true');
+    } else {
+      this.saveButton.removeAttribute('disabled');
+    }
+  }
+
   switchButton(container: HTMLDivElement, target: HTMLSpanElement) {
     const children = container.querySelectorAll('span.ql-table-tooltip-hover');
     for (const child of children) {
@@ -650,6 +675,22 @@ class TablePropertiesForm {
     input.value = value;
   }
 
+  updateInputStatus(container: HTMLElement, status: boolean, isColor?: boolean) {
+    const closestContainer =
+      isColor
+        ? this.getColorClosest(container)
+        : getClosestElement(container, '.label-field-view');
+      const wrapper = closestContainer.querySelector('.label-field-view-input-wrapper');
+    if (status) {
+      wrapper.classList.add('label-field-view-error');
+      this.setSaveButtonDisabled(true);
+    } else { 
+      wrapper.classList.remove('label-field-view-error');
+      const wrappers = this.form.querySelectorAll('.label-field-view-error');
+      if (!wrappers.length) this.setSaveButtonDisabled(false);
+    }
+  }
+
   updatePropertiesForm(container: HTMLElement, type: string) {
     container.classList.remove('ql-table-triangle-none');
     const { height, width } = container.getBoundingClientRect();
@@ -688,6 +729,7 @@ class TablePropertiesForm {
     const input: HTMLInputElement = element.querySelector('.property-input');
     const colorButton: HTMLElement = element.querySelector('.color-button');
     const colorPickerSelect: HTMLElement = element.querySelector('.color-picker-select');
+    const status: HTMLElement = element.querySelector('.label-field-view-status');
     if (!value) {
       colorButton.classList.add('color-unselected');
     } else {
@@ -696,6 +738,22 @@ class TablePropertiesForm {
     input.value = value;
     setElementProperty(colorButton, { 'background-color': value });
     colorPickerSelect.classList.add('ql-hidden');
+    this.switchHidden(status, isValidColor(value));
+  }
+
+  updateSelectedStatus(container: HTMLDivElement, value: string, type: string) {
+    const selectors = type === 'color' ? '.color-list' : '.ql-table-dropdown-list';
+    const list = container.querySelector(selectors);
+    if (!list) return;
+    const lists = Array.from(list.querySelectorAll('li'));
+    for (const list of lists) {
+      list.classList.remove(`ql-table-${type}-selected`);
+    }
+    const selected = lists.find(li => {
+      const data = type === 'color' ? li.getAttribute('data-color') : li.innerText;
+      return data === value;
+    });
+    selected && selected.classList.add(`ql-table-${type}-selected`);
   }
 }
 
