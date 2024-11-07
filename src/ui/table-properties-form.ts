@@ -230,7 +230,7 @@ class TablePropertiesForm {
     container.classList.add('erase-container');
     container.appendChild(icon);
     container.appendChild(button);
-    button.addEventListener('click', listener);
+    container.addEventListener('click', listener);
     return container;
   }
 
@@ -240,7 +240,10 @@ class TablePropertiesForm {
     const remove = this.createColorPickerIcon(
       eraseIcon,
       useLanguage('removeColor'),
-      () => this.setAttribute(propertyName, '', container)
+      () => {
+        this.setAttribute(propertyName, '', container);
+        this.updateInputStatus(container, false, true);
+      }
     );
     const list = this.createColorList(propertyName);
     const palette = this.createPalette(propertyName, useLanguage, container);
