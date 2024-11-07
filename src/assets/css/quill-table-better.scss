@@ -81,6 +81,10 @@ $focused-border: 1px solid $focused-border-color;
   content: '';
   border: 10px solid transparent;
 }
+.ql-table-input-focus {
+  border: $focused-border;
+  box-shadow: 0 0 0 3px #cae1fc;
+}
 .ql-table-input {
   width: 80px;
   height: 30px;
@@ -92,8 +96,7 @@ $focused-border: 1px solid $focused-border-color;
     color: transparent;
   }
   &:focus {
-    border: $focused-border;
-    box-shadow: 0 0 0 3px #cae1fc;
+    @extend .ql-table-input-focus;
   }
   &:focus + label {
     display: block;
@@ -111,11 +114,10 @@ $focused-border: 1px solid $focused-border-color;
   align-items: center;
 }
 .ql-table-selected {
+  @extend .ql-table-input-focus;
   background-image: url('../icon/check.png');
   background-repeat: no-repeat;
   background-size: 16px;
-  border: $focused-border;
-  box-shadow: 0 0 0 3px #cae1fc;
   box-sizing: border-box;
 }
 
@@ -428,6 +430,10 @@ $focused-border: 1px solid $focused-border-color;
           height: 100%;
           cursor: pointer;
         }
+      }
+      & > .erase-container {
+        @extend .ql-table-input-focus;
+        margin-bottom: 4px;
       }
       .color-list {
         display: flex;
