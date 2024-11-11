@@ -54,6 +54,8 @@ class CellSelection {
     this.singleList = [];
     this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
+    document.addEventListener('copy', (e: ClipboardEvent) => this.onCaptureCopy(e, false));
+    document.addEventListener('cut', (e: ClipboardEvent) => this.onCaptureCopy(e, true));
     this.initWhiteList();
   }
 
@@ -90,6 +92,36 @@ class CellSelection {
       singleWhiteList = SINGLE_WHITE_LIST
     } = toolbarButtons;
     return [whiteList, singleWhiteList];
+  }
+
+  getCopyData() {
+    let html = '';
+    const map: { [propName: string]: Element[] } = {};
+    for (const td of this.selectedTds) {
+      const rowId = td.getAttribute('data-row');
+      if (!map[rowId]) {
+        map[rowId] = [];
+      }
+      map[rowId].push(td);
+    }
+    for (const tds of Object.values(map)) {
+      let res = '';
+      for (const td of tds) {
+        const outerHTML = td.outerHTML
+          .replace(/data-[a-z]+="[^"]*"/g, '')
+          .replace(/class="[^"]*"/g, collapse => {
+            return collapse
+              .replace('ql-cell-selected', '')
+              .replace('ql-table-block', '');
+          })
+          .replace(/class="\s*"/g, '');
+        res += outerHTML;
+      }
+      res = `<tr>${res}</tr>`;
+      html += res;
+    }
+    html = `<table><tbody>${html}</tbody></table>`;
+    return { html, text: '' };
   }
 
   getCorrectDisabled(input: HTMLElement, format: string) {
@@ -310,6 +342,16 @@ class CellSelection {
         this.quill.setSelection(index, 0, Quill.sources.USER);
       }
     }
+  }
+
+  onCaptureCopy(e: ClipboardEvent, isCut = false) {
+    if (this.selectedTds?.length < 2) return;
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    const { html, text } = this.getCopyData();
+    e.clipboardData?.setData('text/plain', text);
+    e.clipboardData?.setData('text/html', html);
+    if (isCut) this.removeSelectedTdsContent();
   }
 
   removeCursor() {
