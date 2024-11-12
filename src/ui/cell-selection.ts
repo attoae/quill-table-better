@@ -6,6 +6,7 @@ import {
   getCorrectBounds,
   getCorrectCellBlot
 } from '../utils';
+import type { AllowedChildren } from '../utils';
 import { TableCellBlock, TableCell } from '../formats/table';
 import { DEVIATION } from '../config';
 
@@ -80,6 +81,15 @@ class CellSelection {
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
+  }
+
+  exitTableFocus(block: AllowedChildren, up: boolean) {
+    const cell = getCorrectCellBlot(block);
+    const table = cell.table();
+    const offset = up ? -1 : table.length();
+    const index = table.offset(this.quill.scroll) + offset;
+    this.tableBetter.hideTools();
+    this.quill.setSelection(index, 0, Quill.sources.USER);
   }
 
   getButtonsWhiteList(): [string[], string[]] {
@@ -300,14 +310,13 @@ class CellSelection {
           }
           row = row[_key];
         }
-        this.tableArrowSelection(up, cellBlot);
+        if (!cellBlot) {
+          this.exitTableFocus(block, up);
+        } else {
+          this.tableArrowSelection(up, cellBlot);
+        }
       } else {
-        const cell = getCorrectCellBlot(block);
-        const table = cell.table();
-        const offset = up ? -1 : table.length();
-        const index = table.offset(this.quill.scroll) + offset;
-        this.tableBetter.hideTools();
-        this.quill.setSelection(index, 0, Quill.sources.USER);
+        this.exitTableFocus(block, up);
       }
     }
   }
