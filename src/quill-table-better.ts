@@ -82,6 +82,17 @@ class Table extends Module {
     this.registerToolbarTable(options?.toolbarTable);
   }
 
+  clearHistorySelected() {
+    const [table] = this.getTable();
+    if (!table) return;
+    const selectedTds: Element[] = Array.from(
+      table.domNode.querySelectorAll('td.ql-cell-selected')
+    );
+    for (const td of selectedTds) {
+      td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
+    }
+  }
+
   deleteTable() {
     const [table] = this.getTable();
     if (table == null) return;
@@ -116,6 +127,7 @@ class Table extends Module {
     this.cellSelection.handleKeyup(e);
     if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
       this.hideTools();
+      this.clearHistorySelected();
     }
     this.updateMenus(e);
   }
