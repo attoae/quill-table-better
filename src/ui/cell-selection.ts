@@ -157,7 +157,12 @@ class CellSelection {
   handleDeleteKeyup(e: KeyboardEvent) {
     if (this.selectedTds?.length < 2) return;
     if (e.key === 'Backspace' || e.key === 'Delete') {
-      this.removeSelectedTdsContent();
+      if (e.ctrlKey) {
+        this.tableBetter.tableMenus.deleteColumn(true);
+        this.tableBetter.tableMenus.deleteRow(true);
+      } else {
+        this.removeSelectedTdsContent();
+      }
     }
   }
 

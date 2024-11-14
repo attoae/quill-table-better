@@ -90,16 +90,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
         delete: {
           content: useLanguage('delCol'),
           handler() {
-            const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
-            const bounds = this.table.getBoundingClientRect();
-            const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
-            const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
-            const tableBlot = Quill.find(leftTd).table();
-            const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
-            this.tableBetter.cellSelection.updateSelected('column');
-            tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
-            updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
-            this.updateMenus();
+            this.deleteColumn();
           }
         }
       }
@@ -130,19 +121,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
         delete: {
           content: useLanguage('delRow'),
           handler() {
-            const selectedTds = this.tableBetter.cellSelection.selectedTds;
-            const rows = [];
-            let id = '';
-            for (const td of selectedTds) {
-              if (td.getAttribute('data-row') !== id) {
-                rows.push(Quill.find(td.parentElement));
-                id = td.getAttribute('data-row');
-              }
-            }
-            this.tableBetter.cellSelection.updateSelected('row');
-            const tableBlot = Quill.find(selectedTds[0]).table();
-            tableBlot.deleteRow(rows, this.hideMenus.bind(this));
-            this.updateMenus();
+            this.deleteRow();
           }
         }
       }
@@ -307,6 +286,42 @@ class TableMenus {
     }
     this.quill.container.appendChild(container);
     return container;
+  }
+
+  deleteColumn(isKeyboard: boolean = false) {
+    const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
+    const bounds = this.table.getBoundingClientRect();
+    const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
+    const tableBlot = Quill.find(leftTd).table();
+    const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
+    if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
+    this.tableBetter.cellSelection.updateSelected('column');
+    tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
+    updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
+    this.updateMenus();
+  }
+
+  deleteRow(isKeyboard: boolean = false) {
+    const selectedTds = this.tableBetter.cellSelection.selectedTds;
+    const rows = [];
+    let id = '';
+    for (const td of selectedTds) {
+      if (td.getAttribute('data-row') !== id) {
+        rows.push(Quill.find(td.parentElement));
+        id = td.getAttribute('data-row');
+      }
+    }
+    if (isKeyboard) {
+      const sum = rows.reduce((sum: number, row: TableRow) => {
+        return sum += row.children.length;
+      }, 0);
+      if (sum !== selectedTds.length) return;
+    }
+    this.tableBetter.cellSelection.updateSelected('row');
+    const tableBlot = Quill.find(selectedTds[0]).table();
+    tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+    this.updateMenus();
   }
 
   destroyTablePropertiesForm() {
