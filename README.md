@@ -207,6 +207,11 @@ Only supports formatting for a single cell.
 const SINGLE_WHITE_LIST = ['link', 'image'];
 ```
 
+## Key combination
+
+- delete cells and their contents (`Ctrl + Backspace` or `Ctrl + Delete`)  
+When all cells in a row or column are selected, you can use key combinations to delete cells and their contents.
+
 ## Methods
 
 ```JavaScript

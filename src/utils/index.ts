@@ -54,7 +54,7 @@ function getAlign(cellBlot: TableCell) {
   const blocks = cellBlot.descendants(TableCellBlock);
   const lists = cellBlot.descendants(TableList);
   const headers = cellBlot.descendants(TableHeader);
-  function getChildAlign(child: TableCellBlock | TableHeader | TableList): string {
+  function getChildAlign(child: AllowedChildren): string {
     for (const name of child.domNode.classList) {
       if (/ql-align-/.test(name)) {
         return name.split('ql-align-')[1];
@@ -198,9 +198,10 @@ function getCorrectBounds(target: Element, container: Element) {
   }
 }
 
-function getCorrectCellBlot(blot: TableCell) {
+function getCorrectCellBlot(blot: TableCell | AllowedChildren): TableCell | null {
   while (blot) {
     if (blot.statics.blotName === TableCell.blotName) {
+      // @ts-ignore
       return blot;
     }
     blot = blot.parent;
@@ -355,6 +356,7 @@ function updateTableWidth(
   }
 }
 
+export type AllowedChildren = TableCellBlock | TableHeader | TableList;
 export {
   addDimensionsUnit,
   convertUnitToInteger,

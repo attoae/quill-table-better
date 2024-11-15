@@ -420,7 +420,7 @@ class TableContainer extends Container {
     return prev;
   }
 
-  getInsertRow(prev: TableRow, offset: number) {
+  getInsertRow(prev: TableRow, ref: TableRow | null, offset: number) {
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
     const id = tableId();
@@ -435,13 +435,21 @@ class TableContainer extends Container {
       });
       return row;
     } else {
-      prev = this.getCorrectRow(prev.prev, maxColumns);
-      prev.children.forEach((child: TableCell) => {
+      const correctRow = this.getCorrectRow(prev.prev, maxColumns);
+      correctRow.children.forEach((child: TableCell) => {
         const formats = { height: '24', 'data-row': id };
         const colspan = ~~child.domNode.getAttribute('colspan');
         const rowspan = ~~child.domNode.getAttribute('rowspan');
         if (rowspan > 1) {
-          child.domNode.setAttribute('rowspan', rowspan + 1);
+          if (offset > 0 && !ref) {
+            this.insertTableCell(colspan, formats, row);
+          } else {
+            const [formats] = getCellFormats(child);
+            child.replaceWith(child.statics.blotName, {
+              ...formats,
+              rowspan: rowspan + 1
+            });
+          }
         } else {
           this.insertTableCell(colspan, formats, row);
         }
@@ -548,7 +556,7 @@ class TableContainer extends Container {
     if (body == null || body.children.head == null) return;
     const ref = body.children.at(index);
     const prev = ref ? ref : body.children.at(index - 1);
-    const correctRow = this.getInsertRow(prev, offset);
+    const correctRow = this.getInsertRow(prev, ref, offset);
     body.insertBefore(correctRow, ref);
   }
 

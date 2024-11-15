@@ -6,6 +6,7 @@ import {
   getCorrectBounds,
   getCorrectCellBlot
 } from '../utils';
+import type { AllowedChildren } from '../utils';
 import { TableCellBlock, TableCell } from '../formats/table';
 import { DEVIATION } from '../config';
 
@@ -54,6 +55,7 @@ class CellSelection {
     this.singleList = [];
     this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
+    this.initDocumentListener();
     this.initWhiteList();
   }
 
@@ -80,6 +82,15 @@ class CellSelection {
     this.selectedTds = [];
     this.startTd = null;
     this.endTd = null;
+  }
+
+  exitTableFocus(block: AllowedChildren, up: boolean) {
+    const cell = getCorrectCellBlot(block);
+    const table = cell.table();
+    const offset = up ? -1 : table.length();
+    const index = table.offset(this.quill.scroll) + offset;
+    this.tableBetter.hideTools();
+    this.quill.setSelection(index, 0, Quill.sources.USER);
   }
 
   getButtonsWhiteList(): [string[], string[]] {
@@ -143,6 +154,18 @@ class CellSelection {
     this.quill.scrollSelectionIntoView();
   }
 
+  handleDeleteKeyup(e: KeyboardEvent) {
+    if (this.selectedTds?.length < 2) return;
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      if (e.ctrlKey) {
+        this.tableBetter.tableMenus.deleteColumn(true);
+        this.tableBetter.tableMenus.deleteRow(true);
+      } else {
+        this.removeSelectedTdsContent();
+      }
+    }
+  }
+
   handleKeyup(e: KeyboardEvent) {
     switch (e.key) {
       case 'ArrowLeft':
@@ -152,10 +175,6 @@ class CellSelection {
       case 'ArrowUp':
       case 'ArrowDown':
         this.makeTableArrowVerticalHandler(e.key);
-        break;
-      case 'Backspace':
-      case 'Delete':
-        this.removeSelectedTdsContent();
         break;
       default:
         break;
@@ -199,6 +218,10 @@ class CellSelection {
 
     this.quill.root.addEventListener('mousemove', handleMouseMove);
     this.quill.root.addEventListener('mouseup', handleMouseup);
+  }
+
+  initDocumentListener() {
+    document.addEventListener('keyup', this.handleDeleteKeyup.bind(this));
   }
 
   initWhiteList() {
@@ -300,14 +323,13 @@ class CellSelection {
           }
           row = row[_key];
         }
-        this.tableArrowSelection(up, cellBlot);
+        if (!cellBlot) {
+          this.exitTableFocus(block, up);
+        } else {
+          this.tableArrowSelection(up, cellBlot);
+        }
       } else {
-        const cell = getCorrectCellBlot(block);
-        const table = cell.table();
-        const offset = up ? -1 : table.length();
-        const index = table.offset(this.quill.scroll) + offset;
-        this.tableBetter.hideTools();
-        this.quill.setSelection(index, 0, Quill.sources.USER);
+        this.exitTableFocus(block, up);
       }
     }
   }
