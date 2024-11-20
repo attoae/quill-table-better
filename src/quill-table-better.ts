@@ -339,7 +339,7 @@ function makeTableListHandler(key: string) {
     empty: true,
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
-      const cellId = line.parent.formats()[line.parent.statics.blotName];
+      const cellId = getCellId(line.parent.formats()[line.parent.statics.blotName]);
       line.replaceWith(TableCellBlock.blotName, cellId);      
     }
   }
