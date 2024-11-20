@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
+import merge from 'lodash.merge';
 import { EmbedBlot } from 'parchment';
 import { getCorrectCellBlot } from '../utils';
 import { TableCell } from '../formats/table';
@@ -225,10 +226,8 @@ function tablehandler(
   return this.setTableFormat(range, selectedTds, value, name, lines);
 }
 
-TableToolbar.DEFAULTS = {
-  container: null,
+TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
   handlers: {
-    ...Toolbar.DEFAULTS.handlers,
     header(value: string, lines?: any[]) {
       const cellSelection = this.getCellSelection(); 
       const selectedTds = cellSelection.selectedTds;
@@ -260,8 +259,9 @@ TableToolbar.DEFAULTS = {
       } else {
         this.quill.format('list', value, Quill.sources.USER);
       }
-    }
+    },
+    'table-better'() {}
   }
-};
+});
 
 export default TableToolbar;
