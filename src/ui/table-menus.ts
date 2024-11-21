@@ -304,14 +304,23 @@ class TableMenus {
 
   deleteRow(isKeyboard: boolean = false) {
     const selectedTds = this.tableBetter.cellSelection.selectedTds;
-    const rows = [];
-    let id = '';
+    const map: { [propName: string]: TableRow } = {};
     for (const td of selectedTds) {
-      if (td.getAttribute('data-row') !== id) {
-        rows.push(Quill.find(td.parentElement));
-        id = td.getAttribute('data-row');
+      let rowspan = ~~td.getAttribute('rowspan') || 1;
+      let row = Quill.find(td.parentElement);
+      if (rowspan > 1) {
+        while (row && rowspan) {
+          const id = row.children.head.domNode.getAttribute('data-row');
+          if (!map[id]) map[id] = row;
+          row = row.next;
+          rowspan--;
+        }
+      } else {
+        const id = td.getAttribute('data-row');
+        if (!map[id]) map[id] = row;
       }
     }
+    const rows: TableRow[] = Object.values(map);
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
         return sum += row.children.length;
@@ -667,24 +676,8 @@ class TableMenus {
     }, 0);
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
-      const blot = Quill.find(td);
-      blot.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
-        const blotName = child.statics.blotName;
-        switch (blotName) {
-          case ListContainer.blotName:
-            child.children.forEach((ch: TableList) => {
-              ch.format && ch.format(blotName, { ...formats, cellId });
-            });
-            break;
-          case TableHeader.blotName:
-            const _formats = child.formats()[blotName];
-            child.format && child.format(blotName, { ..._formats, cellId });
-            break;
-          default:
-            child.format && child.format(blotName, cellId);
-            break;
-        }
-      });
+      const blot: TableCell = Quill.find(td);
+      blot.childrenFormat(formats, cellId);
       blot.moveChildren(leftTdBlot);
       blot.remove();
     }

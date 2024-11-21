@@ -111,6 +111,18 @@ class CellSelection {
     return [...child, input];
   }
 
+  getCorrectRow(td: Element, key: string) {
+    const offset = key === 'next' ? 0 : -1;
+    let rowspan = (~~td.getAttribute('rowspan') || 1) + offset;
+    const cell: TableCell = Quill.find(td);
+    let row = cell.parent;
+    while (row && rowspan) {
+      row = row[key];
+      rowspan--;
+    }
+    return row?.domNode;
+  }
+
   getCorrectValue(format: string, value: boolean | string) {
     for (const td of this.selectedTds) {
       const blot = Quill.find(td);
@@ -457,8 +469,8 @@ class CellSelection {
       case 'row':
         {
           const row =
-            this.endTd.parentElement.nextElementSibling ||
-            this.startTd.parentElement.previousElementSibling;
+            this.getCorrectRow(this.endTd, 'next') ||
+            this.getCorrectRow(this.startTd, 'prev');
           if (!row) return;
           const startCorrectBounds = getCorrectBounds(this.startTd, this.quill.container);
           let child = row.firstElementChild;

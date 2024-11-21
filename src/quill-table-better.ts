@@ -86,7 +86,7 @@ class Table extends Module {
     const [table] = this.getTable();
     if (!table) return;
     const selectedTds: Element[] = Array.from(
-      table.domNode.querySelectorAll('td.ql-cell-selected')
+      table.domNode.querySelectorAll('td.ql-cell-focused, td.ql-cell-selected')
     );
     for (const td of selectedTds) {
       td.classList && td.classList.remove('ql-cell-focused', 'ql-cell-selected');
