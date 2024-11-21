@@ -525,19 +525,19 @@ class TableMenus {
     const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
     const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
     if (
-      startCorrectBounds.left > endCorrectBounds.left &&
-      startCorrectBounds.top > endCorrectBounds.top
+      startCorrectBounds.left <= endCorrectBounds.left &&
+      startCorrectBounds.top <= endCorrectBounds.top
     ) {
       return {
         computeBounds,
-        leftTd: endTd,
-        rightTd: startTd
+        leftTd: startTd,
+        rightTd: endTd
       };
     }
     return {
       computeBounds,
-      leftTd: startTd,
-      rightTd: endTd
+      leftTd: endTd,
+      rightTd: startTd
     };
   }
 

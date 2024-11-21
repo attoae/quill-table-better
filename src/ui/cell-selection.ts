@@ -212,6 +212,7 @@ class CellSelection {
 
     const handleMouseup = (e: MouseEvent) => {
       this.setSingleDisabled();
+      this.setCorrectPositionTds(this.startTd, this.endTd); 
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
@@ -358,6 +359,15 @@ class CellSelection {
       }
     }
     this.tableBetter.tableMenus.updateMenus();
+  }
+
+  setCorrectPositionTds(startTd: Element, endTd: Element) {
+    if (!startTd || !endTd) return;
+    const sTdBounds = startTd.getBoundingClientRect();
+    const eTdBounds = endTd.getBoundingClientRect();
+    if (sTdBounds.left <= eTdBounds.left && sTdBounds.top <= eTdBounds.top) return;
+    this.startTd = endTd;
+    this.endTd = startTd;
   }
 
   setDisabled(disabled: boolean) {
