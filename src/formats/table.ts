@@ -465,7 +465,7 @@ class TableContainer extends Container {
     }, 0);
   }
 
-  insertColumn(position: number, isLast: boolean, w: number) {
+  insertColumn(position: number, isLast: boolean, w: number, offset: number) {
     const colgroup = this.colgroup();
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
@@ -473,7 +473,7 @@ class TableContainer extends Container {
     const cols: [TableColgroup, TableCol | null][] = [];
     let row = body.children.head;
     while (row) {
-      if (isLast) {
+      if (isLast && offset > 0) {
         const id = row.children.tail.domNode.getAttribute('data-row');
         columnCells.push([row, id, null]);
       } else {

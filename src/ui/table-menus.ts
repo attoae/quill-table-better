@@ -597,12 +597,8 @@ class TableMenus {
     const tdBlot = Quill.find(td);
     const tableBlot = tdBlot.table();
     const isLast = td.parentElement.lastChild.isEqualNode(td);
-    if (offset > 0) {
-      tableBlot.insertColumn(right, isLast, width);
-    } else {
-      tableBlot.insertColumn(left, isLast, width);
-    }
-    // this.quill.update(Quill.sources.USER);
+    const position = offset > 0 ? right : left;
+    tableBlot.insertColumn(position, isLast, width, offset);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -632,7 +628,6 @@ class TableMenus {
     } else {
       tableBlot.insertRow(index + offset, offset);
     }
-    // this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -694,7 +689,6 @@ class TableMenus {
       blot.remove();
     }
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
-    // this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
@@ -763,7 +757,6 @@ class TableMenus {
         rowspan: null
       });
     }
-    // this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
