@@ -113,7 +113,7 @@ class CellSelection {
 
   getCorrectRow(td: Element, key: string) {
     const offset = key === 'next' ? 0 : -1;
-    let rowspan = (~~td.getAttribute('rowspan') || 1) + offset;
+    let rowspan = (~~td.getAttribute('rowspan') || 1) + offset || 1;
     const cell: TableCell = Quill.find(td);
     let row = cell.parent;
     while (row && rowspan) {
@@ -477,17 +477,15 @@ class CellSelection {
           while (child) {
             const childCorrectBounds = getCorrectBounds(child, this.quill.container);
             if (
-              childCorrectBounds.left + DEVIATION >= startCorrectBounds.left &&
-              (
-                childCorrectBounds.right <= startCorrectBounds.right + DEVIATION ||
-                childCorrectBounds.right + DEVIATION >= startCorrectBounds.right
-              )
+              childCorrectBounds.left + DEVIATION >= startCorrectBounds.left ||
+              childCorrectBounds.right - DEVIATION >= startCorrectBounds.left
             ) {
               this.setSelected(child);
-              break;
+              return;
             }
             child = child.nextElementSibling;
           }
+          this.setSelected(row.firstElementChild);
         }
         break;
       default:

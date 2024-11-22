@@ -369,14 +369,14 @@ class TableContainer extends Container {
       this.deleteTable();
       hideMenus();
     } else {
+      for (const [td, offset] of changeTds) {
+        this.setCellColspan(Quill.find(td), offset);
+      }
       for (const td of [...delTds, ...cols]) {
         if (td.parentElement.children.length === 1) {
           this.setCellRowspan(td.parentElement.previousElementSibling);
         }
         td.remove();
-      }
-      for (const [td, offset] of changeTds) {
-        this.setCellColspan(Quill.find(td), offset);
       }
     }
   }
