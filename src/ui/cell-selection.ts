@@ -224,7 +224,7 @@ class CellSelection {
 
     const handleMouseup = (e: MouseEvent) => {
       this.setSingleDisabled();
-      this.setCorrectPositionTds(this.startTd, this.endTd); 
+      this.setCorrectPositionTds(this.startTd, this.endTd, this.selectedTds); 
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
@@ -373,13 +373,27 @@ class CellSelection {
     this.tableBetter.tableMenus.updateMenus();
   }
 
-  setCorrectPositionTds(startTd: Element, endTd: Element) {
-    if (!startTd || !endTd) return;
-    const sTdBounds = startTd.getBoundingClientRect();
-    const eTdBounds = endTd.getBoundingClientRect();
-    if (sTdBounds.left <= eTdBounds.left && sTdBounds.top <= eTdBounds.top) return;
-    this.startTd = endTd;
-    this.endTd = startTd;
+  setCorrectPositionTds(startTd: Element, endTd: Element, selectedTds: Element[]) {
+    if (!startTd || !endTd || selectedTds.length < 2) return;
+    const firstTd = selectedTds[0];
+    const lastTd = selectedTds[selectedTds.length - 1];
+    const tds = [...new Set([startTd, endTd, firstTd, lastTd])];
+    tds.sort((prev: Element, next: Element) => {
+      const prevBounds = prev.getBoundingClientRect();
+      const nextBounds = next.getBoundingClientRect();
+      if (
+        prevBounds.top <= nextBounds.top &&
+        (
+          prevBounds.left <= nextBounds.left ||
+          prevBounds.right <= nextBounds.right
+        )
+      ) {
+        return -1
+      }
+      return 1;
+    });
+    this.startTd = tds[0];
+    this.endTd = tds[tds.length - 1];
   }
 
   setDisabled(disabled: boolean) {
