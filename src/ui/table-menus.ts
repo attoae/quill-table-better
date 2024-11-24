@@ -22,13 +22,10 @@ import downIcon from '../assets/icon/down.svg';
 import deleteIcon from '../assets/icon/delete.svg';
 import {
   TableCell,
-  TableCellBlock,
   TableCol,
   TableRow
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
-import TableList, { ListContainer } from '../formats/list';
-import TableHeader from '../formats/header';
 import {
   CELL_DEFAULT_VALUES,
   CELL_DEFAULT_WIDTH,
@@ -201,12 +198,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
       content: useLanguage('delTable'),
       icon: deleteIcon,
       handler() {
-        const tableBlot = Quill.find(this.table);
-        if (!tableBlot) return;
-        const offset = tableBlot.offset(this.quill.scroll);
-        tableBlot.remove();
-        this.tableBetter.hideTools();
-        this.quill.setSelection(offset - 1, 0, Quill.sources.USER);
+        this.deleteTable();
       }
     }
   };
@@ -297,7 +289,7 @@ class TableMenus {
     const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
     if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
     this.tableBetter.cellSelection.updateSelected('column');
-    tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
+    tableBlot.deleteColumn(changeTds, delTds, this.deleteTable.bind(this), deleteCols);
     updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
     this.updateMenus();
   }
@@ -329,8 +321,17 @@ class TableMenus {
     }
     this.tableBetter.cellSelection.updateSelected('row');
     const tableBlot = Quill.find(selectedTds[0]).table();
-    tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+    tableBlot.deleteRow(rows, this.deleteTable.bind(this));
     this.updateMenus();
+  }
+
+  deleteTable() {
+    const tableBlot = Quill.find(this.table);
+    if (!tableBlot) return;
+    const offset = tableBlot.offset(this.quill.scroll);
+    tableBlot.remove();
+    this.tableBetter.hideTools();
+    this.quill.setSelection(offset - 1, 0, Quill.sources.USER);
   }
 
   destroyTablePropertiesForm() {

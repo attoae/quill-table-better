@@ -359,15 +359,14 @@ class TableContainer extends Container {
   deleteColumn(
     changeTds: [Element, number][],
     delTds: Element[],
-    hideMenus: () => void,
+    deleteTable: () => void,
     cols: Element[] = []
   ) {
     const body = this.tbody();
     const tableCells = this.descendants(TableCell);
     if (body == null || body.children.head == null) return;
     if (delTds.length === tableCells.length) {
-      this.deleteTable();
-      hideMenus();
+      deleteTable();
     } else {
       for (const [td, offset] of changeTds) {
         this.setCellColspan(Quill.find(td), offset);
@@ -381,12 +380,11 @@ class TableContainer extends Container {
     }
   }
 
-  deleteRow(rows: TableRow[], hideMenus: () => void) {
+  deleteRow(rows: TableRow[], deleteTable: () => void) {
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
     if (rows.length === body.children.length) {
-      this.deleteTable();
-      hideMenus();
+      deleteTable();
     } else {
       const weakMap: WeakMap<TableCell, { next: TableRow, rowspan: number }> = new WeakMap();
       const columnCells: [TableRow, Props, TableCell | null, TableCell | null][] = [];
