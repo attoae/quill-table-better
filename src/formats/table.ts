@@ -561,12 +561,17 @@ class TableContainer extends Container {
     colgroup.insertBefore(col, ref);
   }
 
-  insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
+  insertColumnCell(row: TableRow | null, id: string, ref: TableCell | null) {
     const colgroup = this.colgroup();
     const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
     const cell = this.scroll.create(TableCell.blotName, formats);
     const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
     cell.appendChild(cellBlock);
+    if (!row) {
+      const tbody = this.tbody();
+      row = this.scroll.create(TableRow.blotName);
+      tbody.insertBefore(row, null);
+    }
     row.insertBefore(cell, ref);
     cellBlock.optimize();
   }

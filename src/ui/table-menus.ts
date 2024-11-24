@@ -23,7 +23,8 @@ import deleteIcon from '../assets/icon/delete.svg';
 import {
   TableCell,
   TableCol,
-  TableRow
+  TableRow,
+  tableId
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
 import {
@@ -480,6 +481,7 @@ class TableMenus {
 
   getRefInfo(row: TableRow, right: number) {
     let ref = null;
+    if (!row) return { id: tableId(), ref };
     let td = row.children.head;
     const id = td.domNode.getAttribute('data-row');
     while (td) {
@@ -723,14 +725,14 @@ class TableMenus {
             for (let j = 0; j < colspan; j++) {
               columnCells.push([nextRowBlot, id, ref]);
             }
-            nextRowBlot = nextRowBlot.next;
+            nextRowBlot && (nextRowBlot = nextRowBlot.next);
           }
         } else {
           let nextRowBlot = rowBlot.next;
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
             columnCells.push([nextRowBlot, id, ref]);
-            nextRowBlot = nextRowBlot.next;
+            nextRowBlot && (nextRowBlot = nextRowBlot.next);
           }
         }
       }
