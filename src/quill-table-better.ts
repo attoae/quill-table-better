@@ -266,7 +266,7 @@ const keyboardBindings = {
       const blot = line.replaceWith(TableCellBlock.blotName, cellId);
       const tableModule = this.quill.getModule('table-better');
       const cell = getCorrectCellBlot(blot);
-      cell && tableModule.cellSelection.setSelected(cell.domNode);
+      cell && tableModule.cellSelection.setSelected(cell.domNode, false);
     }
   }
 }

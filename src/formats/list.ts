@@ -5,10 +5,14 @@ import { CELL_ATTRIBUTE } from '../config';
 
 const List = Quill.import('formats/list');
 const Container = Quill.import('blots/container');
+const DEFAULT_ATTRIBUTE = ['colspan', 'rowspan'];
 
 class ListContainer extends Container {
   static create(value: Props) {
     const node = super.create();
+    for (const key of DEFAULT_ATTRIBUTE) {
+      if (value[key] == '1') delete value[key];
+    }
     const keys = Object.keys(value);
     for (const key of keys) {
       if (key === 'data-row') {
@@ -35,6 +39,9 @@ class ListContainer extends Container {
       return formats;
     }, {});
     formats['cellId'] = domNode.getAttribute('data-cell');
+    for (const key of DEFAULT_ATTRIBUTE) {
+      if (!formats[key]) formats[key] = '1';
+    }
     return formats;
   }
 
