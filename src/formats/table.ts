@@ -1,6 +1,7 @@
 import Quill from 'quill';
 import {
   filterWordStyle,
+  getCellChildBlot,
   getCellFormats,
   getCellId,
   getCorrectCellBlot
@@ -617,12 +618,13 @@ class TableContainer extends Container {
           const blotName = cell.statics.blotName;
           const formats = cell.formats()[blotName];
           const rowspan = (~~formats['rowspan'] || 1) - 1;
+          const childBlot = getCellChildBlot(cell);
           if (rowspan > 1) {
             Object.assign(formats, { rowspan });
           } else {
             delete formats['rowspan'];
           }
-          cell.replaceWith(blotName, formats);
+          childBlot.format(blotName, formats);
         }
         break;
       }

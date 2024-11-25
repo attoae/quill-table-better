@@ -382,7 +382,10 @@ class CellSelection {
       const prevBounds = prev.getBoundingClientRect();
       const nextBounds = next.getBoundingClientRect();
       if (
-        prevBounds.top <= nextBounds.top &&
+        (
+          prevBounds.top <= nextBounds.top ||
+          prevBounds.bottom <= nextBounds.bottom
+        ) &&
         (
           prevBounds.left <= nextBounds.left ||
           prevBounds.right <= nextBounds.right

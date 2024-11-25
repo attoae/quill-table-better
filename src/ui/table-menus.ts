@@ -677,14 +677,25 @@ class TableMenus {
       }
       return rowspan;
     }, 0);
+    let offset = 0;
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
       const blot: TableCell = Quill.find(td);
       blot.moveChildren(leftTdBlot);
       blot.remove();
+      if (!blot.parent?.children?.length) offset++;
+    }
+    if (offset) {
+      // Subtract the number of rows deleted by the merge
+      row.children.forEach((child: TableCell) => {
+        if (child.domNode.isEqualNode(leftTd)) return;
+        const rowspan = child.domNode.getAttribute('rowspan');
+        const [formats] = getCellFormats(child);
+        child.replaceWith(child.statics.blotName, { ...formats, rowspan: rowspan - offset });
+      });
     }
     leftTdBlot.setChildrenId(cellId);
-    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
+    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
