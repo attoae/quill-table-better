@@ -22,13 +22,11 @@ import downIcon from '../assets/icon/down.svg';
 import deleteIcon from '../assets/icon/delete.svg';
 import {
   TableCell,
-  TableCellBlock,
   TableCol,
-  TableRow
+  TableRow,
+  tableId
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
-import TableList, { ListContainer } from '../formats/list';
-import TableHeader from '../formats/header';
 import {
   CELL_DEFAULT_VALUES,
   CELL_DEFAULT_WIDTH,
@@ -201,12 +199,7 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
       content: useLanguage('delTable'),
       icon: deleteIcon,
       handler() {
-        const tableBlot = Quill.find(this.table);
-        if (!tableBlot) return;
-        const offset = tableBlot.offset(this.quill.scroll);
-        tableBlot.remove();
-        this.tableBetter.hideTools();
-        this.quill.setSelection(offset - 1, 0, Quill.sources.USER);
+        this.deleteTable();
       }
     }
   };
@@ -297,21 +290,30 @@ class TableMenus {
     const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
     if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
     this.tableBetter.cellSelection.updateSelected('column');
-    tableBlot.deleteColumn(changeTds, delTds, this.hideMenus.bind(this), deleteCols);
+    tableBlot.deleteColumn(changeTds, delTds, this.deleteTable.bind(this), deleteCols);
     updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
     this.updateMenus();
   }
 
   deleteRow(isKeyboard: boolean = false) {
     const selectedTds = this.tableBetter.cellSelection.selectedTds;
-    const rows = [];
-    let id = '';
+    const map: { [propName: string]: TableRow } = {};
     for (const td of selectedTds) {
-      if (td.getAttribute('data-row') !== id) {
-        rows.push(Quill.find(td.parentElement));
-        id = td.getAttribute('data-row');
+      let rowspan = ~~td.getAttribute('rowspan') || 1;
+      let row = Quill.find(td.parentElement);
+      if (rowspan > 1) {
+        while (row && rowspan) {
+          const id = row.children.head.domNode.getAttribute('data-row');
+          if (!map[id]) map[id] = row;
+          row = row.next;
+          rowspan--;
+        }
+      } else {
+        const id = td.getAttribute('data-row');
+        if (!map[id]) map[id] = row;
       }
     }
+    const rows: TableRow[] = Object.values(map);
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
         return sum += row.children.length;
@@ -320,8 +322,17 @@ class TableMenus {
     }
     this.tableBetter.cellSelection.updateSelected('row');
     const tableBlot = Quill.find(selectedTds[0]).table();
-    tableBlot.deleteRow(rows, this.hideMenus.bind(this));
+    tableBlot.deleteRow(rows, this.deleteTable.bind(this));
     this.updateMenus();
+  }
+
+  deleteTable() {
+    const tableBlot = Quill.find(this.table);
+    if (!tableBlot) return;
+    const offset = tableBlot.offset(this.quill.scroll);
+    tableBlot.remove();
+    this.tableBetter.hideTools();
+    this.quill.setSelection(offset - 1, 0, Quill.sources.USER);
   }
 
   destroyTablePropertiesForm() {
@@ -470,6 +481,7 @@ class TableMenus {
 
   getRefInfo(row: TableRow, right: number) {
     let ref = null;
+    if (!row) return { id: tableId(), ref };
     let td = row.children.head;
     const id = td.domNode.getAttribute('data-row');
     while (td) {
@@ -525,19 +537,19 @@ class TableMenus {
     const endCorrectBounds = getCorrectBounds(endTd, this.quill.container);
     const computeBounds = getComputeBounds(startCorrectBounds, endCorrectBounds);
     if (
-      startCorrectBounds.left > endCorrectBounds.left &&
-      startCorrectBounds.top > endCorrectBounds.top
+      startCorrectBounds.left <= endCorrectBounds.left &&
+      startCorrectBounds.top <= endCorrectBounds.top
     ) {
       return {
         computeBounds,
-        leftTd: endTd,
-        rightTd: startTd
+        leftTd: startTd,
+        rightTd: endTd
       };
     }
     return {
       computeBounds,
-      leftTd: startTd,
-      rightTd: endTd
+      leftTd: endTd,
+      rightTd: startTd
     };
   }
 
@@ -597,12 +609,8 @@ class TableMenus {
     const tdBlot = Quill.find(td);
     const tableBlot = tdBlot.table();
     const isLast = td.parentElement.lastChild.isEqualNode(td);
-    if (offset > 0) {
-      tableBlot.insertColumn(right, isLast, width);
-    } else {
-      tableBlot.insertColumn(left, isLast, width);
-    }
-    // this.quill.update(Quill.sources.USER);
+    const position = offset > 0 ? right : left;
+    tableBlot.insertColumn(position, isLast, width, offset);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -632,7 +640,6 @@ class TableMenus {
     } else {
       tableBlot.insertRow(index + offset, offset);
     }
-    // this.quill.update(Quill.sources.USER);
     this.quill.scrollSelectionIntoView();
   }
 
@@ -670,31 +677,25 @@ class TableMenus {
       }
       return rowspan;
     }, 0);
+    let offset = 0;
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
-      const blot = Quill.find(td);
-      blot.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
-        const blotName = child.statics.blotName;
-        switch (blotName) {
-          case ListContainer.blotName:
-            child.children.forEach((ch: TableList) => {
-              ch.format && ch.format(blotName, { ...formats, cellId });
-            });
-            break;
-          case TableHeader.blotName:
-            const _formats = child.formats()[blotName];
-            child.format && child.format(blotName, { ..._formats, cellId });
-            break;
-          default:
-            child.format && child.format(blotName, cellId);
-            break;
-        }
-      });
+      const blot: TableCell = Quill.find(td);
       blot.moveChildren(leftTdBlot);
       blot.remove();
+      if (!blot.parent?.children?.length) offset++;
     }
-    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
-    // this.quill.update(Quill.sources.USER);
+    if (offset) {
+      // Subtract the number of rows deleted by the merge
+      row.children.forEach((child: TableCell) => {
+        if (child.domNode.isEqualNode(leftTd)) return;
+        const rowspan = child.domNode.getAttribute('rowspan');
+        const [formats] = getCellFormats(child);
+        child.replaceWith(child.statics.blotName, { ...formats, rowspan: rowspan - offset });
+      });
+    }
+    leftTdBlot.setChildrenId(cellId);
+    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
@@ -735,14 +736,14 @@ class TableMenus {
             for (let j = 0; j < colspan; j++) {
               columnCells.push([nextRowBlot, id, ref]);
             }
-            nextRowBlot = nextRowBlot.next;
+            nextRowBlot && (nextRowBlot = nextRowBlot.next);
           }
         } else {
           let nextRowBlot = rowBlot.next;
           for (let i = 1; i < rowspan; i++) {
             const { ref, id } = this.getRefInfo(nextRowBlot, right);
             columnCells.push([nextRowBlot, id, ref]);
-            nextRowBlot = nextRowBlot.next;
+            nextRowBlot && (nextRowBlot = nextRowBlot.next);
           }
         }
       }
@@ -763,7 +764,6 @@ class TableMenus {
         rowspan: null
       });
     }
-    // this.quill.update(Quill.sources.USER);
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }

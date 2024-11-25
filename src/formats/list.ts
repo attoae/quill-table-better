@@ -76,6 +76,9 @@ class TableList extends List {
       this.wrap(name, value);
       // @ts-ignore
       this.wrap(ListContainer.blotName, { ...formats, ...value });
+    } else if (name === this.statics.blotName && !value) {
+      const [, cellId] = this.getCellFormats(this.parent);
+      this.replaceWith(TableCellBlock.blotName, cellId);
     } else {
       super.format(name, value);
     }

@@ -337,6 +337,7 @@ function updateTableWidth(
 ) {
   if (!table?.style.getPropertyValue('width')) return;
   const tableBlot = Quill.find(table);
+  if (!tableBlot) return;
   const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
   if (colgroup) {

@@ -111,6 +111,18 @@ class CellSelection {
     return [...child, input];
   }
 
+  getCorrectRow(td: Element, key: string) {
+    const offset = key === 'next' ? 0 : -1;
+    let rowspan = (~~td.getAttribute('rowspan') || 1) + offset || 1;
+    const cell: TableCell = Quill.find(td);
+    let row = cell.parent;
+    while (row && rowspan) {
+      row = row[key];
+      rowspan--;
+    }
+    return row?.domNode;
+  }
+
   getCorrectValue(format: string, value: boolean | string) {
     for (const td of this.selectedTds) {
       const blot = Quill.find(td);
@@ -212,6 +224,7 @@ class CellSelection {
 
     const handleMouseup = (e: MouseEvent) => {
       this.setSingleDisabled();
+      this.setCorrectPositionTds(this.startTd, this.endTd, this.selectedTds); 
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
@@ -360,6 +373,32 @@ class CellSelection {
     this.tableBetter.tableMenus.updateMenus();
   }
 
+  setCorrectPositionTds(startTd: Element, endTd: Element, selectedTds: Element[]) {
+    if (!startTd || !endTd || selectedTds.length < 2) return;
+    const firstTd = selectedTds[0];
+    const lastTd = selectedTds[selectedTds.length - 1];
+    const tds = [...new Set([startTd, endTd, firstTd, lastTd])];
+    tds.sort((prev: Element, next: Element) => {
+      const prevBounds = prev.getBoundingClientRect();
+      const nextBounds = next.getBoundingClientRect();
+      if (
+        (
+          prevBounds.top <= nextBounds.top ||
+          prevBounds.bottom <= nextBounds.bottom
+        ) &&
+        (
+          prevBounds.left <= nextBounds.left ||
+          prevBounds.right <= nextBounds.right
+        )
+      ) {
+        return -1
+      }
+      return 1;
+    });
+    this.startTd = tds[0];
+    this.endTd = tds[tds.length - 1];
+  }
+
   setDisabled(disabled: boolean) {
     for (const input of this.disabledList) {
       if (disabled) {
@@ -447,25 +486,23 @@ class CellSelection {
       case 'row':
         {
           const row =
-            this.endTd.parentElement.nextElementSibling ||
-            this.startTd.parentElement.previousElementSibling;
+            this.getCorrectRow(this.endTd, 'next') ||
+            this.getCorrectRow(this.startTd, 'prev');
           if (!row) return;
           const startCorrectBounds = getCorrectBounds(this.startTd, this.quill.container);
           let child = row.firstElementChild;
           while (child) {
             const childCorrectBounds = getCorrectBounds(child, this.quill.container);
             if (
-              childCorrectBounds.left + DEVIATION >= startCorrectBounds.left &&
-              (
-                childCorrectBounds.right <= startCorrectBounds.right + DEVIATION ||
-                childCorrectBounds.right + DEVIATION >= startCorrectBounds.right
-              )
+              childCorrectBounds.left + DEVIATION >= startCorrectBounds.left ||
+              childCorrectBounds.right - DEVIATION >= startCorrectBounds.left
             ) {
               this.setSelected(child);
-              break;
+              return;
             }
             child = child.nextElementSibling;
           }
+          this.setSelected(row.firstElementChild);
         }
         break;
       default:

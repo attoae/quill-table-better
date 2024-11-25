@@ -187,6 +187,12 @@ class TableCell extends Container {
     return -1;
   }
 
+  setChildrenId(cellId: string) {
+    this.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
+      child.domNode.setAttribute('data-cell', cellId);
+    });
+  }
+
   table() {
     let cur = this.parent;
     while (cur != null && cur.statics.blotName !== 'table-container') {
@@ -340,53 +346,74 @@ class TableContainer extends Container {
   deleteColumn(
     changeTds: [Element, number][],
     delTds: Element[],
-    hideMenus: () => void,
+    deleteTable: () => void,
     cols: Element[] = []
   ) {
     const body = this.tbody();
     const tableCells = this.descendants(TableCell);
     if (body == null || body.children.head == null) return;
     if (delTds.length === tableCells.length) {
-      this.deleteTable();
-      hideMenus();
+      deleteTable();
     } else {
+      for (const [td, offset] of changeTds) {
+        this.setCellColspan(Quill.find(td), offset);
+      }
       for (const td of [...delTds, ...cols]) {
         if (td.parentElement.children.length === 1) {
           this.setCellRowspan(td.parentElement.previousElementSibling);
         }
         td.remove();
       }
-      for (const [td, offset] of changeTds) {
-        this.setCellColspan(Quill.find(td), offset);
-      }
     }
   }
 
-  deleteRow(rows: TableRow[], hideMenus: () => void) {
+  deleteRow(rows: TableRow[], deleteTable: () => void) {
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
     if (rows.length === body.children.length) {
-      this.deleteTable();
-      hideMenus();
+      deleteTable();
     } else {
+      const weakMap: WeakMap<TableCell, { next: TableRow, rowspan: number }> = new WeakMap();
+      const columnCells: [TableRow, Props, TableCell | null, TableCell | null][] = [];
+      const keys: TableCell[] = [];
       const maxColumns = this.getMaxColumns(body.children.head.children);
       for (const row of rows) {
         const prev = this.getCorrectRow(row, maxColumns);
         prev && prev.children.forEach((child: TableCell) => {
-          const rowspan = ~~child.domNode.getAttribute('rowspan');
+          const rowspan = ~~child.domNode.getAttribute('rowspan') || 1;
           if (rowspan > 1) {
-            const [formats, cellId] = getCellFormats(child);
-            let head = child.children.head;
-            if (head.statics.blotName === ListContainer.blotName) {
-              head = head.children.head;
-              Object.assign(formats, { cellId });
+            const blotName = child.statics.blotName;
+            const [formats] = getCellFormats(child);
+            if (rows.includes(child.parent)) {
+              const next = child.parent?.next;
+              if (weakMap.has(child)) {
+                const { rowspan } = weakMap.get(child);
+                weakMap.set(child, { next, rowspan: rowspan - 1 });
+              } else {
+                weakMap.set(child, { next, rowspan: rowspan - 1 });
+                keys.push(child);
+              }
+            } else {
+              child.replaceWith(blotName, { ...formats, rowspan: rowspan - 1 });
             }
-            head.format && head.format(
-              child.statics.blotName,
-              { ...formats, rowspan: rowspan - 1 }
-            );
           }
         });
+      }
+      for (const prev of keys) {
+        const [formats] = getCellFormats(prev);
+        const { right: position, width } = prev.domNode.getBoundingClientRect();
+        const { next, rowspan } = weakMap.get(prev);
+        this.setColumnCells(next, columnCells, { position, width }, formats, rowspan, prev);
+      }
+      for (const [row, formats, ref, prev] of columnCells) {
+        const cell: TableCell = this.scroll.create(TableCell.blotName, formats);
+        prev.moveChildren(cell);
+        const _cellId = cellId();
+        cell.setChildrenId(_cellId);
+        row.insertBefore(cell, ref);
+        prev.remove();
+      }
+      for (const row of rows) {
         row.remove();
       }
     }
@@ -430,7 +457,7 @@ class TableContainer extends Container {
     if (nextMaxColumns === maxColumns) {
       prev.children.forEach((child: TableCell) => {
         const formats = { height: '24', 'data-row': id };
-        const colspan = ~~child.domNode.getAttribute('colspan');
+        const colspan = ~~child.domNode.getAttribute('colspan') || 1;
         this.insertTableCell(colspan, formats, row);
       });
       return row;
@@ -438,8 +465,8 @@ class TableContainer extends Container {
       const correctRow = this.getCorrectRow(prev.prev, maxColumns);
       correctRow.children.forEach((child: TableCell) => {
         const formats = { height: '24', 'data-row': id };
-        const colspan = ~~child.domNode.getAttribute('colspan');
-        const rowspan = ~~child.domNode.getAttribute('rowspan');
+        const colspan = ~~child.domNode.getAttribute('colspan') || 1;
+        const rowspan = ~~child.domNode.getAttribute('rowspan') || 1;
         if (rowspan > 1) {
           if (offset > 0 && !ref) {
             this.insertTableCell(colspan, formats, row);
@@ -465,39 +492,19 @@ class TableContainer extends Container {
     }, 0);
   }
 
-  insertColumn(position: number, isLast: boolean, w: number) {
+  insertColumn(position: number, isLast: boolean, w: number, offset: number) {
     const colgroup = this.colgroup();
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
-    const columnCells: [TableRow, string, TableCell | null][] = [];
+    const columnCells: [TableRow, string, TableCell | null, null][] = [];
     const cols: [TableColgroup, TableCol | null][] = [];
     let row = body.children.head;
     while (row) {
-      if (isLast) {
+      if (isLast && offset > 0) {
         const id = row.children.tail.domNode.getAttribute('data-row');
-        columnCells.push([row, id, null]);
+        columnCells.push([row, id, null, null]);
       } else {
-        let ref = row.children.head;
-        while (ref) {
-          const { left, right } = ref.domNode.getBoundingClientRect();
-          const id = ref.domNode.getAttribute('data-row');
-          if (Math.abs(left - position) <= DEVIATION) {
-            columnCells.push([row, id, ref]);
-            break;
-          } else if (Math.abs(right - position) <= DEVIATION && !ref.next) {
-            columnCells.push([row, id, null]);
-            break;
-          // rowspan > 1 (insertLeft, position + w is left)
-          } else if (Math.abs(left - position - w) <= DEVIATION) {
-            columnCells.push([row, id, ref]);
-            break;
-          // rowspan > 1 (position between left and right, rowspan++)
-          } else if (position > left && position < right) {
-            columnCells.push([null, id, ref]);
-            break;
-          }
-          ref = ref.next;
-        }
+        this.setColumnCells(row, columnCells, { position, width: w });
       }
       row = row.next;
     }
@@ -541,12 +548,17 @@ class TableContainer extends Container {
     colgroup.insertBefore(col, ref);
   }
 
-  insertColumnCell(row: TableRow, id: string, ref: TableCell | null) {
+  insertColumnCell(row: TableRow | null, id: string, ref: TableCell | null) {
     const colgroup = this.colgroup();
     const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
     const cell = this.scroll.create(TableCell.blotName, formats);
     const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
     cell.appendChild(cellBlock);
+    if (!row) {
+      const tbody = this.tbody();
+      row = this.scroll.create(TableRow.blotName);
+      tbody.insertBefore(row, null);
+    }
     row.insertBefore(cell, ref);
     cellBlock.optimize();
   }
@@ -589,13 +601,12 @@ class TableContainer extends Container {
     const blotName = cell.statics.blotName;
     const formats = cell.formats()[blotName];
     const colspan = (~~formats['colspan'] || 1) + offset;
-    const childBlot = getCellChildBlot(cell);
     if (colspan > 1) {
       Object.assign(formats, { colspan });
     } else {
       delete formats['colspan'];
     }
-    childBlot.format(blotName, formats);
+    cell.replaceWith(blotName, formats);
   }
 
   setCellRowspan(parentElement: Element) {
@@ -657,6 +668,43 @@ class TableContainer extends Container {
       if (!_className && !className) {
         setClass(_temporary, defaultClassName);
       }
+    }
+  }
+
+  private setColumnCells(
+    row: TableRow,
+    columnCells: [TableRow, Props | string, TableCell, TableCell][],
+    bounds: { position: number, width: number },
+    formats?: Props,
+    rowspan?: number,
+    prev?: TableCell
+  ) {
+    if (!row) return;
+    const { position, width } = bounds;
+    let ref = row.children.head;
+    while (ref) {
+      const { left, right } = ref.domNode.getBoundingClientRect();
+      const id: string = ref.domNode.getAttribute('data-row');
+      if (typeof formats === 'object') {
+        Object.assign(formats, { rowspan, 'data-row': id });
+      }
+      const props = formats || id;
+      if (Math.abs(left - position) <= DEVIATION) {
+        columnCells.push([row, props, ref, prev]);
+        break;
+      } else if (Math.abs(right - position) <= DEVIATION && !ref.next) {
+        columnCells.push([row, props, null, prev]);
+        break;
+      // rowspan > 1 (insertLeft, position + w is left)
+      } else if (Math.abs(left - position - width) <= DEVIATION) {
+        columnCells.push([row, props, ref, prev]);
+        break;
+      // rowspan > 1 (position between left and right, rowspan++)
+      } else if (position > left && position < right) {
+        columnCells.push([null, props, ref, prev]);
+        break;
+      }
+      ref = ref.next;
     }
   }
 
