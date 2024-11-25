@@ -35,6 +35,9 @@ class TableHeader extends Header {
       return this.replaceWith('table-list', value);
     } else if (name === TableCell.blotName) {
       return this.wrap(name, value);
+    } else if (name === this.statics.blotName && !value) {
+      const cellId = this.domNode.getAttribute('data-cell');
+      this.replaceWith(TableCellBlock.blotName, cellId);
     } else {
       super.format(name, value);
     }

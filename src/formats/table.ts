@@ -6,7 +6,7 @@ import {
   getCorrectCellBlot
 } from '../utils';
 import TableHeader from './header';
-import TableList, { ListContainer } from './list';
+import { ListContainer } from './list';
 import {
   CELL_ATTRIBUTE,
   CELL_DEFAULT_WIDTH,
@@ -103,26 +103,6 @@ class TableCell extends Container {
     }
     return false;
   }
-
-  childrenFormat(formats: Props, cellId: string) {
-    this.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
-      const blotName = child.statics.blotName;
-      switch (blotName) {
-        case ListContainer.blotName:
-          child.children.forEach((ch: TableList) => {
-            ch.format && ch.format(blotName, { ...formats, cellId });
-          });
-          break;
-        case TableHeader.blotName:
-          const _formats = child.formats()[blotName];
-          child.format && child.format(blotName, { ..._formats, cellId });
-          break;
-        default:
-          child.format && child.format(blotName, cellId);
-          break;
-      }
-    });
-  }
   
   static create(value: Props) {
     const node = super.create();
@@ -204,6 +184,12 @@ class TableCell extends Container {
       return this.row().rowOffset();
     }
     return -1;
+  }
+
+  setChildrenId(cellId: string) {
+    this.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
+      child.domNode.setAttribute('data-cell', cellId);
+    });
   }
 
   table() {
@@ -422,7 +408,7 @@ class TableContainer extends Container {
         const cell: TableCell = this.scroll.create(TableCell.blotName, formats);
         prev.moveChildren(cell);
         const _cellId = cellId();
-        cell.childrenFormat(formats, _cellId);
+        cell.setChildrenId(_cellId);
         row.insertBefore(cell, ref);
         prev.remove();
       }

@@ -28,8 +28,8 @@ class TableToolbar extends Toolbar {
     }
     const eventName = input.tagName === 'SELECT' ? 'change' : 'click';
     input.addEventListener(eventName, (e) => {
-      const cellSelection = this.getCellSelection();
-      if (cellSelection.selectedTds.length > 1) {
+      const { cellSelection } = this.getTableBetter();
+      if (cellSelection?.selectedTds?.length > 1) {
         this.cellSelectionAttach(input, format, e, cellSelection);
       } else {
         this.toolbarAttach(input, format, e);
@@ -64,9 +64,8 @@ class TableToolbar extends Toolbar {
     }
   }
 
-  getCellSelection() {
-    const { cellSelection } = this.quill.getModule('table-better');
-    return cellSelection;
+  getTableBetter() {
+    return this.quill.getModule('table-better') || {};
   }
 
   setTableFormat(
@@ -77,13 +76,13 @@ class TableToolbar extends Toolbar {
     lines: any[]
   ) {
     let blot = null;
+    const { cellSelection, tableMenus } = this.getTableBetter();
     const _isReplace = isReplace(range, selectedTds, lines);
     for (const line of lines) {
       const isReplace = getHeaderReplace(selectedTds, name, line, _isReplace);
       blot = line.format(name, value, isReplace);
     }
     if (selectedTds.length < 2) {
-      const cellSelection = this.getCellSelection();
       if (_isReplace || lines.length === 1) {
         const cell = getCorrectCellBlot(blot);
         Promise.resolve().then(() => {
@@ -98,6 +97,7 @@ class TableToolbar extends Toolbar {
       }
       this.quill.setSelection(range, Quill.sources.SILENT);
     }
+    tableMenus.updateMenus();
     return blot;
   }
 
@@ -229,17 +229,17 @@ function tablehandler(
 TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
   handlers: {
     header(value: string, lines?: any[]) {
-      const cellSelection = this.getCellSelection(); 
-      const selectedTds = cellSelection.selectedTds;
-      if (selectedTds.length) {
+      const { cellSelection } = this.getTableBetter(); 
+      const selectedTds = cellSelection?.selectedTds;
+      if (selectedTds?.length) {
         return tablehandler.call(this, value, selectedTds, 'header', lines);
       }
       this.quill.format('header', value, Quill.sources.USER);
     },
     list(value: string, lines?: any[]) {
-      const cellSelection = this.getCellSelection();
-      const selectedTds = cellSelection.selectedTds;
-      if (selectedTds.length) {
+      const { cellSelection } = this.getTableBetter();
+      const selectedTds = cellSelection?.selectedTds;
+      if (selectedTds?.length) {
         if (selectedTds.length === 1) {
           const range = this.quill.getSelection(true);
           const formats = this.quill.getFormat(range);

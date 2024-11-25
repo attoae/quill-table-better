@@ -680,10 +680,10 @@ class TableMenus {
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
       const blot: TableCell = Quill.find(td);
-      blot.childrenFormat(formats, cellId);
       blot.moveChildren(leftTdBlot);
       blot.remove();
     }
+    leftTdBlot.setChildrenId(cellId);
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
