@@ -103,6 +103,36 @@ class CellSelection {
     return [whiteList, singleWhiteList];
   }
 
+  getCopyData() {
+    let html = '';
+    const map: { [propName: string]: Element[] } = {};
+    for (const td of this.selectedTds) {
+      const rowId = td.getAttribute('data-row');
+      if (!map[rowId]) {
+        map[rowId] = [];
+      }
+      map[rowId].push(td);
+    }
+    for (const tds of Object.values(map)) {
+      let res = '';
+      for (const td of tds) {
+        const outerHTML = td.outerHTML
+          .replace(/data-[a-z]+="[^"]*"/g, '')
+          .replace(/class="[^"]*"/g, collapse => {
+            return collapse
+              .replace('ql-cell-selected', '')
+              .replace('ql-table-block', '');
+          })
+          .replace(/class="\s*"/g, '');
+        res += outerHTML;
+      }
+      res = `<tr>${res}</tr>`;
+      html += res;
+    }
+    html = `<table><tbody>${html}</tbody></table>`;
+    return { html, text: '' };
+  }
+
   getCorrectDisabled(input: HTMLElement, format: string) {
     if (input.tagName !== 'SELECT') return [input];
     const parentElement = input.closest('span.ql-formats');
@@ -234,6 +264,8 @@ class CellSelection {
   }
 
   initDocumentListener() {
+    document.addEventListener('copy', (e: ClipboardEvent) => this.onCaptureCopy(e, false));
+    document.addEventListener('cut', (e: ClipboardEvent) => this.onCaptureCopy(e, true));
     document.addEventListener('keyup', this.handleDeleteKeyup.bind(this));
   }
 
@@ -345,6 +377,16 @@ class CellSelection {
         this.exitTableFocus(block, up);
       }
     }
+  }
+
+  onCaptureCopy(e: ClipboardEvent, isCut = false) {
+    if (this.selectedTds?.length < 2) return;
+    if (e.defaultPrevented) return;
+    e.preventDefault();
+    const { html, text } = this.getCopyData();
+    e.clipboardData?.setData('text/plain', text);
+    e.clipboardData?.setData('text/html', html);
+    if (isCut) this.removeSelectedTdsContent();
   }
 
   removeCursor() {
