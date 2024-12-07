@@ -434,6 +434,22 @@ class TableContainer extends Container {
     return null;
   }
 
+  getCopyTable() {
+    return this.domNode.outerHTML
+      .replace(/<temporary[^>]*>(.*?)<\/temporary>/gi, '')
+      .replace(/<td[^>]*>(.*?)<\/td>/gi, ($1: string) => {
+        return $1
+        .replace(/data-[a-z]+="[^"]*"/g, '')
+        .replace(/class="[^"]*"/g, collapse => {
+          return collapse
+            .replace('ql-cell-selected', '')
+            .replace('ql-cell-focused', '')
+            .replace('ql-table-block', '');
+        })
+        .replace(/class="\s*"/g, '');
+      });
+  }
+
   getCorrectRow(prev: TableRow, maxColumns: number) {
     let isCorrect = false;
     while (prev && !isCorrect) {

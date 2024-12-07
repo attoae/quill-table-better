@@ -14,6 +14,7 @@ export default {
   'insParaOTbl': 'Wstaw akapit poza tabelą',
   'insB4': 'Wstaw przed',
   'insAft': 'Wstaw po',
+  'copyTable': 'Kopiuj tabelę',
   'delTable': 'Usuń tabelę',
   'border': 'Obramowanie',
   'color': 'Kolor',
