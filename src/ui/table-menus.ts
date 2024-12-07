@@ -20,6 +20,7 @@ import cellIcon from '../assets/icon/cell.svg';
 import wrapIcon from '../assets/icon/wrap.svg';
 import downIcon from '../assets/icon/down.svg';
 import deleteIcon from '../assets/icon/delete.svg';
+import copyIcon from '../assets/icon/copy.svg';
 import {
   TableCell,
   TableCol,
@@ -203,9 +204,18 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
       }
     }
   };
+  const EXTRA: MenusDefaults = {
+    copy: {
+      content: useLanguage('copyTable'),
+      icon: copyIcon,
+      handler() {
+        this.copyTable();
+      }
+    }
+  };
   if (menus?.length) {
     return Object.values(menus).reduce((config: MenusDefaults, key: string) => {
-      config[key] = DEFAULT[key];
+      config[key] = Object.assign({}, DEFAULT, EXTRA)[key];
       return config;
     }, {});
   }
@@ -231,6 +241,28 @@ class TableMenus {
     this.tablePropertiesForm = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
     this.root = this.createMenus();
+  }
+
+  async copyTable() {
+    if (!this.table) return;
+    const tableBlot = Quill.find(this.table);
+    if (!tableBlot) return;
+    const html = '<p><br></p>' + tableBlot.getCopyTable();
+    const text = this.tableBetter.cellSelection.getText(html);
+    const clipboardItem = new ClipboardItem({
+      'text/html': new Blob([html], { type: 'text/html' }),
+      'text/plain': new Blob([text], { type: 'text/plain' })
+    });
+    try {
+      await navigator.clipboard.write([clipboardItem]);
+      const index = this.quill.getIndex(tableBlot);
+      const length = tableBlot.length();
+      this.quill.setSelection(index + length, Quill.sources.SILENT);
+      this.tableBetter.hideTools();
+      this.quill.scrollSelectionIntoView();
+    } catch (error) {
+      console.error('Failed to copy table:', error);
+    }
   }
 
   createList(children: Children) {
@@ -622,10 +654,7 @@ class TableMenus {
       .retain(index + length)
       .insert('\n');
     this.quill.updateContents(delta, Quill.sources.USER);
-    this.quill.setSelection(
-      index + length,
-      Quill.sources.SILENT,
-    );
+    this.quill.setSelection(index + length, Quill.sources.SILENT);
     this.tableBetter.hideTools();
     this.quill.scrollSelectionIntoView();
   }

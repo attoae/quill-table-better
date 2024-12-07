@@ -14,6 +14,7 @@ export default {
   'insParaOTbl': 'Absatz außerhalb der Tabelle einfügen',
   'insB4': 'Davor einfügen',
   'insAft': 'Danach einfügen',
+  'copyTable': 'Tabelle kopieren',
   'delTable': 'Tabelle löschen',
   'border': 'Rahmen',
   'color': 'Farbe',
