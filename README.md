@@ -2,7 +2,7 @@
 A module that enhances the table functionality of [Quill](https://quilljs.com/).
 
 ## Compare the advantages of other table plugins
-1. Supports multiple formats (include list).
+1. Supports multiple formats (include list、header).
 2. Supports simultaneous operations on multiple cells.
 3. Undo/History not break table.
 4. Support language switching.
@@ -50,7 +50,7 @@ const options = {
     toolbar: toolbarOptions,
     'table-better': {
       language: 'en_US',
-      menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
+      menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
       toolbarTable: true
     },
     keyboard: {
@@ -87,7 +87,7 @@ cdn
       toolbar: toolbarOptions,
       'table-better': {
         language: 'en_US',
-        menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
+        menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
         toolbarTable: true
       },
       keyboard: {
@@ -119,7 +119,7 @@ The `language` parameter has two types:
 
 ### menus
 `menus` are used to configure the action bar, and those not in the array are not displayed.  
-Empty array or no configuration default all display.  
+Empty array or no configuration default all display (Except for `copy`).  
 The functions of the operation bar are as follows:
 1. column
   - Insert column left
@@ -141,6 +141,8 @@ The functions of the operation bar are as follows:
   - Insert after
 7. delete
   - Delete table
+8. copy (Not default)
+  - Copy table
 
 ### toolbarTable
 `toolbarTable` is used to add a button to insert a table on the toolbar (true or false).  
@@ -172,7 +174,7 @@ toolbarButtons: {
 ```JavaScript
 'table-better': {
   language: 'en_US',
-  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'delete'],
+  menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
   toolbarButtons: {
     whiteList: ['link', 'image'],
     singleWhiteList: ['link', 'image']

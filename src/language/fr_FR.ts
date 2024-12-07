@@ -14,6 +14,7 @@ export default {
   'insParaOTbl': 'Insérer paragraphe en dehors du tableau',
   'insB4': 'Insérer avant',
   'insAft': 'Insérer après',
+  'copyTable': 'Copier le tableau',
   'delTable': 'Supprimer le tableau',
   'border': 'Bordure',
   'color': 'Couleur',

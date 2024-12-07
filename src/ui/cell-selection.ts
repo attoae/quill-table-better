@@ -1,4 +1,5 @@
 import Quill from 'quill';
+import Delta from 'quill-delta';
 import type { Op } from 'quill-delta';
 import {
   getComputeBounds,
@@ -185,6 +186,14 @@ class CellSelection {
       }
     }
     return value;
+  }
+
+  getText(html: string): string {
+    const delta: Delta = this.quill.clipboard.convert({ html });
+    return delta
+      .filter((op) => typeof op.insert === 'string')
+      .map((op) => op.insert)
+      .join('');
   }
 
   handleClick(e: MouseEvent) {
