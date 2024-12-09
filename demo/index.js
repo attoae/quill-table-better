@@ -81,5 +81,5 @@ btn5.onclick = () => {
     delta.length() - range.length,
     Quill.sources.SILENT,
   );
-  editor.scrollIntoView();
+  editor.scrollSelectionIntoView();
 }

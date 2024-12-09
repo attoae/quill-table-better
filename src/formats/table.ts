@@ -4,6 +4,7 @@ import {
   getCellChildBlot,
   getCellFormats,
   getCellId,
+  getCopyTd,
   getCorrectCellBlot
 } from '../utils';
 import TableHeader from './header';
@@ -114,7 +115,7 @@ class TableCell extends Container {
     return node;
   }
 
-  static formats(domNode: HTMLElement) {
+  static formats(domNode: Element) {
     const rowspan = this.getEmptyRowspan(domNode);
     const formats = CELL_ATTRIBUTE.reduce((formats: Props, attr) => {
       if (domNode.hasAttribute(attr)) {
@@ -438,15 +439,7 @@ class TableContainer extends Container {
     return this.domNode.outerHTML
       .replace(/<temporary[^>]*>(.*?)<\/temporary>/gi, '')
       .replace(/<td[^>]*>(.*?)<\/td>/gi, ($1: string) => {
-        return $1
-        .replace(/data-[a-z]+="[^"]*"/g, '')
-        .replace(/class="[^"]*"/g, collapse => {
-          return collapse
-            .replace('ql-cell-selected', '')
-            .replace('ql-cell-focused', '')
-            .replace('ql-table-block', '');
-        })
-        .replace(/class="\s*"/g, '');
+        return getCopyTd($1);
       });
   }
 

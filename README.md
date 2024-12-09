@@ -26,7 +26,7 @@ quill.setSelection(
   delta.length() - (range?.length || 0),
   Quill.sources.SILENT
 );
-quill.scrollIntoView();
+quill.scrollSelectionIntoView();
 ```
 
 npm

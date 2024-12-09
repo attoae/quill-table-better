@@ -4,11 +4,18 @@ import type { Op } from 'quill-delta';
 import {
   getComputeBounds,
   getComputeSelectedTds,
+  getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot
 } from '../utils';
+import { applyFormat } from '../utils/clipboard-matchers';
 import type { AllowedChildren } from '../utils';
-import { TableCellBlock, TableCell } from '../formats/table';
+import {
+  TableCellBlock,
+  TableCell,
+  TableRow,
+  TableContainer
+} from '../formats/table';
 import { DEVIATION } from '../config';
 
 const Block = Quill.import('blots/block');
@@ -104,7 +111,23 @@ class CellSelection {
     return [whiteList, singleWhiteList];
   }
 
+  getCopyColumns(container: Element) {
+    const tr = container.querySelector('tr');
+    const children = Array.from(tr.querySelectorAll('td'));
+    return children.reduce((sum: number, td: HTMLTableCellElement) => {
+      const colspan = ~~td.getAttribute('colspan') || 1;
+      return sum += colspan;
+    }, 0);
+  }
+
   getCopyData() {
+    const tableBlot = Quill.find(this.selectedTds[0]).table();
+    const tableCells = tableBlot.descendants(TableCell);
+    if (tableCells.length === this.selectedTds.length) {
+      const html = tableBlot.getCopyTable();
+      const text = this.getText(html);
+      return { html, text };
+    }
     let html = '';
     const map: { [propName: string]: Element[] } = {};
     for (const td of this.selectedTds) {
@@ -117,21 +140,14 @@ class CellSelection {
     for (const tds of Object.values(map)) {
       let res = '';
       for (const td of tds) {
-        const outerHTML = td.outerHTML
-          .replace(/data-[a-z]+="[^"]*"/g, '')
-          .replace(/class="[^"]*"/g, collapse => {
-            return collapse
-              .replace('ql-cell-selected', '')
-              .replace('ql-table-block', '');
-          })
-          .replace(/class="\s*"/g, '');
-        res += outerHTML;
+        res += getCopyTd(td.outerHTML);
       }
       res = `<tr>${res}</tr>`;
       html += res;
-    }
+    } 
     html = `<table><tbody>${html}</tbody></table>`;
-    return { html, text: '' };
+    const text = this.getText(html);
+    return { html, text };
   }
 
   getCorrectDisabled(input: HTMLElement, format: string) {
@@ -186,6 +202,60 @@ class CellSelection {
       }
     }
     return value;
+  }
+
+  getPasteComputeBounds(startTd: Element, rightTd: Element, row: TableRow) {
+    const startTdBounds = startTd.getBoundingClientRect();
+    const rightTdBounds = rightTd.getBoundingClientRect();
+    const rowBounds = row.domNode.getBoundingClientRect();
+    const containerBounds = this.quill.container.getBoundingClientRect();
+    const scrollLeft = this.quill.container.scrollLeft;
+    const scrollTop = this.quill.container.scrollTop;
+    const left = startTdBounds.left - containerBounds.left - scrollLeft;
+    const right = rightTdBounds.right - containerBounds.left - scrollLeft;
+    const top = startTdBounds.top - containerBounds.top - scrollTop;
+    const bottom = rowBounds.bottom - containerBounds.top - scrollTop;
+    return {
+      left,
+      right,
+      top,
+      bottom
+    }
+  }
+
+  getPasteInfo(td: Element, copyColumns: number, rowspan: number): any {
+    let clospan = 0;
+    let cloTd = null;
+    let rowTd = null;
+    let row: Element = td.parentElement;
+    while (td) {
+      const colspan = ~~td.getAttribute('colspan') || 1;
+      clospan += colspan;
+      if (clospan >= copyColumns) {
+        clospan = copyColumns;
+        cloTd = td;
+        break;
+      }
+      td = td.nextElementSibling;
+    }
+    while (rowspan--) {
+      if (!row.nextElementSibling) {
+        rowTd = row.firstElementChild;
+        break;
+      }
+      row = row.nextElementSibling;
+    }
+    return [
+      { clospan: Math.abs(copyColumns - clospan), cloTd },
+      { rowspan, rowTd }
+    ];
+  }
+
+  getPasteLastRow(row: TableRow, len: number) {
+    while (--len && row) {
+      row = row.next;
+    }
+    return row;
   }
 
   getText(html: string): string {
@@ -276,6 +346,7 @@ class CellSelection {
     document.addEventListener('copy', (e: ClipboardEvent) => this.onCaptureCopy(e, false));
     document.addEventListener('cut', (e: ClipboardEvent) => this.onCaptureCopy(e, true));
     document.addEventListener('keyup', this.handleDeleteKeyup.bind(this));
+    document.addEventListener('paste', this.onCapturePaste.bind(this));
   }
 
   initWhiteList() {
@@ -286,6 +357,24 @@ class CellSelection {
         this.attach(input);
       }
     );
+  }
+
+  insertColumnCell(table: TableContainer, offset: number) {
+    const tbody = table.tbody();
+    if (!tbody) return;
+    tbody.children.forEach((row: TableRow) => {
+      const id = row.children.tail.domNode.getAttribute('data-row');
+      for (let i = 0; i < offset; i++) {
+        table.insertColumnCell(row, id, null);
+      }
+    });
+  }
+
+  insertRow(table: TableContainer, offset: number, td: Element) {
+    const index = Quill.find(td).rowOffset();
+    while (offset--) {
+      table.insertRow(index + 1, 1);
+    }
   }
 
   insertWith(insert: string | Record<string, unknown>) {
@@ -398,6 +487,64 @@ class CellSelection {
     if (isCut) this.removeSelectedTdsContent();
   }
 
+  onCapturePaste(e: ClipboardEvent) {
+    if (!this.selectedTds?.length) return;
+    e.preventDefault();
+    const html = e.clipboardData?.getData('text/html');
+    const text = e.clipboardData?.getData('text/plain');
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    const cell = Quill.find(this.startTd);
+    const row = cell.row();
+    const table = cell.table();
+    const copyRows = Array.from(container.querySelectorAll('tr'));
+    const copyColumns = this.getCopyColumns(container);
+    const [cloInfo, rowInfo] = this.getPasteInfo(this.startTd, copyColumns, copyRows.length);
+    const { clospan, cloTd } = cloInfo;
+    const { rowspan, rowTd } = rowInfo;
+    if (clospan) this.insertColumnCell(table, clospan);
+    if (rowspan) this.insertRow(table, rowspan, rowTd);
+    const rightTd = clospan ? row.children.tail.domNode : cloTd;
+    const pasteLastRow = this.getPasteLastRow(row, copyRows.length);
+    const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
+    const pasteTds = getComputeSelectedTds(computeBounds, table.domNode, this.quill.container);
+    const copyTds = Array.from(container.querySelectorAll('td'));
+    const selectedTds = [];
+    while (copyTds.length) {
+      const copyTd = copyTds.shift();
+      const pasteTd = pasteTds.shift();
+      const cell = this.pasteSelectedTd(pasteTd, copyTd);
+      selectedTds.push(cell.domNode);
+    }
+    this.quill.blur();
+    this.setSelectedTds(selectedTds);
+    this.quill.scrollSelectionIntoView();
+  }
+
+  pasteSelectedTd(selectedTd: Element, copyTd: Element) {
+    const id = selectedTd.getAttribute('data-row');
+    const copyFormats = TableCell.formats(copyTd);
+    Object.assign(copyFormats, { 'data-row': id });
+    const cell = Quill.find(selectedTd);
+    const _cell = cell.replaceWith(cell.statics.blotName, copyFormats);
+    this.quill.setSelection(
+      _cell.offset(this.quill.scroll) + _cell.length() - 1,
+      0,
+      Quill.sources.USER
+    );
+    const range = this.quill.getSelection(true);
+    const formats = this.quill.getFormat(range.index);
+    const html = copyTd.innerHTML;
+    const text = this.getText(html);
+    const pastedDelta = this.quill.clipboard.convert({ text, html });
+    const delta = new Delta()
+      .retain(range.index)
+      .delete(range.length)
+      .concat(applyFormat(pastedDelta, formats));
+    this.quill.updateContents(delta, Quill.sources.USER);
+    return _cell;
+  }
+
   removeCursor() {
     const range = this.quill.getSelection(true);
     if (range && range.length === 0) {
@@ -408,18 +555,22 @@ class CellSelection {
     }
   }
 
+  removeSelectedTdContent(td: Element) {
+    const tdBlot = Quill.find(td);
+    let head = tdBlot.children.head;
+    const cellId = head.formats()[TableCellBlock.blotName];
+    const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
+    tdBlot.insertBefore(cellBlock, head);
+    while (head) {
+      head.remove();
+      head = head.next;
+    }
+  }
+
   removeSelectedTdsContent() {
     if (this.selectedTds.length < 2) return;
     for (const td of this.selectedTds) {
-      const tdBlot = Quill.find(td);
-      let head = tdBlot.children.head;
-      const cellId = head.formats()[TableCellBlock.blotName];
-      const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
-      tdBlot.insertBefore(cellBlock, head);
-      while (head) {
-        head.remove();
-        head = head.next;
-      }
+      this.removeSelectedTdContent(td);
     }
     this.tableBetter.tableMenus.updateMenus();
   }
