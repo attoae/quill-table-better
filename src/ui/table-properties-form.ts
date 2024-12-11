@@ -8,6 +8,7 @@ import { getProperties } from '../config';
 import {
   addDimensionsUnit,
   createTooltip,
+  getCellChildBlot,
   getClosestElement,
   getComputeSelectedCols,
   isDimensions,
@@ -566,6 +567,7 @@ class TablePropertiesForm {
       const blotName = tdBlot.statics.blotName;
       const formats = tdBlot.formats()[blotName];
       const style = this.getCellStyle(td, attrs);
+      const childBlot = getCellChildBlot(tdBlot);
       if (align) {
         const _align = align === 'left' ? '' : align;
         tdBlot.children.forEach((child: TableCellBlock | ListContainer | TableHeader) => {
@@ -578,7 +580,7 @@ class TablePropertiesForm {
           }
         });
       }
-      const parent: TableCell = tdBlot.replaceWith(blotName, { ...formats, style });
+      const parent: TableCell = childBlot.format(blotName, { ...formats, style });
       newSelectedTds.push(parent.domNode);
     }
     this.tableMenus.tableBetter.cellSelection.setSelectedTds(newSelectedTds);
