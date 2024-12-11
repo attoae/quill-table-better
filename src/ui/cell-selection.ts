@@ -504,11 +504,11 @@ class CellSelection {
     const text = e.clipboardData?.getData('text/plain');
     const container = document.createElement('div');
     container.innerHTML = html;
+    const copyRows = Array.from(container.querySelectorAll('tr'));
+    if (!copyRows.length) return;
     const cell = Quill.find(this.startTd);
     const row = cell.row();
     const table = cell.table();
-    const copyRows = Array.from(container.querySelectorAll('tr'));
-    if (!copyRows.length) return;
     this.quill.history.cutoff();
     const copyColumns = this.getCopyColumns(container);
     const [cloInfo, rowInfo] = this.getPasteInfo(this.startTd, copyColumns, copyRows.length);
