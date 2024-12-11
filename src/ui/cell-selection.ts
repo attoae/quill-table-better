@@ -238,7 +238,7 @@ class CellSelection {
       }
       td = td.nextElementSibling;
     }
-    while (rowspan--) {
+    while (--rowspan) {
       if (!row.nextElementSibling) {
         rowTd = row.firstElementChild;
         break;
@@ -256,6 +256,16 @@ class CellSelection {
       row = row.next;
     }
     return row;
+  }
+
+  getPasteTds(computeSelectedTds: Element[]) {
+    const map: { [propName: string]: Element[] } = {};
+    for (const td of computeSelectedTds) {
+      const id = td.getAttribute('data-row');
+      if (!map[id]) map[id] = [];
+      map[id].push(td);
+    }
+    return Object.values(map);
   }
 
   getText(html: string): string {
@@ -498,6 +508,8 @@ class CellSelection {
     const row = cell.row();
     const table = cell.table();
     const copyRows = Array.from(container.querySelectorAll('tr'));
+    if (!copyRows.length) return;
+    this.quill.history.cutoff();
     const copyColumns = this.getCopyColumns(container);
     const [cloInfo, rowInfo] = this.getPasteInfo(this.startTd, copyColumns, copyRows.length);
     const { clospan, cloTd } = cloInfo;
@@ -507,17 +519,40 @@ class CellSelection {
     const rightTd = clospan ? row.children.tail.domNode : cloTd;
     const pasteLastRow = this.getPasteLastRow(row, copyRows.length);
     const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
-    const pasteTds = getComputeSelectedTds(computeBounds, table.domNode, this.quill.container);
-    const copyTds = Array.from(container.querySelectorAll('td'));
-    const selectedTds = [];
+    const pasteTds = this.getPasteTds(getComputeSelectedTds(computeBounds, table.domNode, this.quill.container));
+    const copyTds = copyRows.reduce((copyTds: HTMLTableCellElement[][], row: HTMLTableRowElement) => {
+      copyTds.push(Array.from(row.querySelectorAll('td')));
+      return copyTds;
+    }, []);
+    const selectedTds: HTMLTableCellElement[] = [];
     while (copyTds.length) {
-      const copyTd = copyTds.shift();
-      const pasteTd = pasteTds.shift();
-      const cell = this.pasteSelectedTd(pasteTd, copyTd);
-      selectedTds.push(cell.domNode);
+      const copyTs = copyTds.shift();
+      const pasteTs = pasteTds.shift();
+      let prevPasteTd = null;
+      let cell: TableCell = null;
+      while (copyTs.length) {
+        const copyTd = copyTs.shift();
+        const pasteTd = pasteTs.shift();
+        if (!pasteTd) {
+          const id = prevPasteTd.getAttribute('data-row');
+          const ref = Quill.find(prevPasteTd);
+          cell = table.insertColumnCell(ref.parent, id, ref.next);
+          cell = this.pasteSelectedTd(cell.domNode, copyTd);
+          prevPasteTd = cell.domNode;
+        } else {
+          prevPasteTd = pasteTd;
+          cell = this.pasteSelectedTd(pasteTd, copyTd);
+        }
+        cell && selectedTds.push(cell.domNode);
+      }
+      while (pasteTs.length) {
+        const pasteTd = pasteTs.shift();
+        pasteTd.remove();
+      }
     }
     this.quill.blur();
     this.setSelectedTds(selectedTds);
+    this.tableBetter.tableMenus.updateMenus();
     this.quill.scrollSelectionIntoView();
   }
 

@@ -570,6 +570,7 @@ class TableContainer extends Container {
     }
     row.insertBefore(cell, ref);
     cellBlock.optimize();
+    return cell;
   }
 
   insertRow(index: number, offset: number) {
