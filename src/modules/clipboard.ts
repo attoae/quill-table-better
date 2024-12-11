@@ -39,8 +39,12 @@ class TableClipboard extends Clipboard {
         ) {
           return new Delta();
         }
-        // Process externally pasted lists or headers.
-        if (op?.attributes?.header || op?.attributes?.list) {
+        // Process externally pasted lists or headers or text.
+        if (
+            op?.attributes?.header ||
+            op?.attributes?.list ||
+            !op?.attributes?.[TableCellBlock.blotName]
+        ) {
           op.attributes = { ...op.attributes, ...formats };
         }
       }

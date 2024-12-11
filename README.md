@@ -26,7 +26,7 @@ quill.setSelection(
   delta.length() - (range?.length || 0),
   Quill.sources.SILENT
 );
-quill.scrollIntoView();
+quill.scrollSelectionIntoView();
 ```
 
 npm
@@ -112,6 +112,7 @@ The `language` parameter has two types:
 | French | fr_FR |
 | Polish | pl_PL |
 | German | de_DE |
+| Russian | ru_RU |
 
 2. Used to register a new language, such as:  
   { name: `'en_UK'`, content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))

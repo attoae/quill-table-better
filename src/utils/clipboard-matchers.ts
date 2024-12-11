@@ -99,6 +99,7 @@ function matchTableTh(node: HTMLTableCellElement, delta: Delta, row: string | nu
 }
 
 export {
+  applyFormat,
   matchTable,
   matchTableCell,
   matchTableCol,

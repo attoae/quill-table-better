@@ -181,6 +181,18 @@ function getComputeSelectedTds(
   }, []);
 }
 
+function getCopyTd(html: string) {
+  return html
+  .replace(/data-[a-z]+="[^"]*"/g, '')
+  .replace(/class="[^"]*"/g, collapse => {
+    return collapse
+      .replace('ql-cell-selected', '')
+      .replace('ql-cell-focused', '')
+      .replace('ql-table-block', '');
+  })
+  .replace(/class="\s*"/g, '');
+}
+
 function getCorrectBounds(target: Element, container: Element) {
   const targetBounds = target.getBoundingClientRect();
   const containerBounds = container.getBoundingClientRect();
@@ -372,6 +384,7 @@ export {
   getComputeBounds,
   getComputeSelectedCols,
   getComputeSelectedTds,
+  getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot,
   getElementStyle,
