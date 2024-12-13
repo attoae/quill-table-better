@@ -1,12 +1,17 @@
 # quill-table-better
 A module that enhances the table functionality of [Quill](https://quilljs.com/).
 
+![quill-table-better](https://github.com/user-attachments/assets/c5304bab-84bd-4a60-b4ec-6a941a7d0c11)
+
 ## Compare the advantages of other table plugins
 1. Supports multiple formats (include list、header).
 2. Supports simultaneous operations on multiple cells.
 3. Undo/History not break table.
 4. Support language switching.
 5. The toolbar provides button for inserting table.
+6. Support table content is pasted overwritten.
+7. Support copying and cutting table content (Select multiple cells).
+8. Drag and drop the table to change its overall size (Bottom right corner of the table).
 
 ## Demo
 [quill-table-better Codepen Demo](https://codepen.io/attoae/pen/WNBGjZp)
