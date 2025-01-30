@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import Delta from 'quill-delta';
+import Delta, { Op } from 'quill-delta';
 import {
   cellId,
   TableCellBlock,
@@ -104,9 +104,14 @@ class Table extends Module {
   }
 
   deleteTableTemporary() {
-    const temporaries = this.quill.scroll.descendants(TableTemporary);
-    for (const temporary of temporaries) {
-      temporary.remove();
+    let opIndex = 0;
+    const delta = this.quill.getContents()
+    for (const op of delta.ops){
+      if (op.attributes?.[TableTemporary.blotName]){
+        this.quill.updateContents(new Delta().retain(opIndex).delete(1), Quill.sources.API);
+        opIndex--;
+      }
+      opIndex += Op.length(op)
     }
     this.hideTools();
   }
