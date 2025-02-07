@@ -347,7 +347,6 @@ function updateTableWidth(
   tableBounds: CorrectBound,
   change: number
 ) {
-  if (!table?.style.getPropertyValue('width')) return;
   const tableBlot = Quill.find(table);
   if (!tableBlot) return;
   const colgroup = tableBlot.colgroup();
