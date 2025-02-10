@@ -103,12 +103,13 @@ class Table extends Module {
     this.quill.setSelection(offset, Quill.sources.SILENT);
   }
 
-  deleteTableTemporary() {
+  deleteTableTemporary(source: string = Quill.sources.API) {
     const temporaries = this.quill.scroll.descendants(TableTemporary);
     for (const temporary of temporaries) {
       temporary.remove();
     }
     this.hideTools();
+    this.quill.update(source);
   }
 
   getTable(range = this.quill.getSelection()) {

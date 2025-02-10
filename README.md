@@ -243,6 +243,7 @@ axios.post(url, delta);
 
 ```JavaScript
 // HTML
+// deleteTableTemporary(source = Quill.sources.API)
 module.deleteTableTemporary();
 const html = quill.getSemanticHTML();
 axios.post(url, html);
