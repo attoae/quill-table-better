@@ -2,14 +2,30 @@ import Quill from 'quill';
 import Delta from 'quill-delta';
 import merge from 'lodash.merge';
 import { EmbedBlot } from 'parchment';
+import type { ContainerBlot } from 'parchment';
+import type { Range } from 'quill';
+import type {
+  CellSelection,
+  QuillTableBetter,
+  TableCell,
+  TableCellAllowedChildren,
+  TableCellChildren
+} from '../types';
 import { getCorrectCellBlot } from '../utils';
-import { TableCell } from '../formats/table';
 import TableHeader from '../formats/header';
 
-const Container = Quill.import('blots/container');
-const Toolbar = Quill.import('modules/toolbar');
+const Module = Quill.import('core/module');
+const Container = Quill.import('blots/container') as typeof ContainerBlot;
+const Toolbar = Quill.import('modules/toolbar') as typeof Module;
+
+type Handler = (this: TableToolbar, value: any) => void;
 
 class TableToolbar extends Toolbar {
+  handlers: Record<string, Handler>;
+  controls: [string, HTMLElement][];
+  update: (range: Range | null) => void;
+  container?: HTMLElement | null;
+  
   attach(input: HTMLElement) {
     let format = Array.from(input.classList).find((className) => {
       return className.indexOf('ql-') === 0;
@@ -42,7 +58,7 @@ class TableToolbar extends Toolbar {
     input: HTMLElement,
     format: string,
     e: Event | MouseEvent,
-    cellSelection: any
+    cellSelection: CellSelection
   ) {
     if (input.tagName === 'SELECT') {
       // @ts-ignore
@@ -65,7 +81,7 @@ class TableToolbar extends Toolbar {
   }
 
   getTableBetter() {
-    return this.quill.getModule('table-better') || {};
+    return this.quill.getModule('table-better') as QuillTableBetter;
   }
 
   setTableFormat(
@@ -73,14 +89,14 @@ class TableToolbar extends Toolbar {
     selectedTds: Element[],
     value: string,
     name: string,
-    lines: any[]
+    lines: TableCellChildren[]
   ) {
     let blot = null;
     const { cellSelection, tableMenus } = this.getTableBetter();
     const _isReplace = isReplace(range, selectedTds, lines);
     for (const line of lines) {
       const isReplace = getHeaderReplace(selectedTds, name, line, _isReplace);
-      blot = line.format(name, value, isReplace);
+      blot = line.format(name, value, isReplace) as TableCellChildren;
     }
     if (selectedTds.length < 2) {
       if (_isReplace || lines.length === 1) {
@@ -127,6 +143,7 @@ class TableToolbar extends Toolbar {
     if (this.handlers[format] != null) {
       this.handlers[format].call(this, value);
     } else if (
+      // @ts-expect-error
       this.quill.scroll.query(format).prototype instanceof EmbedBlot
     ) {
       value = prompt(`Enter ${format}`); // eslint-disable-line no-alert
@@ -151,7 +168,7 @@ function containers(
   length = Number.MAX_VALUE
 ) {
   const getContainers = (
-    blot: TableCell,
+    blot: TableCell | TableCellAllowedChildren,
     blotIndex: number,
     blotLength: number
   ) => {
@@ -178,7 +195,7 @@ function containers(
 function getHeaderReplace(
   selectedTds: Element[],
   name: string,
-  line: TableHeader,
+  line: TableCellChildren,
   _isReplace: boolean
 ) {
   if (
@@ -191,15 +208,15 @@ function getHeaderReplace(
   return _isReplace;
 }
 
-function getLength(blots: any[]): number {
+function getLength(blots: TableCellChildren[]): number {
   return blots.reduce((sum, blot) => {
     return sum += blot.length();
   }, 0);
 }
 
-function isReplace(range: Range, selectedTds: Element[], lines: any[]) {
+function isReplace(range: Range, selectedTds: Element[], lines: TableCellChildren[]) {
   if (selectedTds.length === 1) {
-    const cellBlot = Quill.find(selectedTds[0]);
+    const cellBlot = Quill.find(selectedTds[0]) as TableCell;
     const _containers = containers(cellBlot, range.index, range.length);
     const length = getLength(_containers);
     const _length = getLength(lines);
@@ -212,7 +229,7 @@ function tablehandler(
   value: string,
   selectedTds: Element[],
   name: string,
-  lines?: any[]
+  lines?: TableCellChildren[]
 ) {
   const range = this.quill.getSelection();
   if (!lines) {
@@ -228,7 +245,7 @@ function tablehandler(
 
 TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
   handlers: {
-    header(value: string, lines?: any[]) {
+    header(value: string, lines?: TableCellChildren[]) {
       const { cellSelection } = this.getTableBetter(); 
       const selectedTds = cellSelection?.selectedTds;
       if (selectedTds?.length) {
@@ -236,7 +253,7 @@ TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
       }
       this.quill.format('header', value, Quill.sources.USER);
     },
-    list(value: string, lines?: any[]) {
+    list(value: string, lines?: TableCellChildren[]) {
       const { cellSelection } = this.getTableBetter();
       const selectedTds = cellSelection?.selectedTds;
       if (selectedTds?.length) {

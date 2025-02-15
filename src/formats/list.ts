@@ -1,15 +1,20 @@
 import Quill from 'quill';
+import type { BlockBlot, ContainerBlot } from 'parchment';
+import type { Props, TableCellChildren } from '../types';
 import { TableCell, TableCellBlock } from './table';
 import { getCellFormats, getCorrectCellBlot } from '../utils';
 import { CELL_ATTRIBUTE } from '../config';
 
-const List = Quill.import('formats/list');
-const Container = Quill.import('blots/container');
+const List = Quill.import('formats/list') as typeof BlockBlot;
+const Container = Quill.import('blots/container') as typeof ContainerBlot;
 const DEFAULT_ATTRIBUTE = ['colspan', 'rowspan'];
 
 class ListContainer extends Container {
+  next: this | null;
+  parent: TableCell;
+
   static create(value: Props) {
-    const node = super.create();
+    const node = super.create() as HTMLElement;
     for (const key of DEFAULT_ATTRIBUTE) {
       if (value[key] == '1') delete value[key];
     }
@@ -55,6 +60,8 @@ ListContainer.className = 'table-list-container';
 ListContainer.tagName = 'OL';
 
 class TableList extends List {
+  parent: ListContainer;
+  
   format(name: string, value: string | Props, isReplace?: boolean) {
     const list = this.formats()[this.statics.blotName];
     if (name === 'list') {
@@ -91,7 +98,7 @@ class TableList extends List {
     }
   }
 
-  getCellFormats(parent: TableCell) {
+  getCellFormats(parent: TableCell | TableCellChildren) {
     const cellBlot = getCorrectCellBlot(parent);
     return getCellFormats(cellBlot);
   }
@@ -117,6 +124,7 @@ class TableList extends List {
       if (blot.statics.blotName === ListContainer.blotName) {
         return blot;
       }
+      // @ts-ignore
       blot = blot.parent;
     }
     return null;

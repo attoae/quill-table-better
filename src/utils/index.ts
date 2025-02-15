@@ -1,4 +1,10 @@
 import Quill from 'quill';
+import type {
+  CorrectBound,
+  Props,
+  TableCellChildren,
+  TableContainer
+} from '../types';
 import {
   TableCell,
   TableCellBlock,
@@ -54,7 +60,7 @@ function getAlign(cellBlot: TableCell) {
   const blocks = cellBlot.descendants(TableCellBlock);
   const lists = cellBlot.descendants(TableList);
   const headers = cellBlot.descendants(TableHeader);
-  function getChildAlign(child: AllowedChildren): string {
+  function getChildAlign(child: TableCellChildren): string {
     for (const name of child.domNode.classList) {
       if (/ql-align-/.test(name)) {
         return name.split('ql-align-')[1];
@@ -78,8 +84,11 @@ function getAlign(cellBlot: TableCell) {
 }
 
 function getCellChildBlot(cellBlot: TableCell) {
+  // @ts-expect-error
   const [block] = cellBlot.descendant(TableCellBlock);
+  // @ts-expect-error
   const [list] = cellBlot.descendant(ListContainer);
+  // @ts-expect-error
   const [header] = cellBlot.descendant(TableHeader);
   return block || list || header;
 }
@@ -118,7 +127,7 @@ function getComputeSelectedCols(
   table: Element,
   container: Element
 ) {
-  const tableParchment = Quill.find(table);
+  const tableParchment = Quill.find(table) as TableContainer;
   const cols = tableParchment.descendants(TableCol);
   let correctLeft = 0;
   return cols.reduce((selectedCols: Element[], col: TableCol) => {
@@ -141,7 +150,7 @@ function getComputeSelectedTds(
   container: Element,
   type?: string
 ): Element[] {
-  const tableParchment = Quill.find(table);
+  const tableParchment = Quill.find(table) as TableContainer;
   const tableCells = tableParchment.descendants(TableCell);
   return tableCells.reduce((selectedTds: Element[], tableCell: TableCell) => {
     const { left, top, width, height } = getCorrectBounds(tableCell.domNode, container);
@@ -210,12 +219,13 @@ function getCorrectBounds(target: Element, container: Element) {
   }
 }
 
-function getCorrectCellBlot(blot: TableCell | AllowedChildren): TableCell | null {
+function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | null {
   while (blot) {
     if (blot.statics.blotName === TableCell.blotName) {
       // @ts-ignore
       return blot;
     }
+    // @ts-expect-error
     blot = blot.parent;
   }
   return null;
@@ -347,7 +357,7 @@ function updateTableWidth(
   tableBounds: CorrectBound,
   change: number
 ) {
-  const tableBlot = Quill.find(table);
+  const tableBlot = Quill.find(table) as TableContainer;
   if (!tableBlot) return;
   const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
@@ -368,7 +378,6 @@ function updateTableWidth(
   }
 }
 
-export type AllowedChildren = TableCellBlock | TableHeader | TableList;
 export {
   addDimensionsUnit,
   convertUnitToInteger,

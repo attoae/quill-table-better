@@ -3,6 +3,7 @@
   "version": "1.1.6",
   "description": "A module that enhances the table functionality of Quill",
   "main": "dist/quill-table-better.js",
+  "types": "dist/types/index.d.ts",
   "scripts": {
     "dev": "webpack-dev-server --config config/webpack.dev.js",
     "build": "webpack --config config/webpack.prod.js && rm dist/quill-table-better",
@@ -32,7 +33,7 @@
     "html-loader": "^4.2.0",
     "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "^2.6.0",
-    "parchment": "^2.0.1",
+    "parchment": "^3.0.0",
     "quill": "^2.0.1",
     "sass": "^1.51.0",
     "sass-loader": "^12.6.0",

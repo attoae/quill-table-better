@@ -1,5 +1,8 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
+import type { EmitterSource, Range } from 'quill';
+import type { Props } from './types';
+import type { BindingObject, Context } from './types/keyboard';
 import {
   cellId,
   TableCellBlock,
@@ -30,10 +33,6 @@ import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
 
-interface Context {
-  [propName: string]: any
-}
-
 interface Options {
   language?: string | {
     name: string
@@ -52,6 +51,15 @@ type Line = TableCellBlock | TableHeader | ListContainer;
 const Module = Quill.import('core/module');
 
 class Table extends Module {
+  language: Language;
+  cellSelection: CellSelection;
+  operateLine: OperateLine;
+  tableMenus: TableMenus;
+  tableSelect: TableSelect;
+  options: Options;
+  
+  static keyboardBindings: { [propName: string]: BindingObject };
+  
   static register() {
     Quill.register(TableCellBlock, true);
     Quill.register(TableCell, true);
@@ -61,11 +69,13 @@ class Table extends Module {
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
-    Quill.register('modules/toolbar', TableToolbar, true);
-    Quill.register('modules/clipboard', TableClipboard, true);
+    Quill.register({
+      'modules/toolbar': TableToolbar,
+      'modules/clipboard': TableClipboard
+    }, true);
   }
 
-  constructor(quill: any, options: Options) {
+  constructor(quill: Quill, options: Options) {
     super(quill, options);
     quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
@@ -103,7 +113,7 @@ class Table extends Module {
     this.quill.setSelection(offset, Quill.sources.SILENT);
   }
 
-  deleteTableTemporary(source: string = Quill.sources.API) {
+  deleteTableTemporary(source: EmitterSource = Quill.sources.API) {
     const temporaries = this.quill.scroll.descendants(TableTemporary);
     for (const temporary of temporaries) {
       temporary.remove();
@@ -112,15 +122,17 @@ class Table extends Module {
     this.quill.update(source);
   }
 
-  getTable(range = this.quill.getSelection()) {
+  getTable(
+    range = this.quill.getSelection()
+  ): [null, null, null, -1] | [TableContainer, TableRow, TableCell, number] {
     if (range == null) return [null, null, null, -1];
     const [block, offset] = this.quill.getLine(range.index);
     if (block == null || block.statics.blotName !== TableCellBlock.blotName) {
       return [null, null, null, -1];
     }
-    const cell = block.parent;
-    const row = cell.parent;
-    const table = row.parent.parent;
+    const cell = block.parent as TableCell;
+    const row = cell.parent as TableRow;
+    const table = row.parent.parent as TableContainer;
     return [table, row, cell, offset];
   }
 
@@ -193,8 +205,8 @@ class Table extends Module {
 
   private registerToolbarTable(toolbarTable: boolean) {
     if (!toolbarTable) return;
-    Quill.register('formats/table-better', ToolbarTable, true);
-    const toolbar = this.quill.getModule('toolbar');
+    Quill.register({ 'formats/table-better': ToolbarTable }, true);
+    const toolbar = this.quill.getModule('toolbar') as TableToolbar;
     const button = toolbar.container.querySelector('button.ql-table-better');
     if (!button || !this.tableSelect.root) return;
     button.appendChild(this.tableSelect.root);
@@ -210,7 +222,7 @@ class Table extends Module {
     });
   }
 
-  private showTools(force?: boolean) {
+  showTools(force?: boolean) {
     const [table, , cell] = this.getTable();
     if (!table || !cell) return;
     this.cellSelection.setDisabled(true);
@@ -265,7 +277,7 @@ const keyboardBindings = {
     handler(range: Range, context: Context) {
       const { line } = context;
       const { cellId } = line.parent.formats()[line.parent.statics.blotName];
-      const blot = line.replaceWith(TableCellBlock.blotName, cellId);
+      const blot = line.replaceWith(TableCellBlock.blotName, cellId) as TableCellBlock;
       const tableModule = this.quill.getModule('table-better');
       const cell = getCorrectCellBlot(blot);
       cell && tableModule.cellSelection.setSelected(cell.domNode, false);

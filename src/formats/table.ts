@@ -1,4 +1,6 @@
 import Quill from 'quill';
+import type { BlockBlot, ContainerBlot, LinkedList } from 'parchment';
+import type { Props, TableCellAllowedChildren } from '../types';
 import {
   filterWordStyle,
   getCellChildBlot,
@@ -15,15 +17,20 @@ import {
   DEVIATION
 } from '../config';
 
-const Block = Quill.import('blots/block');
-const Break = Quill.import('blots/break');
-const Container = Quill.import('blots/container');
-
+const Block = Quill.import('blots/block') as typeof BlockBlot;
+const Container = Quill.import('blots/container') as typeof ContainerBlot;
 const TABLE_ATTRIBUTE = ['border', 'cellspacing', 'style', 'data-class'];
 const STYLE_RULES = ['color', 'border', 'width', 'height'];
 const COL_ATTRIBUTE = ['width'];
 
 class TableCellBlock extends Block {
+  static blotName = 'table-cell-block';
+  static className = 'ql-table-block';
+  static tagName = 'P';
+
+  next: this | null;
+  parent: TableCell;
+
   static create(value: string) {
     const node = super.create();
     if (value) {
@@ -78,11 +85,16 @@ class TableCellBlock extends Block {
     this.wrap(TableCell.blotName, formats);
   }
 }
-TableCellBlock.blotName = 'table-cell-block';
-TableCellBlock.className = 'ql-table-block';
-TableCellBlock.tagName = 'P';
 
 class TableCell extends Container {
+  static blotName = 'table-cell';
+  static tagName = 'TD';
+
+  children: LinkedList<TableCellBlock | TableHeader | ListContainer>;
+  next: this | null;
+  parent: TableRow;
+  prev: this | null;
+
   checkMerge() {
     if (
       super.checkMerge() &&
@@ -107,7 +119,7 @@ class TableCell extends Container {
   }
   
   static create(value: Props) {
-    const node = super.create();
+    const node = super.create() as HTMLElement;
     const keys = Object.keys(value);
     for (const key of keys) {
       value[key] && node.setAttribute(key, value[key]);
@@ -194,22 +206,26 @@ class TableCell extends Container {
     });
   }
 
-  table() {
+  table(): TableContainer {
     let cur = this.parent;
     while (cur != null && cur.statics.blotName !== 'table-container') {
+      // @ts-expect-error
       cur = cur.parent;
     }
+    // @ts-expect-error
     return cur;
   }
 
-  optimize(...args: unknown[]) {
-    super.optimize(...args);
-    this.children.forEach((child: TableCellBlock | TableHeader | ListContainer) => {
+  optimize(context?: unknown) {
+    super.optimize(context);
+    
+    this.children.forEach((child: TableCellAllowedChildren) => {
       if (child.next == null) return;
       const childFormats = getCellId(child.formats()[child.statics.blotName]);
       const nextFormats = getCellId(child.next.formats()[child.next.statics.blotName]);
       if (childFormats !== nextFormats) {
         const next = this.splitAfter(child);
+        // @ts-expect-error
         if (next) next.optimize();
         // We might be able to merge with prev now
         if (this.prev) this.prev.optimize();
@@ -217,10 +233,16 @@ class TableCell extends Container {
     });
   }
 }
-TableCell.blotName = 'table-cell';
-TableCell.tagName = 'TD';
 
 class TableRow extends Container {
+  static blotName = 'table-row';
+  static tagName = 'TR';
+
+  children: LinkedList<TableCell>;
+  next: this | null;
+  parent: TableBody;
+  prev: this | null;
+
   checkMerge() {
     if (
       super.checkMerge() &&
@@ -247,14 +269,23 @@ class TableRow extends Container {
     return -1;
   }
 }
-TableRow.blotName = 'table-row';
-TableRow.tagName = 'TR';
 
-class TableBody extends Container {}
-TableBody.blotName = 'table-body';
-TableBody.tagName = 'TBODY';
+class TableBody extends Container {
+  static blotName = 'table-body';
+  static tagName = 'TBODY';
+
+  children: LinkedList<TableRow>;
+  next: this | null;
+  parent: TableContainer;
+}
 
 class TableTemporary extends Block {
+  static blotName = 'table-temporary';
+  static className = 'ql-table-temporary';
+  static tagName = 'temporary';
+
+  next: this | null;
+
   static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
@@ -299,11 +330,13 @@ class TableTemporary extends Block {
     super.optimize(...args);
   }
 }
-TableTemporary.blotName = 'table-temporary';
-TableTemporary.className = 'ql-table-temporary';
-TableTemporary.tagName = 'temporary';
 
 class TableCol extends Block {
+  static blotName = 'table-col';
+  static tagName = 'COL';
+
+  next: this | null;
+
   static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
@@ -331,17 +364,26 @@ class TableCol extends Block {
     return this.domNode.outerHTML;
   }
 }
-TableCol.blotName = 'table-col';
-TableCol.tagName = 'COL';
 
-class TableColgroup extends Container {}
-TableColgroup.blotName = 'table-colgroup';
-TableColgroup.tagName = 'COLGROUP';
+class TableColgroup extends Container {
+  static blotName = 'table-colgroup';
+  static tagName = 'COLGROUP';
+
+  children: LinkedList<TableCol>;
+  next: this | null;
+}
 
 class TableContainer extends Container {
+  static blotName = 'table-container';
+  static defaultClassName = 'ql-table-better';
+  static tagName = 'TABLE';
+
+  children: LinkedList<TableBody | TableTemporary | TableColgroup>;
+  
   colgroup() {
+    // @ts-expect-error
     const [colgroup] = this.descendant(TableColgroup);
-    return colgroup || this.findChild('table-colgroup');
+    return colgroup || this.findChild('table-colgroup') as TableColgroup;
   }
 
   deleteColumn(
@@ -357,7 +399,7 @@ class TableContainer extends Container {
       deleteTable();
     } else {
       for (const [td, offset] of changeTds) {
-        this.setCellColspan(Quill.find(td), offset);
+        this.setCellColspan(Quill.find(td) as TableCell, offset);
       }
       for (const td of [...delTds, ...cols]) {
         if (td.parentElement.children.length === 1) {
@@ -407,7 +449,7 @@ class TableContainer extends Container {
         this.setColumnCells(next, columnCells, { position, width }, formats, rowspan, prev);
       }
       for (const [row, formats, ref, prev] of columnCells) {
-        const cell: TableCell = this.scroll.create(TableCell.blotName, formats);
+        const cell = this.scroll.create(TableCell.blotName, formats) as TableCell;
         prev.moveChildren(cell);
         const _cellId = cellId();
         cell.setChildrenId(_cellId);
@@ -460,7 +502,7 @@ class TableContainer extends Container {
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
     const id = tableId();
-    const row = this.scroll.create(TableRow.blotName);
+    const row = this.scroll.create(TableRow.blotName) as TableRow;
     const maxColumns = this.getMaxColumns(body.children.head.children);
     const nextMaxColumns = this.getMaxColumns(prev.children);
     if (nextMaxColumns === maxColumns) {
@@ -494,7 +536,7 @@ class TableContainer extends Container {
     }
   }
 
-  getMaxColumns(children: TableCell[]) {
+  getMaxColumns(children: LinkedList<TableCell>) {
     return children.reduce((num: number, child: TableCell) => {
       const colspan = ~~child.domNode.getAttribute('colspan') || 1;
       return num += colspan;
@@ -502,8 +544,8 @@ class TableContainer extends Container {
   }
 
   insertColumn(position: number, isLast: boolean, w: number, offset: number) {
-    const colgroup = this.colgroup();
-    const body = this.tbody();
+    const colgroup = this.colgroup() as TableColgroup;
+    const body = this.tbody() as TableBody;
     if (body == null || body.children.head == null) return;
     const columnCells: [TableRow, string, TableCell | null, null][] = [];
     const cols: [TableColgroup, TableCol | null][] = [];
@@ -560,12 +602,12 @@ class TableContainer extends Container {
   insertColumnCell(row: TableRow | null, id: string, ref: TableCell | null) {
     const colgroup = this.colgroup();
     const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
-    const cell = this.scroll.create(TableCell.blotName, formats);
-    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
+    const cell = this.scroll.create(TableCell.blotName, formats) as TableCell;
+    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId()) as TableCellBlock;
     cell.appendChild(cellBlock);
     if (!row) {
       const tbody = this.tbody();
-      row = this.scroll.create(TableRow.blotName);
+      row = this.scroll.create(TableRow.blotName) as TableRow;
       tbody.insertBefore(row, null);
     }
     row.insertBefore(cell, ref);
@@ -574,7 +616,7 @@ class TableContainer extends Container {
   }
 
   insertRow(index: number, offset: number) {
-    const body = this.tbody();
+    const body = this.tbody() as TableBody;
     if (body == null || body.children.head == null) return;
     const ref = body.children.at(index);
     const prev = ref ? ref : body.children.at(index - 1);
@@ -588,15 +630,15 @@ class TableContainer extends Container {
     } else {
       delete formats['colspan'];
     }
-    const cell = this.scroll.create(TableCell.blotName, formats);
-    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId());
+    const cell = this.scroll.create(TableCell.blotName, formats) as TableCell;
+    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId()) as TableCellBlock;
     cell.appendChild(cellBlock);
     row.appendChild(cell);
     cellBlock.optimize();
   }
 
-  optimize(...args: unknown[]) {
-    super.optimize(...args);
+  optimize(context: unknown) {
+    super.optimize(context);
     const temporaries = this.descendants(TableTemporary);
     this.setClassName(temporaries);
     if (temporaries.length > 1) {
@@ -624,7 +666,7 @@ class TableContainer extends Container {
       const children = parentElement.querySelectorAll('td[rowspan]');
       if (children.length) {
         for (const child of children) {
-          const cell = Quill.find(child);
+          const cell = Quill.find(child) as TableCell;
           const blotName = cell.statics.blotName;
           const formats = cell.formats()[blotName];
           const rowspan = (~~formats['rowspan'] || 1) - 1;
@@ -659,7 +701,9 @@ class TableContainer extends Container {
     if (!_temporary) {
       const container = this.prev;
       if (!container) return;
+      // @ts-expect-error
       const [cell] = container.descendant(TableCell);
+      // @ts-expect-error
       const [temporary] = container.descendant(TableTemporary);
       if (!cell && temporary) {
         const className = temporary.domNode.getAttribute('data-class');
@@ -719,19 +763,17 @@ class TableContainer extends Container {
   }
 
   tbody() {
+    // @ts-expect-error
     const [body] = this.descendant(TableBody);
-    return body || this.findChild('table-body');
+    return body || this.findChild('table-body') as TableBody;
   }
 
   temporary() {
+    // @ts-expect-error
     const [temporary] = this.descendant(TableTemporary);
     return temporary;
   } 
 }
-TableContainer.blotName = 'table-container';
-// TableContainer.className = 'ql-table-better';
-TableContainer.defaultClassName = 'ql-table-better';
-TableContainer.tagName = 'TABLE';
 
 TableContainer.allowedChildren = [TableBody, TableTemporary, TableColgroup];
 TableBody.requiredContainer = TableContainer;

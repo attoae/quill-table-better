@@ -1,14 +1,22 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
 import logger from 'quill/core/logger.js';
+import type { Range } from 'quill';
+import type { Props } from '../types';
 import { TableCellBlock, TableTemporary } from '../formats/table';
 
-const Clipboard = Quill.import('modules/clipboard');
+const Module = Quill.import('core/module');
+const Clipboard = Quill.import('modules/clipboard') as typeof Module;
 const debug = logger('quill:clipboard');
 
 class TableClipboard extends Clipboard {
+  convert: ({ html, text }: {
+    html?: string;
+    text?: string;
+  }, formats?: Record<string, unknown>) => Delta;
+
   onPaste(range: Range, { text, html }: { text?: string; html?: string }) {
-    const formats = this.quill.getFormat(range.index);
+    const formats = this.quill.getFormat(range.index) as Props;
     const pastedDelta = this.getTableDelta({ text, html }, formats);
     debug.log('onPaste', pastedDelta, { text, html });
     const delta = new Delta()
