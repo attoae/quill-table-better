@@ -1,14 +1,18 @@
 import Quill from 'quill';
+import type {
+  QuillTableBetter,
+  TableCell,
+  TableColgroup
+} from '../types';
 import {
   setElementProperty,
   setElementAttribute,
   updateTableWidth
 } from '../utils';
-import { TableColgroup } from '../formats/table';
 
 interface Options {
-  tableNode: Element
-  cellNode: Element
+  tableNode: HTMLElement
+  cellNode: HTMLElement
   mousePosition: {
     clientX: number
     clientY: number
@@ -21,15 +25,15 @@ const LINE_CONTAINER_HEIGHT = 5;
 const LINE_CONTAINER_WIDTH = 5;
 
 class OperateLine {
-  quill: any;
+  quill: Quill;
   options: Options | null;
   drag: boolean;
   line: HTMLElement | null;
   dragBlock: HTMLElement | null;
   dragTable: HTMLElement | null;
   direction: string | null;
-  tableBetter: any;
-  constructor(quill: any, tableBetter?: any) {
+  tableBetter: QuillTableBetter;
+  constructor(quill: Quill, tableBetter?: QuillTableBetter) {
     this.quill = quill;
     this.options = null;
     this.drag = false;
@@ -225,8 +229,8 @@ class OperateLine {
     const { right } = cell.getBoundingClientRect();
     const change = ~~(clientX - right);
     const colSum = this.getLevelColSum(cell);
-    const tableBlot = Quill.find(cell).table();
-    const colgroup = tableBlot.colgroup();
+    const tableBlot = (Quill.find(cell) as TableCell).table();
+    const colgroup = tableBlot.colgroup() as TableColgroup;
     const bounds = tableBlot.domNode.getBoundingClientRect();
     if (colgroup) {
       const col = this.getCorrectCol(colgroup, colSum);
@@ -287,8 +291,8 @@ class OperateLine {
     const averageX = changeX / maxColNum;
     const averageY = changeY / rows.length;
     const preNodes: [Element, string, string][] = [];
-    const tableBlot = Quill.find(cell).table();
-    const colgroup = tableBlot.colgroup();
+    const tableBlot = (Quill.find(cell) as TableCell).table();
+    const colgroup = tableBlot.colgroup() as TableColgroup;
     const bounds = tableBlot.domNode.getBoundingClientRect();
     for (const row of rows) {
       const cells = row.children;

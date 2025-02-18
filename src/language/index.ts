@@ -1,3 +1,4 @@
+import type { Props } from '../types';
 import en_US from './en_US';
 import zh_CN from './zh_CN';
 import fr_FR from './fr_FR';

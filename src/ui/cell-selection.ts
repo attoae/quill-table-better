@@ -1,6 +1,16 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
-import type { Op } from 'quill-delta';
+import { BlockBlot, ContainerBlot, EmbedBlot } from 'parchment';
+import type { AttributeMap, Op } from 'quill-delta';
+import type {
+  Props,
+  QuillTableBetter,
+  TableBody,
+  TableCellAllowedChildren,
+  TableCellChildren,
+  TableContainer,
+  TableRow
+} from '../types';
 import {
   getComputeBounds,
   getComputeSelectedTds,
@@ -9,18 +19,8 @@ import {
   getCorrectCellBlot
 } from '../utils';
 import { applyFormat } from '../utils/clipboard-matchers';
-import type { AllowedChildren } from '../utils';
-import {
-  TableCellBlock,
-  TableCell,
-  TableRow,
-  TableContainer
-} from '../formats/table';
+import { TableCellBlock, TableCell } from '../formats/table';
 import { DEVIATION } from '../config';
-
-const Block = Quill.import('blots/block');
-const { BlockEmbed } = Quill.import('blots/block');
-const Container = Quill.import('blots/container');
 
 const WHITE_LIST = [
   'bold',
@@ -41,20 +41,19 @@ const WHITE_LIST = [
 // Only supports formatting for a single cell.
 const SINGLE_WHITE_LIST = ['link', 'image'];
 
-// @ts-ignore
-function isLine(blot: unknown): blot is Block | BlockEmbed {
-  return blot instanceof Block || blot instanceof BlockEmbed;
+function isLine(blot: unknown): blot is BlockBlot | EmbedBlot {
+  return blot instanceof BlockBlot || blot instanceof EmbedBlot;
 }
 
 class CellSelection {
-  quill: any;
+  quill: Quill;
   selectedTds: Element[];
   startTd: Element;
   endTd: Element;
   disabledList: Array<HTMLElement | Element>;
   singleList: Array<HTMLElement | Element>;
-  tableBetter: any;
-  constructor(quill: any, tableBetter: any) {
+  tableBetter: QuillTableBetter;
+  constructor(quill: Quill, tableBetter: QuillTableBetter) {
     this.quill = quill;
     this.selectedTds = [];
     this.startTd = null;
@@ -92,7 +91,7 @@ class CellSelection {
     this.endTd = null;
   }
 
-  exitTableFocus(block: AllowedChildren, up: boolean) {
+  exitTableFocus(block: TableCellChildren, up: boolean) {
     const cell = getCorrectCellBlot(block);
     const table = cell.table();
     const offset = up ? -1 : table.length();
@@ -121,7 +120,7 @@ class CellSelection {
   }
 
   getCopyData() {
-    const tableBlot = Quill.find(this.selectedTds[0]).table();
+    const tableBlot = (Quill.find(this.selectedTds[0]) as TableCell).table();
     const tableCells = tableBlot.descendants(TableCell);
     if (tableCells.length === this.selectedTds.length) {
       const html = tableBlot.getCopyTable();
@@ -161,9 +160,10 @@ class CellSelection {
   getCorrectRow(td: Element, key: string) {
     const offset = key === 'next' ? 0 : -1;
     let rowspan = (~~td.getAttribute('rowspan') || 1) + offset || 1;
-    const cell: TableCell = Quill.find(td);
+    const cell = Quill.find(td) as TableCell;
     let row = cell.parent;
     while (row && rowspan) {
+      // @ts-expect-error
       row = row[key];
       rowspan--;
     }
@@ -172,7 +172,7 @@ class CellSelection {
 
   getCorrectValue(format: string, value: boolean | string) {
     for (const td of this.selectedTds) {
-      const blot = Quill.find(td);
+      const blot = Quill.find(td) as TableCell;
       const html = blot.html() || td.outerHTML;
       const delta = this.quill.clipboard.convert({
         html,
@@ -191,7 +191,7 @@ class CellSelection {
   getListCorrectValue(
     format: string,
     value: boolean | string,
-    formats: any = {}
+    formats: AttributeMap = {}
   ) {
     if (format !== 'list') return value;
     if (value === 'check') {
@@ -223,7 +223,7 @@ class CellSelection {
     }
   }
 
-  getPasteInfo(td: Element, copyColumns: number, rowspan: number): any {
+  getPasteInfo(td: Element, copyColumns: number, rowspan: number) {
     let clospan = 0;
     let cloTd = null;
     let rowTd = null;
@@ -361,6 +361,7 @@ class CellSelection {
 
   initWhiteList() {
     const toolbar = this.quill.getModule('toolbar');
+    // @ts-expect-error
     Array.from(toolbar.container.querySelectorAll('button, select')).forEach(
       input => {
         // @ts-ignore
@@ -370,7 +371,7 @@ class CellSelection {
   }
 
   insertColumnCell(table: TableContainer, offset: number) {
-    const tbody = table.tbody();
+    const tbody = table.tbody() as TableBody;
     if (!tbody) return;
     tbody.children.forEach((row: TableRow) => {
       const id = row.children.tail.domNode.getAttribute('data-row');
@@ -381,7 +382,7 @@ class CellSelection {
   }
 
   insertRow(table: TableContainer, offset: number, td: Element) {
-    const index = Quill.find(td).rowOffset();
+    const index = (Quill.find(td) as TableCell).rowOffset();
     while (offset--) {
       table.insertRow(index + 1, 1);
     }
@@ -407,11 +408,10 @@ class CellSelection {
   }
 
   lines(blot: TableCell) {
-    const getLines = (blot: TableCell) => {
-      // @ts-ignore
-      let lines: (Block | BlockEmbed)[] = [];
-      blot.children.forEach((child: any) => {
-        if (child instanceof Container) {
+    const getLines = (blot: TableCell | TableCellAllowedChildren) => {
+      let lines: (BlockBlot | EmbedBlot)[] = [];
+      blot.children.forEach((child: TableCellAllowedChildren) => {
+        if (child instanceof ContainerBlot) {
           lines = lines.concat(getLines(child));
         } else if (isLine(child)) {
           lines.push(child);
@@ -427,6 +427,7 @@ class CellSelection {
     const range = this.quill.getSelection();
     if (!range) return;
     const [block] = this.quill.getLine(range.index);
+    // @ts-expect-error
     const cell = getCorrectCellBlot(block);
     if (!cell) return this.tableBetter.hideTools();
     if (cell && (!td || !td.isEqualNode(cell.domNode))) {
@@ -448,6 +449,7 @@ class CellSelection {
       this.quill.setSelection(index, 0, Quill.sources.USER);
     } else {
       if (!this.selectedTds.length) {
+        // @ts-expect-error
         const cellBlot = getCorrectCellBlot(block);
         if (!cellBlot) return;
         this.tableArrowSelection(up, cellBlot);
@@ -455,7 +457,7 @@ class CellSelection {
         return;
       }
       const td = up ? this.startTd : this.endTd;
-      const cell = Quill.find(td);
+      const cell = Quill.find(td) as TableCell;
       const targetRow = cell.parent[_key];
       const { left: _left, right: _right } = td.getBoundingClientRect();
       if (targetRow) {
@@ -477,11 +479,13 @@ class CellSelection {
           row = row[_key];
         }
         if (!cellBlot) {
+          // @ts-expect-error
           this.exitTableFocus(block, up);
         } else {
           this.tableArrowSelection(up, cellBlot);
         }
       } else {
+        // @ts-expect-error
         this.exitTableFocus(block, up);
       }
     }
@@ -506,7 +510,7 @@ class CellSelection {
     container.innerHTML = html;
     const copyRows = Array.from(container.querySelectorAll('tr'));
     if (!copyRows.length) return;
-    const cell = Quill.find(this.startTd);
+    const cell = Quill.find(this.startTd) as TableCell;
     const row = cell.row();
     const table = cell.table();
     this.quill.history.cutoff();
@@ -520,11 +524,11 @@ class CellSelection {
     const pasteLastRow = this.getPasteLastRow(row, copyRows.length);
     const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
     const pasteTds = this.getPasteTds(getComputeSelectedTds(computeBounds, table.domNode, this.quill.container));
-    const copyTds = copyRows.reduce((copyTds: HTMLTableCellElement[][], row: HTMLTableRowElement) => {
+    const copyTds = copyRows.reduce((copyTds: HTMLElement[][], row: HTMLTableRowElement) => {
       copyTds.push(Array.from(row.querySelectorAll('td')));
       return copyTds;
     }, []);
-    const selectedTds: HTMLTableCellElement[] = [];
+    const selectedTds: HTMLElement[] = [];
     while (copyTds.length) {
       const copyTs = copyTds.shift();
       const pasteTs = pasteTds.shift();
@@ -535,7 +539,7 @@ class CellSelection {
         const pasteTd = pasteTs.shift();
         if (!pasteTd) {
           const id = prevPasteTd.getAttribute('data-row');
-          const ref = Quill.find(prevPasteTd);
+          const ref = Quill.find(prevPasteTd) as TableCell;
           cell = table.insertColumnCell(ref.parent, id, ref.next);
           cell = this.pasteSelectedTd(cell.domNode, copyTd);
           prevPasteTd = cell.domNode;
@@ -560,15 +564,15 @@ class CellSelection {
     const id = selectedTd.getAttribute('data-row');
     const copyFormats = TableCell.formats(copyTd);
     Object.assign(copyFormats, { 'data-row': id });
-    const cell = Quill.find(selectedTd);
-    const _cell = cell.replaceWith(cell.statics.blotName, copyFormats);
+    const cell = Quill.find(selectedTd) as TableCell;
+    const _cell = cell.replaceWith(cell.statics.blotName, copyFormats) as TableCell;
     this.quill.setSelection(
       _cell.offset(this.quill.scroll) + _cell.length() - 1,
       0,
       Quill.sources.USER
     );
     const range = this.quill.getSelection(true);
-    const formats = this.quill.getFormat(range.index);
+    const formats = this.quill.getFormat(range.index) as Props;
     const html = copyTd.innerHTML;
     const text = this.getText(html);
     const pastedDelta = this.quill.clipboard.convert({ text, html });
@@ -591,8 +595,8 @@ class CellSelection {
   }
 
   removeSelectedTdContent(td: Element) {
-    const tdBlot = Quill.find(td);
-    let head = tdBlot.children.head;
+    const tdBlot = Quill.find(td) as TableCell;
+    let head = tdBlot.children.head as TableCellBlock;
     const cellId = head.formats()[TableCellBlock.blotName];
     const cellBlock = this.quill.scroll.create(TableCellBlock.blotName, cellId);
     tdBlot.insertBefore(cellBlock, head);
@@ -648,7 +652,7 @@ class CellSelection {
   }
 
   setSelected(target: Element, force: boolean = true) {
-    const cell = Quill.find(target);
+    const cell = Quill.find(target) as TableCell;
     this.clearSelected();
     this.startTd = target;
     this.endTd = target;
@@ -675,9 +679,11 @@ class CellSelection {
     const selectedTds = [];
     const toolbar = this.quill.getModule('toolbar');
     for (const td of this.selectedTds) {
+      // @ts-expect-error
       if (toolbar.handlers[format] != null) {
-        const cellBlot = Quill.find(td);
+        const cellBlot = Quill.find(td) as TableCell;
         const lines = this.lines(cellBlot);
+        // @ts-expect-error
         const blot = toolbar.handlers[format].call(toolbar, value, lines);
         blot && selectedTds.push(getCorrectCellBlot(blot).domNode);
       } else {

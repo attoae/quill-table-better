@@ -1,5 +1,16 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
+import type { LinkedList } from 'parchment';
+import type {
+  CorrectBound,
+  Props,
+  QuillTableBetter,
+  TableCellMap,
+  TableColgroup,
+  TableContainer,
+  TableRow,
+  UseLanguageHandler
+} from '../types';
 import {
   createTooltip,
   getAlign,
@@ -23,8 +34,6 @@ import deleteIcon from '../assets/icon/delete.svg';
 import copyIcon from '../assets/icon/copy.svg';
 import {
   TableCell,
-  TableCol,
-  TableRow,
   tableId
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
@@ -57,7 +66,7 @@ enum Alignment {
   right = 'margin-right'
 }
 
-function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefaults {
+function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): MenusDefaults {
   const DEFAULT: MenusDefaults = {
     column: {
       content: useLanguage('col'),
@@ -223,15 +232,15 @@ function getMenusConfig(useLanguage: _useLanguage, menus?: string[]): MenusDefau
 }
 
 class TableMenus {
-  quill: any;
-  table: HTMLTableElement | null;
+  quill: Quill;
+  table: HTMLElement | null;
   root: HTMLElement;
   prevList: HTMLUListElement | null;
   prevTooltip: HTMLDivElement | null;
   scroll: boolean;
-  tableBetter: any;
-  tablePropertiesForm: any;
-  constructor(quill: any, tableBetter?: any) {
+  tableBetter: QuillTableBetter;
+  tablePropertiesForm: TablePropertiesForm;
+  constructor(quill: Quill, tableBetter?: QuillTableBetter) {
     this.quill = quill;
     this.table = null;
     this.prevList = null;
@@ -245,7 +254,7 @@ class TableMenus {
 
   async copyTable() {
     if (!this.table) return;
-    const tableBlot = Quill.find(this.table);
+    const tableBlot = Quill.find(this.table) as TableContainer;
     if (!tableBlot) return;
     const html = '<p><br></p>' + tableBlot.getCopyTable();
     const text = this.tableBetter.cellSelection.getText(html);
@@ -318,7 +327,7 @@ class TableMenus {
     const bounds = this.table.getBoundingClientRect();
     const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
     const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
-    const tableBlot = Quill.find(leftTd).table();
+    const tableBlot = (Quill.find(leftTd) as TableCell).table();
     const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
     if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
     this.tableBetter.cellSelection.updateSelected('column');
@@ -332,7 +341,7 @@ class TableMenus {
     const map: { [propName: string]: TableRow } = {};
     for (const td of selectedTds) {
       let rowspan = ~~td.getAttribute('rowspan') || 1;
-      let row = Quill.find(td.parentElement);
+      let row = Quill.find(td.parentElement) as TableRow;
       if (rowspan > 1) {
         while (row && rowspan) {
           const id = row.children.head.domNode.getAttribute('data-row');
@@ -353,13 +362,13 @@ class TableMenus {
       if (sum !== selectedTds.length) return;
     }
     this.tableBetter.cellSelection.updateSelected('row');
-    const tableBlot = Quill.find(selectedTds[0]).table();
+    const tableBlot = (Quill.find(selectedTds[0]) as TableCell).table();
     tableBlot.deleteRow(rows, this.deleteTable.bind(this));
     this.updateMenus();
   }
 
   deleteTable() {
-    const tableBlot = Quill.find(this.table);
+    const tableBlot = Quill.find(this.table) as TableContainer;
     if (!tableBlot) return;
     const offset = tableBlot.offset(this.quill.scroll);
     tableBlot.remove();
@@ -379,13 +388,13 @@ class TableMenus {
     leftColspan: number,
     rightColspan: number
   ) {
-    const tableBlot = Quill.find(this.table);
+    const tableBlot = Quill.find(this.table) as TableContainer;
     const cells = tableBlot.descendants(TableCell);
     const _left = Math.max(bounds.left, computeBounds.left);
     const _right = Math.min(bounds.right, computeBounds.right);
-    const map: _Map = new Map();
-    const leftMap: _Map = new Map();
-    const rightMap: _Map = new Map();
+    const map: TableCellMap = new Map();
+    const leftMap: TableCellMap = new Map();
+    const rightMap: TableCellMap = new Map();
     for (const cell of cells) {
       const { left, right } = getCorrectBounds(cell.domNode, this.quill.container);
       if (left + DEVIATION >= _left && right <= _right + DEVIATION) {
@@ -408,7 +417,7 @@ class TableMenus {
   }
 
   getColsOffset(
-    colgroup: TableCol,
+    colgroup: TableColgroup,
     computeBounds: CorrectBound,
     bounds: CorrectBound
   ) {
@@ -437,7 +446,7 @@ class TableMenus {
     return offset;
   }
 
-  getCorrectBounds(table: HTMLTableElement): CorrectBound[] {
+  getCorrectBounds(table: HTMLElement): CorrectBound[] {
     const bounds = this.quill.container.getBoundingClientRect();
     const tableBounds = getCorrectBounds(table, this.quill.container);
     return (
@@ -450,12 +459,12 @@ class TableMenus {
   getCorrectTds(
     deleteTds: Element[],
     computeBounds: CorrectBound,
-    leftTd: HTMLTableCellElement,
-    rightTd: HTMLTableCellElement
+    leftTd: Element,
+    rightTd: Element
   ) {
-    const changeTds = [];
+    const changeTds: [Element, number][] = [];
     const delTds = [];
-    const colgroup = Quill.find(leftTd).table().colgroup();
+    const colgroup = (Quill.find(leftTd) as TableCell).table().colgroup() as TableColgroup;
     const leftColspan = (~~leftTd.getAttribute('colspan') || 1);
     const rightColspan = (~~rightTd.getAttribute('colspan') || 1);
     if (colgroup) {
@@ -493,7 +502,7 @@ class TableMenus {
     return { changeTds, delTds };
   }
 
-  getDiffOffset(map: _Map, colspan?: number) {
+  getDiffOffset(map: TableCellMap, colspan?: number) {
     let offset = 0;
     const tds = this.getTdsFromMap(map);
     if (tds.length) {
@@ -530,7 +539,7 @@ class TableMenus {
   }
 
   getSelectedTdAttrs(td: HTMLElement) {
-    const cellBlot = Quill.find(td);
+    const cellBlot = Quill.find(td) as TableCell;
     const align = getAlign(cellBlot);
     const attr: Props =
       align
@@ -601,7 +610,7 @@ class TableMenus {
     return align || 'center';
   }
 
-  getTdsFromMap(map: _Map) {
+  getTdsFromMap(map: TableCellMap) {
     return Object.values(Object.fromEntries(map))
     .reduce((tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
       return tds.length > item.length ? tds : item;
@@ -638,7 +647,7 @@ class TableMenus {
 
   insertColumn(td: HTMLTableColElement, offset: number) {
     const { left, right, width } = td.getBoundingClientRect();
-    const tdBlot = Quill.find(td);
+    const tdBlot = Quill.find(td) as TableCell;
     const tableBlot = tdBlot.table();
     const isLast = td.parentElement.lastChild.isEqualNode(td);
     const position = offset > 0 ? right : left;
@@ -647,7 +656,7 @@ class TableMenus {
   }
 
   insertParagraph(offset: number) {
-    const blot = Quill.find(this.table);
+    const blot = Quill.find(this.table) as TableContainer;
     const index = this.quill.getIndex(blot);
     const length = offset > 0 ? blot.length() : 0;
     const delta = new Delta()
@@ -660,7 +669,7 @@ class TableMenus {
   }
 
   insertRow(td: HTMLTableColElement, offset: number) {
-    const tdBlot = Quill.find(td);
+    const tdBlot = Quill.find(td) as TableCell;
     const index = tdBlot.rowOffset();
     const tableBlot = tdBlot.table();
     if (offset > 0) {
@@ -675,11 +684,11 @@ class TableMenus {
   mergeCells() {
     const { selectedTds } = this.tableBetter.cellSelection;
     const { computeBounds, leftTd } = this.getSelectedTdsInfo();
-    const leftTdBlot = Quill.find(leftTd);
+    const leftTdBlot = Quill.find(leftTd) as TableCell;
     const [formats, cellId] = getCellFormats(leftTdBlot);
     const head = leftTdBlot.children.head;
     const tableBlot = leftTdBlot.table();
-    const rows = tableBlot.tbody().children;
+    const rows = tableBlot.tbody().children as LinkedList<TableRow>;
     const row = leftTdBlot.row();
     const colspan = row.children.reduce((colspan: number, td: TableCell) => {
       const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
@@ -709,7 +718,7 @@ class TableMenus {
     let offset = 0;
     for (const td of selectedTds) {
       if (leftTd.isEqualNode(td)) continue;
-      const blot: TableCell = Quill.find(td);
+      const blot = Quill.find(td) as TableCell;
       blot.moveChildren(leftTdBlot);
       blot.remove();
       if (!blot.parent?.children?.length) offset++;
@@ -720,16 +729,18 @@ class TableMenus {
         if (child.domNode.isEqualNode(leftTd)) return;
         const rowspan = child.domNode.getAttribute('rowspan');
         const [formats] = getCellFormats(child);
+        // @ts-expect-error
         child.replaceWith(child.statics.blotName, { ...formats, rowspan: rowspan - offset });
       });
     }
     leftTdBlot.setChildrenId(cellId);
+    // @ts-expect-error
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
 
-  setCellsMap(cell: TableCell, map: _Map) {
+  setCellsMap(cell: TableCell, map: TableCellMap) {
     const key: string = cell.domNode.getAttribute('data-row');
     if (map.has(key)) {
       map.set(key, [...map.get(key), cell.domNode]);
@@ -745,7 +756,7 @@ class TableMenus {
   splitCell() {
     const { selectedTds } = this.tableBetter.cellSelection;
     const { leftTd } = this.getSelectedTdsInfo();
-    const leftTdBlot = Quill.find(leftTd);
+    const leftTdBlot = Quill.find(leftTd) as TableCell;
     const head = leftTdBlot.children.head;
     for (const td of selectedTds) {
       const colspan = ~~td.getAttribute('colspan') || 1;
@@ -753,7 +764,7 @@ class TableMenus {
       if (colspan === 1 && rowspan === 1) continue;
       const columnCells: [TableRow, string, TableCell | null][] = [];
       const { width, right } = td.getBoundingClientRect();
-      const blot = Quill.find(td);
+      const blot = Quill.find(td) as TableCell;
       const tableBlot = blot.table();
       const nextBlot = blot.next;
       const rowBlot = blot.row();
@@ -809,7 +820,7 @@ class TableMenus {
     this.prevTooltip = tooltip;
   }
 
-  updateMenus(table: HTMLTableElement = this.table) {
+  updateMenus(table: HTMLElement = this.table) {
     if (!table) return;
     requestAnimationFrame(() => {
       this.root.classList.remove('ql-table-triangle-none');
@@ -817,6 +828,7 @@ class TableMenus {
       const { left, right, top, bottom } = tableBounds;
       const { height, width } = this.root.getBoundingClientRect();
       const toolbar = this.quill.getModule('toolbar');
+      // @ts-expect-error
       const computedStyle = getComputedStyle(toolbar.container);
       let correctTop = top - height - 10;
       let correctLeft = (left + right - width) >> 1;
@@ -850,7 +862,7 @@ class TableMenus {
     this.scroll = scroll;
   }
 
-  updateTable(table: HTMLTableElement) {
+  updateTable(table: HTMLElement) {
     this.table = table;
   }
 }
