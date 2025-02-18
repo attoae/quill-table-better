@@ -289,8 +289,13 @@ class TableTemporary extends Block {
   static create(value: Props) {
     const node = super.create();
     const keys = Object.keys(value);
+    const className = TableContainer.defaultClassName;
     for (const key of keys) {
-      node.setAttribute(key, value[key]);
+      if (key === 'data-class' && !~value[key].indexOf(className)) {
+        node.setAttribute(key, `${className} ${value[key]}`);
+      } else {
+        node.setAttribute(key, value[key]);
+      }
     }
     return node;
   }
@@ -695,8 +700,14 @@ class TableContainer extends Container {
       }
       return classNames.join(' ').trim();
     }
-    const setClass = (temporary: TableTemporary, value: string) => {
-      temporary.domNode.setAttribute('data-class', value);
+    const setClass = (temporary: TableTemporary, _className: string) => {
+      const className = temporary.domNode.getAttribute('data-class');
+      if (className !== _className && _className != null) {
+        temporary.domNode.setAttribute('data-class', getClassName(_className));
+      }
+      if (!_className && !className) {
+        temporary.domNode.setAttribute('data-class', defaultClassName);
+      }
     }
     if (!_temporary) {
       const container = this.prev;
@@ -706,22 +717,10 @@ class TableContainer extends Container {
       // @ts-expect-error
       const [temporary] = container.descendant(TableTemporary);
       if (!cell && temporary) {
-        const className = temporary.domNode.getAttribute('data-class');
-        if (className !== _className && _className != null) {
-          setClass(temporary, getClassName(_className));
-        }
-        if (!_className && !className) {
-          setClass(temporary, defaultClassName);
-        }
+        setClass(temporary, _className);
       }
     } else {
-      const className = _temporary.domNode.getAttribute('data-class');
-      if (className !== _className && _className != null) {
-        setClass(_temporary, getClassName(_className));
-      }
-      if (!_className && !className) {
-        setClass(_temporary, defaultClassName);
-      }
+      setClass(_temporary, _className);
     }
   }
 

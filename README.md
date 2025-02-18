@@ -14,10 +14,11 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 8. Drag and drop the table to change its overall size (Bottom right corner of the table).
 
 ## Demo
-[quill-table-better Codepen Demo(JS)](https://codepen.io/attoae/pen/WNBGjZp)
-[quill-table-better Codepen Demo(React)](https://codesandbox.io/p/sandbox/react-quill-wcfghd)
-[quill-table-better Codepen Demo(Vue)](https://codesandbox.io/p/sandbox/vue-quill-fwxplc)
-[quill-table-better Codepen Demo(Angular)](https://codesandbox.io/p/sandbox/angular-quill-y879sy)
+[quill-table-better Codepen Demo(JS)](https://codepen.io/attoae/pen/WNBGjZp)  
+[quill-table-better Codesandbox Demo(React)](https://codesandbox.io/p/sandbox/react-quill-wcfghd)  
+[quill-table-better Codesandbox Demo(Vue)](https://codesandbox.io/p/sandbox/vue-quill-fwxplc)  
+[quill-table-better Codesandbox Demo(Angular)](https://codesandbox.io/p/sandbox/angular-quill-y879sy)  
+[quill-table-better Codesandbox Demo(Next)](https://codesandbox.io/p/sandbox/next-quill-l64dh2)  
 
 ## Dependencies
 [quill.js](https://quilljs.com/) `>= v2.0.0`
