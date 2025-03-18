@@ -17,7 +17,7 @@ import {
 } from './formats/table';
 import TableHeader from './formats/header';
 import { ListContainer } from './formats/list';
-import { 
+import {
   matchTable,
   matchTableCell,
   matchTableCol,
@@ -34,16 +34,18 @@ import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
 
 interface Options {
-  language?: string | {
-    name: string
-    content: Props
-  }
-  menus?: string[]
+  language?:
+    | string
+    | {
+        name: string;
+        content: Props;
+      };
+  menus?: string[];
   toolbarButtons?: {
-    whiteList?: string[]
-    singleWhiteList?: string[]
-  }
-  toolbarTable?: boolean
+    whiteList?: string[];
+    singleWhiteList?: string[];
+  };
+  toolbarTable?: boolean;
 }
 
 type Line = TableCellBlock | TableHeader | ListContainer;
@@ -57,9 +59,9 @@ class Table extends Module {
   tableMenus: TableMenus;
   tableSelect: TableSelect;
   options: Options;
-  
+
   static keyboardBindings: { [propName: string]: BindingObject };
-  
+
   static register() {
     Quill.register(TableCellBlock, true);
     Quill.register(TableCell, true);
@@ -69,10 +71,13 @@ class Table extends Module {
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
-    Quill.register({
-      'modules/toolbar': TableToolbar,
-      'modules/clipboard': TableClipboard
-    }, true);
+    Quill.register(
+      {
+        'modules/toolbar': TableToolbar,
+        'modules/clipboard': TableClipboard
+      },
+      true
+    );
   }
 
   constructor(quill: Quill, options: Options) {
@@ -172,7 +177,7 @@ class Table extends Module {
     const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
-    const style = `width: ${CELL_DEFAULT_WIDTH * columns}px`
+    const style = `width: ${CELL_DEFAULT_WIDTH * columns}px`;
     const formats = this.quill.getFormat(range.index - 1);
     const [, offset] = this.quill.getLine(range.index);
     const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
@@ -183,7 +188,7 @@ class Table extends Module {
       .delete(range.length)
       .concat(extraDelta)
       .insert('\n', { [TableTemporary.blotName]: { style } });
-    const delta = new Array(rows).fill(0).reduce(memo => {
+    const delta = new Array(rows).fill(0).reduce((memo) => {
       const id = tableId();
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
@@ -234,10 +239,7 @@ class Table extends Module {
 
   private updateMenus(e: KeyboardEvent) {
     if (!this.cellSelection.selectedTds.length) return;
-    if (
-      e.key === 'Enter' ||
-      (e.ctrlKey && e.key === 'v')
-    ) {
+    if (e.key === 'Enter' || (e.ctrlKey && e.key === 'v')) {
       this.tableMenus.updateMenus();
     }
   }
@@ -265,7 +267,7 @@ const keyboardBindings = {
       this.quill.updateContents(delta, Quill.sources.USER);
       this.quill.setSelection(range.index + 1, Quill.sources.SILENT);
       this.quill.scrollSelectionIntoView();
-    },
+    }
   },
   'table-list backspace': makeTableListHandler('Backspace'),
   'table-list delete': makeTableListHandler('Delete'),
@@ -283,7 +285,7 @@ const keyboardBindings = {
       cell && tableModule.cellSelection.setSelected(cell.domNode, false);
     }
   }
-}
+};
 
 function makeCellBlockHandler(key: string) {
   return {
@@ -297,11 +299,9 @@ function makeCellBlockHandler(key: string) {
       const blotName = line.prev?.statics.blotName;
       if (
         offset === 0 &&
-        (
-          blotName === ListContainer.blotName ||
+        (blotName === ListContainer.blotName ||
           blotName === TableCellBlock.blotName ||
-          blotName === TableHeader.blotName
-        )
+          blotName === TableHeader.blotName)
       ) {
         return removeLine.call(this, line, range);
       }
@@ -311,7 +311,7 @@ function makeCellBlockHandler(key: string) {
       }
       return true;
     }
-  }
+  };
 }
 
 // Prevent table default up and down keyboard events.
@@ -342,7 +342,7 @@ function makeTableHeaderHandler(key: string) {
         line.replaceWith(TableCellBlock.blotName, cellId);
       }
     }
-  }
+  };
 }
 
 function makeTableListHandler(key: string) {
@@ -354,9 +354,9 @@ function makeTableListHandler(key: string) {
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
       const cellId = getCellId(line.parent.formats()[line.parent.statics.blotName]);
-      line.replaceWith(TableCellBlock.blotName, cellId);      
+      line.replaceWith(TableCellBlock.blotName, cellId);
     }
-  }
+  };
 }
 
 function removeLine(line: Line, range: Range) {

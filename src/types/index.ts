@@ -1,22 +1,22 @@
-import QuillTableBetter from '../quill-table-better';
-import {
-  TableCellBlock,
-  TableCell,
-  TableRow,
-  TableBody,
-  TableTemporary,
-  TableContainer,
-  TableCol,
-  TableColgroup
-} from '../formats/table';
 import TableHeader from '../formats/header';
 import TableList, { ListContainer } from '../formats/list';
+import {
+  TableBody,
+  TableCell,
+  TableCellBlock,
+  TableCol,
+  TableColgroup,
+  TableContainer,
+  TableRow,
+  TableTemporary
+} from '../formats/table';
+import TableClipboard from '../modules/clipboard';
+import TableToolbar from '../modules/toolbar';
+import QuillTableBetter from '../quill-table-better';
 import CellSelection from '../ui/cell-selection';
 import OperateLine from '../ui/operate-line';
 import TableMenus from '../ui/table-menus';
 import ToolbarTable, { TableSelect } from '../ui/toolbar-table';
-import TableToolbar from '../modules/toolbar';
-import TableClipboard from '../modules/clipboard';
 
 export interface CorrectBound {
   left: number;
@@ -28,7 +28,7 @@ export interface CorrectBound {
 }
 
 export interface Props {
-  [propName: string]: string
+  [propName: string]: string;
 }
 
 export type InsertTableHandler = (rows: number, columns: number) => void;
@@ -39,28 +39,28 @@ export type TableCellChildren = TableCellAllowedChildren | TableList;
 
 export type TableCellMap = Map<string, HTMLElement[]>;
 
-export type UseLanguageHandler = (name: string) => string
+export type UseLanguageHandler = (name: string) => string;
 
 export type {
+  CellSelection,
+  ListContainer,
+  OperateLine,
   QuillTableBetter,
-  TableCellBlock,
-  TableCell,
-  TableRow,
   TableBody,
-  TableTemporary,
-  TableContainer,
+  TableCell,
+  TableCellBlock,
+  TableClipboard,
   TableCol,
   TableColgroup,
+  TableContainer,
   TableHeader,
   TableList,
-  ListContainer,
-  CellSelection,
-  OperateLine,
   TableMenus,
-  ToolbarTable,
+  TableRow,
   TableSelect,
+  TableTemporary,
   TableToolbar,
-  TableClipboard
+  ToolbarTable
 };
 
 export default QuillTableBetter;

@@ -1,22 +1,14 @@
 import Quill from 'quill';
-import type {
-  QuillTableBetter,
-  TableCell,
-  TableColgroup
-} from '../types';
-import {
-  setElementProperty,
-  setElementAttribute,
-  updateTableWidth
-} from '../utils';
+import type { QuillTableBetter, TableCell, TableColgroup } from '../types';
+import { setElementAttribute, setElementProperty, updateTableWidth } from '../utils';
 
 interface Options {
-  tableNode: HTMLElement
-  cellNode: HTMLElement
+  tableNode: HTMLElement;
+  cellNode: HTMLElement;
   mousePosition: {
-    clientX: number
-    clientY: number
-  }
+    clientX: number;
+    clientY: number;
+  };
 }
 
 const DRAG_BLOCK_HEIGHT = 8;
@@ -94,7 +86,7 @@ class OperateLine {
       width: `${width}px`,
       height: `${height}px`,
       display: 'block'
-    }
+    };
   }
 
   getLevelColSum(cell: Element) {
@@ -133,7 +125,7 @@ class OperateLine {
       top: `${tableRect.bottom - containerRect.top}px`,
       left: `${tableRect.right - containerRect.left}px`,
       display: tableRect.bottom > containerRect.bottom ? 'none' : 'block'
-    }
+    };
     if (Math.abs(x - clientX) <= 5) {
       this.direction = 'level';
       return {
@@ -150,7 +142,7 @@ class OperateLine {
           width: '1px',
           height: '100%'
         }
-      }
+      };
     } else if (Math.abs(y - clientY) <= 5) {
       this.direction = 'vertical';
       return {
@@ -167,7 +159,7 @@ class OperateLine {
           width: '100%',
           height: '1px'
         }
-      }
+      };
     } else {
       this.hideLine();
     }
@@ -190,7 +182,7 @@ class OperateLine {
     const mousePosition = {
       clientX: e.clientX,
       clientY: e.clientY
-    }
+    };
     if (!tableNode || !cellNode) {
       if (this.line && !this.drag) {
         this.hideLine();
@@ -299,7 +291,11 @@ class OperateLine {
       for (const cell of cells) {
         const colspan = ~~cell.getAttribute('colspan') || 1;
         const { width, height } = cell.getBoundingClientRect();
-        preNodes.push([cell, `${Math.ceil(width + averageX * colspan)}`, `${Math.ceil(height + averageY)}`]);
+        preNodes.push([
+          cell,
+          `${Math.ceil(width + averageX * colspan)}`,
+          `${Math.ceil(height + averageY)}`
+        ]);
       }
     }
     if (colgroup) {
@@ -359,7 +355,7 @@ class OperateLine {
           this.hideLine();
         }
       }
-    }
+    };
 
     const handleMouseup = (e: MouseEvent) => {
       e.preventDefault();
@@ -380,7 +376,7 @@ class OperateLine {
       document.removeEventListener('mousemove', handleDrag, false);
       document.removeEventListener('mouseup', handleMouseup, false);
       this.tableBetter.tableMenus.updateMenus(tableNode);
-    }
+    };
 
     const handleMousedown = (e: MouseEvent) => {
       e.preventDefault();
@@ -398,7 +394,7 @@ class OperateLine {
       this.drag = true;
       document.addEventListener('mousemove', handleDrag);
       document.addEventListener('mouseup', handleMouseup);
-    }
+    };
     node.addEventListener('mousedown', handleMousedown);
   }
 
@@ -415,9 +411,13 @@ class OperateLine {
   updateDragLine(clientX: number, clientY: number) {
     const containerRect = this.quill.container.getBoundingClientRect();
     if (this.direction === 'level') {
-      setElementProperty(this.line, { left: `${~~(clientX - containerRect.left - LINE_CONTAINER_WIDTH / 2)}px` });
+      setElementProperty(this.line, {
+        left: `${~~(clientX - containerRect.left - LINE_CONTAINER_WIDTH / 2)}px`
+      });
     } else if (this.direction === 'vertical') {
-      setElementProperty(this.line, { top: `${(~~clientY - containerRect.top - LINE_CONTAINER_HEIGHT / 2)}px` });
+      setElementProperty(this.line, {
+        top: `${~~clientY - containerRect.top - LINE_CONTAINER_HEIGHT / 2}px`
+      });
     }
   }
 

@@ -14,18 +14,18 @@ A module that enhances the table functionality of [Quill](https://quilljs.com/).
 8. Drag and drop the table to change its overall size (Bottom right corner of the table).
 
 ## Demo
-[quill-table-better Codepen Demo(JS)](https://codepen.io/attoae/pen/WNBGjZp)  
-[quill-table-better Codesandbox Demo(React)](https://codesandbox.io/p/sandbox/react-quill-wcfghd)  
-[quill-table-better Codesandbox Demo(Vue)](https://codesandbox.io/p/sandbox/vue-quill-fwxplc)  
-[quill-table-better Codesandbox Demo(Angular)](https://codesandbox.io/p/sandbox/angular-quill-y879sy)  
-[quill-table-better Codesandbox Demo(Next)](https://codesandbox.io/p/sandbox/next-quill-l64dh2)  
+[quill-table-better Codepen Demo(JS)](https://codepen.io/attoae/pen/WNBGjZp)
+[quill-table-better Codesandbox Demo(React)](https://codesandbox.io/p/sandbox/react-quill-wcfghd)
+[quill-table-better Codesandbox Demo(Vue)](https://codesandbox.io/p/sandbox/vue-quill-fwxplc)
+[quill-table-better Codesandbox Demo(Angular)](https://codesandbox.io/p/sandbox/angular-quill-y879sy)
+[quill-table-better Codesandbox Demo(Next)](https://codesandbox.io/p/sandbox/next-quill-l64dh2)
 
 ## Dependencies
 [quill.js](https://quilljs.com/) `>= v2.0.0`
 
 ## Quickstart
-> **Note**: `setContents` causes the table to not display properly, replace with `updateContents`.  
-> The method is as follows (`Used when initializing data`): 
+> **Note**: `setContents` causes the table to not display properly, replace with `updateContents`.
+> The method is as follows (`Used when initializing data`):
 
 ```JavaScript
 const delta = quill.clipboard.convert({ html });
@@ -113,7 +113,7 @@ cdn
 ## Conifg
 
 ### language
-The `language` parameter has two types:  
+The `language` parameter has two types:
 1. string, default `en_US`
 
 | Language | Code |
@@ -126,12 +126,12 @@ The `language` parameter has two types:
 | Russian | ru_RU |
 | Turkish | tr_TR |
 
-2. Used to register a new language, such as:  
+2. Used to register a new language, such as:
   { name: `'en_UK'`, content: [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts) } (For content, please refer to [en_US](https://github.com/attoae/quill-table-better/blob/develop/src/language/en_US.ts))
 
 ### menus
-`menus` are used to configure the action bar, and those not in the array are not displayed.  
-Empty array or no configuration default all display (Except for `copy`).  
+`menus` are used to configure the action bar, and those not in the array are not displayed.
+Empty array or no configuration default all display (Except for `copy`).
 The functions of the operation bar are as follows:
 1. column
   - Insert column left
@@ -157,9 +157,9 @@ The functions of the operation bar are as follows:
   - Copy table
 
 ### toolbarTable
-`toolbarTable` is used to add a button to insert a table on the toolbar (true or false).  
+`toolbarTable` is used to add a button to insert a table on the toolbar (true or false).
 And `table-better` needs to be added to toolbarOptions, for example:
- 
+
 ```JavaScript
 const toolbarOptions = [
   ['bold', 'italic', 'underline', 'strike'],
@@ -170,10 +170,10 @@ const toolbarOptions = [
 ### toolbarButtons
 `toolbarButtons` is used when focusing on the table, you can specify which buttons to disable and which not.
 
-`whiteList` supports simultaneous operations on multiple cells, default `WHITE_LIST`. 
+`whiteList` supports simultaneous operations on multiple cells, default `WHITE_LIST`.
 > **Note**: The configured `whiteList` is preferably a subset of `WHITE_LIST`, other formats may have problems.
 
-`singleWhiteList` only supports formatting for a single cell, default `SINGLE_WHITE_LIST`.  
+`singleWhiteList` only supports formatting for a single cell, default `SINGLE_WHITE_LIST`.
 > **Note**: `singleWhiteList` must be a subset of `whiteList`.
 
 ```JavaScript
@@ -224,7 +224,7 @@ const SINGLE_WHITE_LIST = ['link', 'image'];
 
 ## Key combination
 
-- delete cells and their contents (`Ctrl + Backspace` or `Ctrl + Delete`)  
+- delete cells and their contents (`Ctrl + Backspace` or `Ctrl + Delete`)
 When all cells in a row or column are selected, you can use key combinations to delete cells and their contents.
 
 ## Methods

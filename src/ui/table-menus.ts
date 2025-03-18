@@ -1,6 +1,23 @@
+import type { LinkedList } from 'parchment';
 import Quill from 'quill';
 import Delta from 'quill-delta';
-import type { LinkedList } from 'parchment';
+import cellIcon from '../assets/icon/cell.svg';
+import columnIcon from '../assets/icon/column.svg';
+import copyIcon from '../assets/icon/copy.svg';
+import deleteIcon from '../assets/icon/delete.svg';
+import downIcon from '../assets/icon/down.svg';
+import mergeIcon from '../assets/icon/merge.svg';
+import rowIcon from '../assets/icon/row.svg';
+import tableIcon from '../assets/icon/table.svg';
+import wrapIcon from '../assets/icon/wrap.svg';
+import {
+  CELL_DEFAULT_VALUES,
+  CELL_DEFAULT_WIDTH,
+  CELL_PROPERTIES,
+  DEVIATION,
+  TABLE_PROPERTIES
+} from '../config';
+import { TableCell, tableId } from '../formats/table';
 import type {
   CorrectBound,
   Props,
@@ -15,50 +32,30 @@ import {
   createTooltip,
   getAlign,
   getCellFormats,
-  getCorrectBounds,
   getComputeBounds,
   getComputeSelectedCols,
   getComputeSelectedTds,
-  setElementProperty,
+  getCorrectBounds,
   getElementStyle,
+  setElementProperty,
   updateTableWidth
 } from '../utils';
-import columnIcon from '../assets/icon/column.svg';
-import rowIcon from '../assets/icon/row.svg';
-import mergeIcon from '../assets/icon/merge.svg';
-import tableIcon from '../assets/icon/table.svg';
-import cellIcon from '../assets/icon/cell.svg';
-import wrapIcon from '../assets/icon/wrap.svg';
-import downIcon from '../assets/icon/down.svg';
-import deleteIcon from '../assets/icon/delete.svg';
-import copyIcon from '../assets/icon/copy.svg';
-import {
-  TableCell,
-  tableId
-} from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
-import {
-  CELL_DEFAULT_VALUES,
-  CELL_DEFAULT_WIDTH,
-  CELL_PROPERTIES,
-  DEVIATION,
-  TABLE_PROPERTIES
-} from '../config';
 
 interface Children {
   [propName: string]: {
-    content: string
-    handler: () => void
-  }
+    content: string;
+    handler: () => void;
+  };
 }
 
 interface MenusDefaults {
   [propName: string]: {
-    content: string
-    icon: string
-    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void
-    children?: Children
-  }
+    content: string;
+    icon: string;
+    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void;
+    children?: Children;
+  };
 }
 
 enum Alignment {
@@ -163,7 +160,7 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
       handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
         const attribute = {
           ...getElementStyle(this.table, TABLE_PROPERTIES),
-          'align': this.getTableAlignment(this.table)
+          align: this.getTableAlignment(this.table)
         };
         this.toggleAttribute(list, tooltip);
         this.tablePropertiesForm = new TablePropertiesForm(this, { attribute, type: 'table' });
@@ -325,7 +322,12 @@ class TableMenus {
   deleteColumn(isKeyboard: boolean = false) {
     const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
     const bounds = this.table.getBoundingClientRect();
-    const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const deleteTds = getComputeSelectedTds(
+      computeBounds,
+      this.table,
+      this.quill.container,
+      'column'
+    );
     const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
     const tableBlot = (Quill.find(leftTd) as TableCell).table();
     const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
@@ -357,7 +359,7 @@ class TableMenus {
     const rows: TableRow[] = Object.values(map);
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
-        return sum += row.children.length;
+        return (sum += row.children.length);
       }, 0);
       if (sum !== selectedTds.length) return;
     }
@@ -399,28 +401,19 @@ class TableMenus {
       const { left, right } = getCorrectBounds(cell.domNode, this.quill.container);
       if (left + DEVIATION >= _left && right <= _right + DEVIATION) {
         this.setCellsMap(cell, map);
-      } else if (
-        left + DEVIATION >= computeBounds.left &&
-        right <= bounds.left + DEVIATION
-      ) {
+      } else if (left + DEVIATION >= computeBounds.left && right <= bounds.left + DEVIATION) {
         this.setCellsMap(cell, leftMap);
-      } else if (
-        left + DEVIATION >= bounds.right &&
-        right <= computeBounds.right + DEVIATION
-      ) {
+      } else if (left + DEVIATION >= bounds.right && right <= computeBounds.right + DEVIATION) {
         this.setCellsMap(cell, rightMap);
       }
     }
-    return this.getDiffOffset(map) ||
-      this.getDiffOffset(leftMap, leftColspan)
-      + this.getDiffOffset(rightMap, rightColspan);
+    return (
+      this.getDiffOffset(map) ||
+      this.getDiffOffset(leftMap, leftColspan) + this.getDiffOffset(rightMap, rightColspan)
+    );
   }
 
-  getColsOffset(
-    colgroup: TableColgroup,
-    computeBounds: CorrectBound,
-    bounds: CorrectBound
-  ) {
+  getColsOffset(colgroup: TableColgroup, computeBounds: CorrectBound, bounds: CorrectBound) {
     let col = colgroup.children.head;
     const _left = Math.max(bounds.left, computeBounds.left);
     const _right = Math.min(bounds.right, computeBounds.right);
@@ -449,11 +442,9 @@ class TableMenus {
   getCorrectBounds(table: HTMLElement): CorrectBound[] {
     const bounds = this.quill.container.getBoundingClientRect();
     const tableBounds = getCorrectBounds(table, this.quill.container);
-    return (
-      tableBounds.width >= bounds.width
-       ? [{ ...tableBounds, left: 0, right: bounds.width }, bounds]
-       : [tableBounds, bounds]
-    );
+    return tableBounds.width >= bounds.width
+      ? [{ ...tableBounds, left: 0, right: bounds.width }, bounds]
+      : [tableBounds, bounds];
   }
 
   getCorrectTds(
@@ -465,8 +456,8 @@ class TableMenus {
     const changeTds: [Element, number][] = [];
     const delTds = [];
     const colgroup = (Quill.find(leftTd) as TableCell).table().colgroup() as TableColgroup;
-    const leftColspan = (~~leftTd.getAttribute('colspan') || 1);
-    const rightColspan = (~~rightTd.getAttribute('colspan') || 1);
+    const leftColspan = ~~leftTd.getAttribute('colspan') || 1;
+    const rightColspan = ~~rightTd.getAttribute('colspan') || 1;
     if (colgroup) {
       for (const td of deleteTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
@@ -489,12 +480,7 @@ class TableMenus {
         ) {
           delTds.push(td);
         } else {
-          const offset = this.getCellsOffset(
-            computeBounds,
-            bounds,
-            leftColspan,
-            rightColspan
-          );
+          const offset = this.getCellsOffset(computeBounds, bounds, leftColspan, rightColspan);
           changeTds.push([td, offset]);
         }
       }
@@ -508,12 +494,12 @@ class TableMenus {
     if (tds.length) {
       if (colspan) {
         for (const td of tds) {
-          offset += (~~td.getAttribute('colspan') || 1);
+          offset += ~~td.getAttribute('colspan') || 1;
         }
         offset -= colspan;
       } else {
         for (const td of tds) {
-          offset -= (~~td.getAttribute('colspan') || 1);
+          offset -= ~~td.getAttribute('colspan') || 1;
         }
       }
     }
@@ -541,10 +527,9 @@ class TableMenus {
   getSelectedTdAttrs(td: HTMLElement) {
     const cellBlot = Quill.find(td) as TableCell;
     const align = getAlign(cellBlot);
-    const attr: Props =
-      align
-        ? { ...getElementStyle(td, CELL_PROPERTIES), 'text-align': align }
-        : getElementStyle(td, CELL_PROPERTIES);
+    const attr: Props = align
+      ? { ...getElementStyle(td, CELL_PROPERTIES), 'text-align': align }
+      : getElementStyle(td, CELL_PROPERTIES);
     return attr;
   }
 
@@ -597,10 +582,10 @@ class TableMenus {
   getTableAlignment(table: HTMLTableElement) {
     const align = table.getAttribute('align');
     if (!align) {
-      const {
-        [Alignment.left]: left,
-        [Alignment.right]: right
-      } = getElementStyle(table, [Alignment.left, Alignment.right]);
+      const { [Alignment.left]: left, [Alignment.right]: right } = getElementStyle(table, [
+        Alignment.left,
+        Alignment.right
+      ]);
       if (left === 'auto') {
         if (right === 'auto') return 'center';
         return 'right';
@@ -611,10 +596,12 @@ class TableMenus {
   }
 
   getTdsFromMap(map: TableCellMap) {
-    return Object.values(Object.fromEntries(map))
-    .reduce((tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
-      return tds.length > item.length ? tds : item;
-    }, []);
+    return Object.values(Object.fromEntries(map)).reduce(
+      (tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
+        return tds.length > item.length ? tds : item;
+      },
+      []
+    );
   }
 
   handleClick(e: MouseEvent) {
@@ -631,10 +618,7 @@ class TableMenus {
       if (this.tablePropertiesForm) return;
       this.showMenus();
       this.updateMenus(table);
-      if (
-        (table && !table.isEqualNode(this.table)) ||
-        this.scroll
-      ) {
+      if ((table && !table.isEqualNode(this.table)) || this.scroll) {
         this.updateScroll(false);
       }
       this.table = table;
@@ -659,9 +643,7 @@ class TableMenus {
     const blot = Quill.find(this.table) as TableContainer;
     const index = this.quill.getIndex(blot);
     const length = offset > 0 ? blot.length() : 0;
-    const delta = new Delta()
-      .retain(index + length)
-      .insert('\n');
+    const delta = new Delta().retain(index + length).insert('\n');
     this.quill.updateContents(delta, Quill.sources.USER);
     this.quill.setSelection(index + length, Quill.sources.SILENT);
     this.tableBetter.hideTools();

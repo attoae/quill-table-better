@@ -1,4 +1,12 @@
+import iro from '@jaames/iro';
 import Quill from 'quill';
+import closeIcon from '../assets/icon/close.svg';
+import downIcon from '../assets/icon/down.svg';
+import eraseIcon from '../assets/icon/erase.svg';
+import paletteIcon from '../assets/icon/palette.svg';
+import saveIcon from '../assets/icon/save.svg';
+import { getProperties } from '../config';
+import { ListContainer } from '../formats/list';
 import type {
   Props,
   TableCell,
@@ -9,12 +17,6 @@ import type {
   TableMenus,
   UseLanguageHandler
 } from '../types';
-import eraseIcon from '../assets/icon/erase.svg';
-import downIcon from '../assets/icon/down.svg';
-import paletteIcon from '../assets/icon/palette.svg';
-import saveIcon from '../assets/icon/save.svg';
-import closeIcon from '../assets/icon/close.svg';
-import { getProperties } from '../config';
 import {
   addDimensionsUnit,
   createTooltip,
@@ -22,43 +24,41 @@ import {
   getComputeSelectedCols,
   isDimensions,
   isValidColor,
-  setElementProperty,
-  setElementAttribute
+  setElementAttribute,
+  setElementProperty
 } from '../utils';
-import { ListContainer } from '../formats/list';
-import iro from '@jaames/iro';
 
 interface Child {
-  category: string
-  propertyName: string
-  value?: string
-  attribute?: Props
-  options?: string[]
-  tooltip?: string
-  menus?: Menus[]
-  valid?: (value?: string) => boolean,
-  message?: string
+  category: string;
+  propertyName: string;
+  value?: string;
+  attribute?: Props;
+  options?: string[];
+  tooltip?: string;
+  menus?: Menus[];
+  valid?: (value?: string) => boolean;
+  message?: string;
 }
 
 interface Menus {
-  icon: string
-  describe: string
-  align: string
+  icon: string;
+  describe: string;
+  align: string;
 }
 
 interface Properties {
-  content: string
-  children: Child[]
+  content: string;
+  children: Child[];
 }
 
 interface Options {
-  type: string
-  attribute: Props
+  type: string;
+  attribute: Props;
 }
 
 interface ColorList {
-  value: string
-  describe: string
+  value: string;
+  describe: string;
 }
 
 const ACTION_LIST = [
@@ -97,7 +97,7 @@ class TablePropertiesForm {
     this.attrs = { ...options.attribute };
     this.borderForm = [];
     this.saveButton = null;
-    this.form = this.createPropertiesForm(options); 
+    this.form = this.createPropertiesForm(options);
   }
 
   checkBtnsAction(status: string) {
@@ -127,7 +127,7 @@ class TablePropertiesForm {
       }
       fragment.appendChild(button);
     }
-    container.addEventListener('click', e => listener(e));
+    container.addEventListener('click', (e) => listener(e));
     container.appendChild(fragment);
     return container;
   }
@@ -150,10 +150,10 @@ class TablePropertiesForm {
     }
     container.classList.add('ql-table-check-container');
     container.appendChild(fragment);
-    container.addEventListener('click', e => {
-      const target: HTMLSpanElement = (
-        e.target as HTMLElement
-      ).closest('span.ql-table-tooltip-hover');
+    container.addEventListener('click', (e) => {
+      const target: HTMLSpanElement = (e.target as HTMLElement).closest(
+        'span.ql-table-tooltip-hover'
+      );
       const value = target.getAttribute('data-align');
       this.switchButton(container, target);
       this.setAttribute(propertyName, value);
@@ -173,7 +173,7 @@ class TablePropertiesForm {
 
   createColorInput(child: Child) {
     const container = this.createInput(child);
-    container.classList.add('label-field-view-color');    
+    container.classList.add('label-field-view-color');
     return container;
   }
 
@@ -192,13 +192,11 @@ class TablePropertiesForm {
       fragment.appendChild(li);
     }
     container.appendChild(fragment);
-    container.addEventListener('click', e => {
+    container.addEventListener('click', (e) => {
       const target = e.target as HTMLLIElement;
-      const value = (
-        target.tagName === 'DIV'
-          ? target.parentElement
-          : target
-      ).getAttribute('data-color');
+      const value = (target.tagName === 'DIV' ? target.parentElement : target).getAttribute(
+        'data-color'
+      );
       this.setAttribute(propertyName, value, container);
       this.updateInputStatus(container, false, true);
     });
@@ -244,14 +242,10 @@ class TablePropertiesForm {
   createColorPickerSelect(propertyName: string) {
     const useLanguage = this.getUseLanguage();
     const container = document.createElement('div');
-    const remove = this.createColorPickerIcon(
-      eraseIcon,
-      useLanguage('removeColor'),
-      () => {
-        this.setAttribute(propertyName, '', container);
-        this.updateInputStatus(container, false, true);
-      }
-    );
+    const remove = this.createColorPickerIcon(eraseIcon, useLanguage('removeColor'), () => {
+      this.setAttribute(propertyName, '', container);
+      this.updateInputStatus(container, false, true);
+    });
     const list = this.createColorList(propertyName);
     const palette = this.createPalette(propertyName, useLanguage, container);
     container.classList.add('color-picker-select', 'ql-hidden');
@@ -297,7 +291,7 @@ class TablePropertiesForm {
     setElementAttribute(input, attribute);
     input.classList.add('property-input');
     input.value = value;
-    input.addEventListener('input', e => {
+    input.addEventListener('input', (e) => {
       // debounce
       const value = (e.target as HTMLInputElement).value;
       valid && this.switchHidden(status, valid(value));
@@ -323,7 +317,7 @@ class TablePropertiesForm {
       container.appendChild(list);
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
-    container.addEventListener('click', e => {
+    container.addEventListener('click', (e) => {
       const value = (e.target as HTMLLIElement).innerText;
       dropText.innerText = value;
       this.toggleBorderDisabled(value);
@@ -341,37 +335,28 @@ class TablePropertiesForm {
     const colorPicker = new iro.ColorPicker(iroContainer, {
       width: 110,
       layout: [
-        { 
+        {
           component: iro.ui.Wheel,
           options: {}
         }
       ]
     });
-    const eraseContainer = this.createColorPickerIcon(
-      paletteIcon,
-      useLanguage('colorPicker'),
-      () => this.toggleHidden(palette)
+    const eraseContainer = this.createColorPickerIcon(paletteIcon, useLanguage('colorPicker'), () =>
+      this.toggleHidden(palette)
     );
-    const btns = this.createActionBtns(
-      (e: MouseEvent) => {
-        const target = (e.target as HTMLElement).closest('button');
-        if (!target) return;
-        const label = target.getAttribute('label');
-        if (label === 'save') {
-          this.setAttribute(
-            propertyName,
-            colorPicker.color.hexString,
-            parent
-          );
-          this.updateInputStatus(container, false, true);
-        }
-        palette.classList.add('ql-hidden');
-        parent.classList.add('ql-hidden');
-      },
-      false
-    );
+    const btns = this.createActionBtns((e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('button');
+      if (!target) return;
+      const label = target.getAttribute('label');
+      if (label === 'save') {
+        this.setAttribute(propertyName, colorPicker.color.hexString, parent);
+        this.updateInputStatus(container, false, true);
+      }
+      palette.classList.add('ql-hidden');
+      parent.classList.add('ql-hidden');
+    }, false);
     palette.classList.add('color-picker-palette', 'ql-hidden');
-    wrap.classList.add('color-picker-wrap')
+    wrap.classList.add('color-picker-wrap');
     iroContainer.classList.add('iro-container');
     wrap.appendChild(iroContainer);
     wrap.appendChild(btns);
@@ -435,13 +420,10 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     container.classList.add('ql-table-properties-form');
     const header = document.createElement('h2');
-    const actions = this.createActionBtns(
-      (e: MouseEvent) => {
-        const target = (e.target as HTMLElement).closest('button');
-        target && this.checkBtnsAction(target.getAttribute('label'));
-      },
-      true
-    );
+    const actions = this.createActionBtns((e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('button');
+      target && this.checkBtnsAction(target.getAttribute('label'));
+    }, true);
     header.innerText = title;
     header.classList.add('properties-form-header');
     container.appendChild(header);
@@ -471,7 +453,7 @@ class TablePropertiesForm {
       }, {});
     Object.assign(style, attrs);
     return Object.keys(style).reduce((value: string, key: string) => {
-      return value += `${key}: ${style[key]}; `;
+      return (value += `${key}: ${style[key]}; `);
     }, '');
   }
 
@@ -498,10 +480,7 @@ class TablePropertiesForm {
     const old = this.options.attribute;
     return Object.keys(change).reduce((attrs: Props, key) => {
       if (change[key] !== old[key]) {
-        attrs[key] =
-          isDimensions(key)
-            ? addDimensionsUnit(change[key])
-            : change[key];
+        attrs[key] = isDimensions(key) ? addDimensionsUnit(change[key]) : change[key];
       }
       return attrs;
     }, {});
@@ -517,7 +496,7 @@ class TablePropertiesForm {
     return {
       viewWidth: document.documentElement.clientWidth,
       viewHeight: document.documentElement.clientHeight
-    }
+    };
   }
 
   hiddenSelectList(element: HTMLElement) {
@@ -601,10 +580,10 @@ class TablePropertiesForm {
     delete attrs['align'];
     switch (align) {
       case 'center':
-        Object.assign(attrs, { 'margin': '0 auto' });
+        Object.assign(attrs, { margin: '0 auto' });
         break;
       case 'left':
-        Object.assign(attrs, { 'margin': '' });
+        Object.assign(attrs, { margin: '' });
         break;
       case 'right':
         Object.assign(attrs, { 'margin-left': 'auto', 'margin-right': '' });
@@ -685,15 +664,14 @@ class TablePropertiesForm {
   }
 
   updateInputStatus(container: HTMLElement, status: boolean, isColor?: boolean) {
-    const closestContainer =
-      isColor
-        ? this.getColorClosest(container)
-        : getClosestElement(container, '.label-field-view');
-      const wrapper = closestContainer.querySelector('.label-field-view-input-wrapper');
+    const closestContainer = isColor
+      ? this.getColorClosest(container)
+      : getClosestElement(container, '.label-field-view');
+    const wrapper = closestContainer.querySelector('.label-field-view-input-wrapper');
     if (status) {
       wrapper.classList.add('label-field-view-error');
       this.setSaveButtonDisabled(true);
-    } else { 
+    } else {
       wrapper.classList.remove('label-field-view-error');
       const wrappers = this.form.querySelectorAll('.label-field-view-error');
       if (!wrappers.length) this.setSaveButtonDisabled(false);
@@ -758,7 +736,7 @@ class TablePropertiesForm {
     for (const list of lists) {
       list.classList.remove(`ql-table-${type}-selected`);
     }
-    const selected = lists.find(li => {
+    const selected = lists.find((li) => {
       const data = type === 'color' ? li.getAttribute('data-color') : li.innerText;
       return data === value;
     });

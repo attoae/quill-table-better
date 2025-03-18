@@ -1,19 +1,19 @@
 import type { Props } from '../types';
+import de_DE from './de_DE';
 import en_US from './en_US';
-import zh_CN from './zh_CN';
 import fr_FR from './fr_FR';
 import pl_PL from './pl_PL';
-import de_DE from './de_DE';
 import ru_RU from './ru_RU';
 import tr_TR from './tr_TR';
+import zh_CN from './zh_CN';
 
 interface Config {
-  [propName: string]: Props
+  [propName: string]: Props;
 }
 
 interface LanguageConfig {
-  name: string
-  content: Props
+  name: string;
+  content: Props;
 }
 
 class Language {
@@ -38,10 +38,7 @@ class Language {
   }
 
   init(language: string | LanguageConfig) {
-    if (
-      typeof language === 'undefined' ||
-      typeof language === 'string'
-    ) {
+    if (typeof language === 'undefined' || typeof language === 'string') {
       this.changeLanguage(language || 'en_US');
     } else {
       const { name, content } = language;
@@ -54,7 +51,7 @@ class Language {
     this.config = {
       ...this.config,
       [name]: content
-    }
+    };
   }
 
   useLanguage(name: string) {
