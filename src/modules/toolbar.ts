@@ -1,9 +1,10 @@
+import merge from 'lodash.merge';
+import type { ContainerBlot } from 'parchment';
+import { EmbedBlot } from 'parchment';
+import type { Range } from 'quill';
 import Quill from 'quill';
 import Delta from 'quill-delta';
-import merge from 'lodash.merge';
-import { EmbedBlot } from 'parchment';
-import type { ContainerBlot } from 'parchment';
-import type { Range } from 'quill';
+import TableHeader from '../formats/header';
 import type {
   CellSelection,
   QuillTableBetter,
@@ -12,7 +13,6 @@ import type {
   TableCellChildren
 } from '../types';
 import { getCorrectCellBlot } from '../utils';
-import TableHeader from '../formats/header';
 
 const Module = Quill.import('core/module');
 const Container = Quill.import('blots/container') as typeof ContainerBlot;
@@ -25,7 +25,7 @@ class TableToolbar extends Toolbar {
   controls: [string, HTMLElement][];
   update: (range: Range | null) => void;
   container?: HTMLElement | null;
-  
+
   attach(input: HTMLElement) {
     let format = Array.from(input.classList).find((className) => {
       return className.indexOf('ql-') === 0;
@@ -35,10 +35,7 @@ class TableToolbar extends Toolbar {
     if (input.tagName === 'BUTTON') {
       input.setAttribute('type', 'button');
     }
-    if (
-      this.handlers[format] == null &&
-      this.quill.scroll.query(format) == null
-    ) {
+    if (this.handlers[format] == null && this.quill.scroll.query(format) == null) {
       console.warn('ignoring attaching to nonexistent format', format, input);
       return;
     }
@@ -65,10 +62,7 @@ class TableToolbar extends Toolbar {
       if (input.selectedIndex < 0) return;
       // @ts-ignore
       const selected = input.options[input.selectedIndex];
-      const val =
-        typeof selected?.value === 'string'
-          ? selected?.value
-          : true;
+      const val = typeof selected?.value === 'string' ? selected?.value : true;
       const value = cellSelection.getCorrectValue(format, val);
       cellSelection.setSelectedTdsFormat(format, value);
     } else {
@@ -153,7 +147,7 @@ class TableToolbar extends Toolbar {
           .retain(range.index)
           .delete(range.length)
           .insert({ [format]: value }),
-        Quill.sources.USER,
+        Quill.sources.USER
       );
     } else {
       this.quill.format(format, value, Quill.sources.USER);
@@ -162,11 +156,7 @@ class TableToolbar extends Toolbar {
   }
 }
 
-function containers(
-  blot: TableCell,
-  index = 0,
-  length = Number.MAX_VALUE
-) {
+function containers(blot: TableCell, index = 0, length = Number.MAX_VALUE) {
   const getContainers = (
     blot: TableCell | TableCellAllowedChildren,
     blotIndex: number,
@@ -183,7 +173,7 @@ function containers(
         if (child instanceof Container) {
           containers.push(child);
           containers = containers.concat(getContainers(child, childIndex, lengthLeft));
-        } 
+        }
         lengthLeft -= childLength;
       }
     );
@@ -210,7 +200,7 @@ function getHeaderReplace(
 
 function getLength(blots: TableCellChildren[]): number {
   return blots.reduce((sum, blot) => {
-    return sum += blot.length();
+    return (sum += blot.length());
   }, 0);
 }
 
@@ -246,7 +236,7 @@ function tablehandler(
 TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
   handlers: {
     header(value: string, lines?: TableCellChildren[]) {
-      const { cellSelection } = this.getTableBetter(); 
+      const { cellSelection } = this.getTableBetter();
       const selectedTds = cellSelection?.selectedTds;
       if (selectedTds?.length) {
         return tablehandler.call(this, value, selectedTds, 'header', lines);
@@ -264,7 +254,7 @@ TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
         }
         return tablehandler.call(this, value, selectedTds, 'list', lines);
       }
-      
+
       const range = this.quill.getSelection(true);
       const formats = this.quill.getFormat(range);
       if (value === 'check') {

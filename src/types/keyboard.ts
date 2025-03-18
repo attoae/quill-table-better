@@ -1,9 +1,8 @@
-import Quill from 'quill';
 import type { Range } from 'quill';
+import Quill from 'quill';
 import type { TableCellChildren } from './';
 
-interface BindingObject
-  extends Partial<Omit<Context, 'prefix' | 'suffix' | 'format'>> {
+interface BindingObject extends Partial<Omit<Context, 'prefix' | 'suffix' | 'format'>> {
   key: number | string | string[];
   shortKey?: boolean | null;
   shiftKey?: boolean | null;
@@ -19,7 +18,7 @@ interface BindingObject
     // eslint-disable-next-line no-use-before-define
     curContext: Context,
     // eslint-disable-next-line no-use-before-define
-    binding: NormalizedBinding,
+    binding: NormalizedBinding
   ) => boolean | void;
 }
 
@@ -38,4 +37,4 @@ interface NormalizedBinding extends Omit<BindingObject, 'key' | 'shortKey'> {
   key: string | number;
 }
 
-export { Context, BindingObject }
+export { BindingObject, Context };

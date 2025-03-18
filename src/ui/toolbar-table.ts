@@ -1,15 +1,15 @@
-import Quill from 'quill';
 import type { InlineBlot } from 'parchment';
-import type { InsertTableHandler } from '../types';
+import Quill from 'quill';
 import tableIcon from '../assets/icon/table.svg';
+import type { InsertTableHandler } from '../types';
 
 const Inline = Quill.import('blots/inline') as typeof InlineBlot;
 const icons = Quill.import('ui/icons');
 // @ts-expect-error
 icons['table-better'] = tableIcon;
 const SUM = 10;
- 
-class ToolbarTable extends Inline {};
+
+class ToolbarTable extends Inline {}
 
 class TableSelect {
   computeChildren: Element[];
@@ -47,7 +47,7 @@ class TableSelect {
     list.appendChild(fragment);
     container.appendChild(list);
     container.appendChild(label);
-    container.addEventListener('mousemove', e => this.handleMouseMove(e, container));
+    container.addEventListener('mousemove', (e) => this.handleMouseMove(e, container));
     return container;
   }
 
@@ -123,4 +123,4 @@ class TableSelect {
   }
 }
 
-export { TableSelect, ToolbarTable as default };
+export { ToolbarTable as default, TableSelect };
