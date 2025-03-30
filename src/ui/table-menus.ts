@@ -47,17 +47,17 @@ import {
 
 interface Children {
   [propName: string]: {
-    content: string
-    handler: () => void
+    content: string;
+    handler: () => void;
   }
 }
 
 interface MenusDefaults {
   [propName: string]: {
-    content: string
-    icon: string
-    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void
-    children?: Children
+    content: string;
+    icon: string;
+    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void;
+    children?: Children;
   }
 }
 
@@ -618,6 +618,7 @@ class TableMenus {
   }
 
   handleClick(e: MouseEvent) {
+    if (!this.quill.isEnabled()) return;
     const table = (e.target as Element).closest('table');
     this.prevList && this.prevList.classList.add('ql-hidden');
     this.prevTooltip && this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
