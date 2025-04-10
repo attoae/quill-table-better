@@ -86,6 +86,32 @@ class TableCellBlock extends Block {
   }
 }
 
+
+class TableHeadCellBlock extends TableCellBlock {
+  static blotName = 'table-head-cell-block';
+  static className = 'ql-table-block';
+  static tagName = 'P';
+
+  format(name: string, value: string | Props) {
+    const cellId = this.formats()[this.statics.blotName];
+    if (name === TableHeadCell.blotName && value) {
+      this.wrap(TableHeadRow.blotName);
+      return this.wrap(name, value);
+    } else if (name === TableContainer.blotName) {
+      this.wrap(name, value);
+    } else {
+      super.format(name, value);
+    }
+  }
+
+  wrapTableCell(parent: TableCell) {
+    const cellBlot = getCorrectCellBlot(parent);
+    if (!cellBlot) return;
+    const [formats] = getCellFormats(cellBlot);
+    this.wrap(TableHeadCell.blotName, formats);
+  }
+}
+
 class TableCell extends Container {
   static blotName = 'table-cell';
   static tagName = 'TD';
@@ -234,6 +260,23 @@ class TableCell extends Container {
   }
 }
 
+class TableHeadCell extends TableCell {
+  static blotName = 'table-head-cell';
+  static tagName = 'TH';
+
+  static hasColgroup(domNode: Element) {
+    while (domNode && domNode.tagName !== 'THEAD') {
+      domNode = domNode.parentElement;
+    }
+    while (domNode) {
+      if (domNode.tagName === 'COLGROUP') {
+        return true;
+      }
+      domNode = domNode.previousElementSibling;
+    }
+    return false;
+  }
+}
 class TableRow extends Container {
   static blotName = 'table-row';
   static tagName = 'TR';
@@ -270,11 +313,25 @@ class TableRow extends Container {
   }
 }
 
+class TableHeadRow extends TableRow {
+  static blotName = 'table-head-row';
+  static tagName = 'TR';
+}
+
 class TableBody extends Container {
   static blotName = 'table-body';
   static tagName = 'TBODY';
 
   children: LinkedList<TableRow>;
+  next: this | null;
+  parent: TableContainer;
+}
+
+class TableHead extends TableBody {
+  static blotName = 'table-head';
+  static tagName = 'THEAD';
+
+  children: LinkedList<TableHeadRow>;
   next: this | null;
   parent: TableContainer;
 }
@@ -774,22 +831,26 @@ class TableContainer extends Container {
   } 
 }
 
-TableContainer.allowedChildren = [TableBody, TableTemporary, TableColgroup];
+TableContainer.allowedChildren = [TableBody, TableHead, TableTemporary, TableColgroup];
 TableBody.requiredContainer = TableContainer;
 TableTemporary.requiredContainer = TableContainer;
 TableColgroup.requiredContainer = TableContainer;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
+TableHeadRow.requiredContainer = TableHead;
 
 TableColgroup.allowedChildren = [TableCol];
 TableCol.requiredContainer = TableColgroup;
 
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
+TableHeadCell.requiredContainer = TableHeadRow;
 
 TableCell.allowedChildren = [TableCellBlock, TableHeader, ListContainer];
+TableHeadCell.allowedChildren = [TableHeadCellBlock];
 TableCellBlock.requiredContainer = TableCell;
+TableHeadCellBlock.requiredContainer = TableHeadCell;
 TableHeader.requiredContainer = TableCell;
 ListContainer.requiredContainer = TableCell;
 
@@ -810,9 +871,13 @@ function tableId() {
 export {
   cellId,
   TableCellBlock,
+  TableHeadCellBlock,
   TableCell,
+  TableHeadCell,
   TableRow,
+  TableHeadRow,
   TableBody,
+  TableHead,
   TableTemporary,
   TableContainer,
   tableId,

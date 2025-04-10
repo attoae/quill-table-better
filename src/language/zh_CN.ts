@@ -55,5 +55,7 @@ export default {
   'turquoise': '青绿色',
   'lightBlue': '浅蓝色',
   'blue': '蓝色',
-  'purple': '紫色'
+  'purple': '紫色',
+  'firstRowIsHeader': '第一行是页眉',
+  'fullWidth': '全宽表格'
 };

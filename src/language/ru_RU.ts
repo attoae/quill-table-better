@@ -55,5 +55,7 @@ export default {
   'turquoise': 'Бирюзовый',
   'lightBlue': 'Светло-голубой',
   'blue': 'Синий',
-  'purple': 'Фиолетовый'
+  'purple': 'Фиолетовый',
+  'firstRowIsHeader': 'Первая строка - это заголовок',
+  'fullWidth': 'Таблица во всю ширину'
 };
