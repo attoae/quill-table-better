@@ -29,36 +29,36 @@ import { ListContainer } from '../formats/list';
 import iro from '@jaames/iro';
 
 interface Child {
-  category: string
-  propertyName: string
-  value?: string
-  attribute?: Props
-  options?: string[]
-  tooltip?: string
-  menus?: Menus[]
-  valid?: (value?: string) => boolean,
-  message?: string
+  category: string;
+  propertyName: string;
+  value?: string;
+  attribute?: Props;
+  options?: string[];
+  tooltip?: string;
+  menus?: Menus[];
+  valid?: (value?: string) => boolean;
+  message?: string;
 }
 
 interface Menus {
-  icon: string
-  describe: string
-  align: string
+  icon: string;
+  describe: string;
+  align: string;
 }
 
 interface Properties {
-  content: string
-  children: Child[]
+  content: string;
+  children: Child[];
 }
 
 interface Options {
-  type: string
-  attribute: Props
+  type: string;
+  attribute: Props;
 }
 
 interface ColorList {
-  value: string
-  describe: string
+  value: string;
+  describe: string;
 }
 
 const ACTION_LIST = [

@@ -28,7 +28,7 @@ export interface CorrectBound {
 }
 
 export interface Props {
-  [propName: string]: string
+  [propName: string]: string;
 }
 
 export type InsertTableHandler = (rows: number, columns: number) => void;

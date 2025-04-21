@@ -8,12 +8,12 @@ import ru_RU from './ru_RU';
 import tr_TR from './tr_TR';
 
 interface Config {
-  [propName: string]: Props
+  [propName: string]: Props;
 }
 
 interface LanguageConfig {
-  name: string
-  content: Props
+  name: string;
+  content: Props;
 }
 
 class Language {

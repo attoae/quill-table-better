@@ -166,7 +166,7 @@ $focused-border: 1px solid $focused-border-color;
   padding: 4px;
   box-sizing: border-box;
   z-index: 1;
-  @extend .ql-table-border-shadow;  
+  @extend .ql-table-border-shadow;
 }
 .ql-table-triangle-up {
   @include triangle('bottom', 'top', $border-color-simple, $color-white);
