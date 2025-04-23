@@ -93,7 +93,6 @@ class TableHeadCellBlock extends TableCellBlock {
   static tagName = 'P';
 
   format(name: string, value: string | Props) {
-    const cellId = this.formats()[this.statics.blotName];
     if (name === TableHeadCell.blotName && value) {
       this.wrap(TableHeadRow.blotName);
       return this.wrap(name, value);
@@ -607,20 +606,17 @@ class TableContainer extends Container {
 
   insertColumn(position: number, isLast: boolean, w: number, offset: number) {
     const colgroup = this.colgroup() as TableColgroup;
-    const body = this.tbody() as TableBody;
-    if (body == null || body.children.head == null) return;
     const columnCells: [TableRow, string, TableCell | null, null][] = [];
     const cols: [TableColgroup, TableCol | null][] = [];
-    let row = body.children.head;
-    while (row) {
+    let rows = this.allRows();
+    rows.forEach((row: TableRow) => {
       if (isLast && offset > 0) {
         const id = row.children.tail.domNode.getAttribute('data-row');
         columnCells.push([row, id, null, null]);
       } else {
         this.setColumnCells(row, columnCells, { position, width: w });
       }
-      row = row.next;
-    }
+    });
     if (colgroup) {
       if (isLast) {
         cols.push([colgroup, null]);
@@ -822,6 +818,10 @@ class TableContainer extends Container {
     // @ts-expect-error
     const [body] = this.descendant(TableBody);
     return body || this.findChild('table-body') as TableBody;
+  }
+
+  allRows(): TableRow[] {
+    return this.descendants(TableRow);
   }
 
   temporary() {

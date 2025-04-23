@@ -277,18 +277,19 @@ class TableMenus {
   createList(children: Children) {
     if (!children) return null;
     const container = document.createElement('ul');
-    for (const [, child] of Object.entries(children)) {
+    for (const [key, child] of Object.entries(children)) {
       const { content, handler } = child;
       const list = document.createElement('li');
       list.innerText = content;
       list.addEventListener('click', handler.bind(this));
+      list.setAttribute('data-name', key);
       container.appendChild(list);
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
     return container;
   }
 
-  createMenu(left: string, right: string, isDropDown: boolean) {
+  createMenu(left: string, right: string, isDropDown: boolean, name: string) {
     const container = document.createElement('div');
     const dropDown = document.createElement('span');
     if (isDropDown) {
@@ -299,6 +300,7 @@ class TableMenus {
     container.classList.add('ql-table-dropdown');
     dropDown.classList.add('ql-table-tooltip-hover');
     container.appendChild(dropDown);
+    container.setAttribute('data-name', name);
     return container;
   }
 
@@ -308,11 +310,11 @@ class TableMenus {
     const useLanguage = language.useLanguage.bind(language);
     const container = document.createElement('div');
     container.classList.add('ql-table-menus-container', 'ql-hidden');
-    for (const [, val] of Object.entries(getMenusConfig(useLanguage, menus))) {
+    for (const [key , val] of Object.entries(getMenusConfig(useLanguage, menus))) {
       const { content, icon, children, handler } = val;
       const list = this.createList(children);
       const tooltip = createTooltip(content);
-      const menu = this.createMenu(icon, downIcon, !!children);
+      const menu = this.createMenu(icon, downIcon, !!children, key);
       menu.appendChild(tooltip);
       list && menu.appendChild(list);
       container.appendChild(menu);
@@ -688,7 +690,7 @@ class TableMenus {
     const [formats, cellId] = getCellFormats(leftTdBlot);
     const head = leftTdBlot.children.head;
     const tableBlot = leftTdBlot.table();
-    const rows = tableBlot.tbody().children as LinkedList<TableRow>;
+    const rows = tableBlot.allRows() as TableRow[];
     const row = leftTdBlot.row();
     const colspan = row.children.reduce((colspan: number, td: TableCell) => {
       const tdCorrectBounds = getCorrectBounds(td.domNode, this.quill.container);
@@ -734,8 +736,7 @@ class TableMenus {
       });
     }
     leftTdBlot.setChildrenId(cellId);
-    // @ts-expect-error
-    head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
+    leftTdBlot.replaceWith(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
   }
@@ -823,6 +824,19 @@ class TableMenus {
   updateMenus(table: HTMLElement = this.table) {
     if (!table) return;
     requestAnimationFrame(() => {
+      const { leftTd } = this.getSelectedTdsInfo();
+      const tdBlot = Quill.find(leftTd) as TableCell;
+      const insertAbove = this.root.querySelector('.ql-table-dropdown[data-name="row"] [data-name="above"]') as HTMLElement;
+      const insertBelow = this.root.querySelector('.ql-table-dropdown[data-name="row"] [data-name="below"]') as HTMLElement;
+      console.log('tdBlot', tdBlot.statics.blotName, { insertAbove, insertBellow: insertBelow });
+      if (tdBlot.statics.blotName === 'table-head-cell') {
+        // If the current cell is in the head we disable add row
+        insertAbove?.style.setProperty('display', 'none');
+        insertBelow?.style.setProperty('display', 'none');
+      } else {
+        insertAbove?.style.setProperty('display', 'block');
+        insertBelow?.style.setProperty('display', 'block');
+      }
       this.root.classList.remove('ql-table-triangle-none');
       const [tableBounds, containerBounds] = this.getCorrectBounds(table);
       const { left, right, top, bottom } = tableBounds;

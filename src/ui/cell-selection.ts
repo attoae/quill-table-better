@@ -12,6 +12,7 @@ import type {
   TableRow
 } from '../types';
 import {
+  getAdjacentRow,
   getComputeBounds,
   getComputeSelectedTds,
   getCopyTd,
@@ -458,7 +459,7 @@ class CellSelection {
       }
       const td = up ? this.startTd : this.endTd;
       const cell = Quill.find(td) as TableCell;
-      const targetRow = cell.parent[_key];
+      const targetRow = getAdjacentRow(up, cell);
       const { left: _left, right: _right } = td.getBoundingClientRect();
       if (targetRow) {
         let cellBlot = null;

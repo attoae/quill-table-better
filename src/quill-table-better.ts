@@ -25,6 +25,7 @@ import {
   matchTable,
   matchTableCell,
   matchTableCol,
+  matchTableHeadCell,
   matchTableTemporary
 } from './utils/clipboard-matchers';
 import Language from './language';
@@ -85,7 +86,8 @@ class Table extends Module {
 
   constructor(quill: Quill, options: Options) {
     super(quill, options);
-    quill.clipboard.addMatcher('td, th', matchTableCell);
+    quill.clipboard.addMatcher('td', matchTableCell);
+    quill.clipboard.addMatcher('th', matchTableHeadCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
@@ -135,7 +137,7 @@ class Table extends Module {
   ): [null, null, null, -1] | [TableContainer, TableRow, TableCell, number] {
     if (range == null) return [null, null, null, -1];
     const [block, offset] = this.quill.getLine(range.index);
-    if (block == null || block.statics.blotName !== TableCellBlock.blotName) {
+    if (block == null || (block.statics.blotName !== TableCellBlock.blotName && block.statics.blotName !== TableHeadCellBlock.blotName)) {
       return [null, null, null, -1];
     }
     const cell = block.parent as TableCell;
@@ -183,7 +185,7 @@ class Table extends Module {
     const style = (fullWidth)? 'width: 100%' : `width: ${CELL_DEFAULT_WIDTH * columns}px`;
     const formats = this.quill.getFormat(range.index - 1);
     const [, offset] = this.quill.getLine(range.index);
-    const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
+    const isExtra = !!formats[(firstRowIsHeader)? TableHeadCellBlock.blotName : TableCellBlock.blotName] || offset !== 0;
     const _offset = isExtra ? 2 : 1;
     const extraDelta = isExtra ? new Delta().insert('\n') : new Delta();
     const base = new Delta()
@@ -336,7 +338,7 @@ function makeTableArrowHandler(up: boolean) {
   return {
     key: up ? 'ArrowUp' : 'ArrowDown',
     collapsed: true,
-    format: ['table-cell'],
+    format: ['table-cell', 'table-head-cell'],
     handler() {
       return false;
     }

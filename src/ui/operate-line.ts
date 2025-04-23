@@ -243,7 +243,6 @@ class OperateLine {
       }
     } else {
       const isLastCell = cell.nextElementSibling == null;
-      //const rows = cell.parentElement.parentElement.children;
       const rows = cell.parentElement.parentElement.parentElement.querySelectorAll('tr');
       const preNodes: [Element, string][] = [];
       for (const row of rows) {
