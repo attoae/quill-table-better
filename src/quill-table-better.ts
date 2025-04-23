@@ -40,15 +40,15 @@ import TableClipboard from './modules/clipboard';
 
 interface Options {
   language?: string | {
-    name: string
-    content: Props
+    name: string;
+    content: Props;
   }
   menus?: string[]
   toolbarButtons?: {
-    whiteList?: string[]
-    singleWhiteList?: string[]
+    whiteList?: string[];
+    singleWhiteList?: string[];
   }
-  toolbarTable?: boolean
+  toolbarTable?: boolean;
 }
 
 type Line = TableCellBlock | TableHeader | ListContainer;
@@ -147,6 +147,7 @@ class Table extends Module {
   }
 
   handleKeyup(e: KeyboardEvent) {
+    if (!this.quill.isEnabled()) return;
     this.cellSelection.handleKeyup(e);
     if (e.ctrlKey && (e.key === 'z' || e.key === 'y')) {
       this.hideTools();
@@ -156,6 +157,7 @@ class Table extends Module {
   }
 
   handleMousedown(e: MouseEvent) {
+    if (!this.quill.isEnabled()) return;
     this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
     if (!table) return this.hideTools();
@@ -164,6 +166,7 @@ class Table extends Module {
   }
 
   handleScroll() {
+    if (!this.quill.isEnabled()) return;
     this.hideTools();
     this.tableMenus?.updateScroll(true);
   }

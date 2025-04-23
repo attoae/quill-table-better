@@ -9,8 +9,8 @@ import alignTopIcon from '../assets/icon/align-top.svg';
 import { convertUnitToInteger, isValidColor, isValidDimensions } from '../utils';
 
 interface Options {
-  type: string
-  attribute: Props
+  type: string;
+  attribute: Props;
 }
 
 const CELL_ATTRIBUTE = ['data-row', 'width', 'height', 'colspan', 'rowspan', 'style'];
