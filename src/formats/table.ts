@@ -43,6 +43,8 @@ class TableCellBlock extends Block {
 
   format(name: string, value: string | Props) {
     const cellId = this.formats()[this.statics.blotName];
+    const TableCell = this.statics.requiredContainer;
+    const TableRow = TableCell.requiredContainer;
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
       return this.wrap(name, value);
@@ -84,6 +86,14 @@ class TableCellBlock extends Block {
     const [formats] = getCellFormats(cellBlot);
     this.wrap(TableCell.blotName, formats);
   }
+}
+
+class TableThBlock extends TableCellBlock {
+  static blotName = 'table-th-block';
+  static tagName = 'P';
+
+  next: this | null;
+  parent: TableTh;
 }
 
 class TableCell extends Container {
@@ -234,6 +244,16 @@ class TableCell extends Container {
   }
 }
 
+class TableTh extends TableCell {
+  static blotName = 'table-th';
+  static tagName = 'TH';
+
+  children: LinkedList<TableThBlock | TableHeader | ListContainer>;
+  next: this | null;
+  parent: TableThRow;
+  prev: this | null;
+}
+
 class TableRow extends Container {
   static blotName = 'table-row';
   static tagName = 'TR';
@@ -270,11 +290,30 @@ class TableRow extends Container {
   }
 }
 
+class TableThRow extends TableRow {
+  static blotName = 'table-th-row';
+  static tagName = 'TR';
+
+  children: LinkedList<TableTh>;
+  next: this | null;
+  parent: TableThead;
+  prev: this | null;
+}
+
 class TableBody extends Container {
   static blotName = 'table-body';
   static tagName = 'TBODY';
 
   children: LinkedList<TableRow>;
+  next: this | null;
+  parent: TableContainer;
+}
+
+class TableThead extends TableBody {
+  static blotName = 'table-thead';
+  static tagName = 'THEAD';
+
+  children: LinkedList<TableThRow>;
   next: this | null;
   parent: TableContainer;
 }
@@ -774,24 +813,31 @@ class TableContainer extends Container {
   } 
 }
 
-TableContainer.allowedChildren = [TableBody, TableTemporary, TableColgroup];
+TableContainer.allowedChildren = [TableBody, TableThead, TableTemporary, TableColgroup];
 TableBody.requiredContainer = TableContainer;
+TableThead.requiredContainer = TableContainer;
 TableTemporary.requiredContainer = TableContainer;
 TableColgroup.requiredContainer = TableContainer;
 
 TableBody.allowedChildren = [TableRow];
 TableRow.requiredContainer = TableBody;
+TableThead.allowedChildren = [TableThRow];
+TableThRow.requiredContainer = TableThead;
 
 TableColgroup.allowedChildren = [TableCol];
 TableCol.requiredContainer = TableColgroup;
 
 TableRow.allowedChildren = [TableCell];
 TableCell.requiredContainer = TableRow;
+TableThRow.allowedChildren = [TableTh];
+TableTh.requiredContainer = TableThRow;
 
 TableCell.allowedChildren = [TableCellBlock, TableHeader, ListContainer];
 TableCellBlock.requiredContainer = TableCell;
 TableHeader.requiredContainer = TableCell;
 ListContainer.requiredContainer = TableCell;
+TableTh.allowedChildren = [TableThBlock];
+TableThBlock.requiredContainer = TableTh;
 
 function cellId() {
   const id = Math.random()
@@ -810,9 +856,13 @@ function tableId() {
 export {
   cellId,
   TableCellBlock,
+  TableThBlock,
   TableCell,
+  TableTh,
   TableRow,
+  TableThRow,
   TableBody,
+  TableThead,
   TableTemporary,
   TableContainer,
   tableId,

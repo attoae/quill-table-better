@@ -24,6 +24,8 @@ function applyFormat(delta: Delta, format: Props | string, value?: any): Delta {
 }
 
 function matchTable(node: HTMLTableRowElement, delta: Delta) {
+  const ths = node.querySelectorAll('th');
+  const blotName = ths?.length ? 'table-th' : 'table-cell';
   const table =
     (node.parentNode as HTMLElement).tagName === 'TABLE'
       ? node.parentNode
@@ -31,29 +33,32 @@ function matchTable(node: HTMLTableRowElement, delta: Delta) {
   const rows = Array.from(table.querySelectorAll('tr'));
   const row = rows.indexOf(node) + 1;
   if (!node.innerHTML.replace(/\s/g, '')) return new Delta();
-  return applyFormat(delta, 'table-cell', row);
+  return applyFormat(delta, blotName, row);
 }
 
 function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
+  const tagName = node.tagName;
+  const isTD = tagName === 'TD';
+  const blotName = isTD ? 'table-cell' : 'table-th';
+  const childBlotName = isTD ? 'table-cell-block' : 'table-th-block';
   const table =
     (node.parentNode.parentNode as HTMLElement).tagName === 'TABLE'
       ? node.parentNode.parentNode
       : node.parentNode.parentNode.parentNode;
   const rows = Array.from(table.querySelectorAll('tr'));
-  const tagName = node.tagName;
   const cells = Array.from(node.parentNode.querySelectorAll(tagName));
   const row =
     node.getAttribute('data-row') ||
     rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
   const cellId = node?.firstElementChild?.getAttribute('data-cell') || cells.indexOf(node) + 1;
-  if (!delta.length()) delta.insert('\n', { 'table-cell': { 'data-row': row } });
+  if (!delta.length()) delta.insert('\n', { blotName: { 'data-row': row } });
   delta.ops.forEach(op => {
-    if (op.attributes && op.attributes['table-cell']) {
+    if (op.attributes && op.attributes[blotName]) {
       // @ts-ignore
-      op.attributes['table-cell'] = { ...op.attributes['table-cell'], 'data-row': row };
+      op.attributes[blotName] = { ...op.attributes[blotName], 'data-row': row };
     }
   });
-  return applyFormat(matchTableTh(node, delta, row), 'table-cell-block', cellId);
+  return applyFormat(matchTableTh(node, delta), childBlotName, cellId);
 }
 
 function matchTableCol(node: HTMLElement, delta: Delta) {
@@ -83,8 +88,7 @@ function matchTableTemporary(node: HTMLElement, delta: Delta) {
     .concat(delta);
 }
 
-function matchTableTh(node: HTMLTableCellElement, delta: Delta, row: string | number) {
-  const formats = TableCell.formats(node);
+function matchTableTh(node: HTMLTableCellElement, delta: Delta) {
   if (node.tagName === 'TH') {
     delta.ops.forEach(op => {
       if (
@@ -94,7 +98,6 @@ function matchTableTh(node: HTMLTableCellElement, delta: Delta, row: string | nu
         op.insert += '\n';
       }
     });
-    return applyFormat(delta, 'table-cell', { ...formats, 'data-row': row });
   }
   return delta;
 }

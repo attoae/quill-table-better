@@ -6,9 +6,13 @@ import type { BindingObject, Context } from './types/keyboard';
 import {
   cellId,
   TableCellBlock,
+  TableThBlock,
   TableCell,
+  TableTh,
   TableRow,
+  TableThRow,
   TableBody,
+  TableThead,
   TableTemporary,
   TableContainer,
   tableId,
@@ -62,9 +66,13 @@ class Table extends Module {
   
   static register() {
     Quill.register(TableCellBlock, true);
+    Quill.register(TableThBlock, true);
     Quill.register(TableCell, true);
+    Quill.register(TableTh, true);
     Quill.register(TableRow, true);
+    Quill.register(TableThRow, true);
     Quill.register(TableBody, true);
+    Quill.register(TableThead, true);
     Quill.register(TableTemporary, true);
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
