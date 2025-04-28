@@ -112,7 +112,7 @@ class CellSelection {
 
   getCopyColumns(container: Element) {
     const tr = container.querySelector('tr');
-    const children = Array.from(tr.querySelectorAll('td'));
+    const children = Array.from(tr.querySelectorAll('td,th'));
     return children.reduce((sum: number, td: HTMLTableCellElement) => {
       const colspan = ~~td.getAttribute('colspan') || 1;
       return sum += colspan;
@@ -317,14 +317,14 @@ class CellSelection {
     const table = (e.target as Element).closest('table');
     if (!table) return;
     this.tableBetter.tableMenus.destroyTablePropertiesForm();
-    const startTd = (e.target as Element).closest('td');
+    const startTd = (e.target as Element).closest('td,th');
     this.startTd = startTd;
     this.endTd = startTd;
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
     
     const handleMouseMove = (e: MouseEvent) => {
-      const endTd = (e.target as Element).closest('td');
+      const endTd = (e.target as Element).closest('td,th');
       if (!endTd) return;
       const isEqualNode = startTd.isEqualNode(endTd);
       if (isEqualNode) return;
@@ -525,7 +525,7 @@ class CellSelection {
     const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
     const pasteTds = this.getPasteTds(getComputeSelectedTds(computeBounds, table.domNode, this.quill.container));
     const copyTds = copyRows.reduce((copyTds: HTMLElement[][], row: HTMLTableRowElement) => {
-      copyTds.push(Array.from(row.querySelectorAll('td')));
+      copyTds.push(Array.from(row.querySelectorAll('td,th')));
       return copyTds;
     }, []);
     const selectedTds: HTMLElement[] = [];

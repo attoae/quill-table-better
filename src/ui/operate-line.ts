@@ -12,7 +12,7 @@ import {
 
 interface Options {
   tableNode: HTMLElement;
-  cellNode: HTMLElement;
+  cellNode: Element;
   mousePosition: {
     clientX: number;
     clientY: number;
@@ -187,7 +187,7 @@ class OperateLine {
   handleMouseMove(e: MouseEvent) {
     if (!this.quill.isEnabled()) return;
     const tableNode = (e.target as Element).closest('table');
-    const cellNode = (e.target as Element).closest('td');
+    const cellNode = (e.target as Element).closest('td,th');
     const mousePosition = {
       clientX: e.clientX,
       clientY: e.clientY

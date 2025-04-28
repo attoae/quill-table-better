@@ -100,6 +100,12 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
           handler() {
             this.deleteColumn();
           }
+        },
+        select: {
+          content: useLanguage('selCol'),
+          handler() {
+            this.selectColumn();
+          }
         }
       }
     },
@@ -130,6 +136,12 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
           content: useLanguage('delRow'),
           handler() {
             this.deleteRow();
+          }
+        },
+        select: {
+          content: useLanguage('selRow'),
+          handler() {
+            this.selectRow();
           }
         }
       }
@@ -325,36 +337,20 @@ class TableMenus {
   deleteColumn(isKeyboard: boolean = false) {
     const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
     const bounds = this.table.getBoundingClientRect();
-    const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const selectTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
     const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
     const tableBlot = (Quill.find(leftTd) as TableCell).table();
-    const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
-    if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
+    const { changeTds, selTds } = this.getCorrectTds(selectTds, computeBounds, leftTd, rightTd);
+    if (isKeyboard && selTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
     this.tableBetter.cellSelection.updateSelected('column');
-    tableBlot.deleteColumn(changeTds, delTds, this.deleteTable.bind(this), deleteCols);
+    tableBlot.deleteColumn(changeTds, selTds, this.deleteTable.bind(this), deleteCols);
     updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
     this.updateMenus();
   }
 
   deleteRow(isKeyboard: boolean = false) {
     const selectedTds = this.tableBetter.cellSelection.selectedTds;
-    const map: { [propName: string]: TableRow } = {};
-    for (const td of selectedTds) {
-      let rowspan = ~~td.getAttribute('rowspan') || 1;
-      let row = Quill.find(td.parentElement) as TableRow;
-      if (rowspan > 1) {
-        while (row && rowspan) {
-          const id = row.children.head.domNode.getAttribute('data-row');
-          if (!map[id]) map[id] = row;
-          row = row.next;
-          rowspan--;
-        }
-      } else {
-        const id = td.getAttribute('data-row');
-        if (!map[id]) map[id] = row;
-      }
-    }
-    const rows: TableRow[] = Object.values(map);
+    const rows = this.getCorrectRows();
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
         return sum += row.children.length;
@@ -457,37 +453,37 @@ class TableMenus {
   }
 
   getCorrectTds(
-    deleteTds: Element[],
+    selectTds: Element[],
     computeBounds: CorrectBound,
     leftTd: Element,
     rightTd: Element
   ) {
     const changeTds: [Element, number][] = [];
-    const delTds = [];
+    const selTds = [];
     const colgroup = (Quill.find(leftTd) as TableCell).table().colgroup() as TableColgroup;
     const leftColspan = (~~leftTd.getAttribute('colspan') || 1);
     const rightColspan = (~~rightTd.getAttribute('colspan') || 1);
     if (colgroup) {
-      for (const td of deleteTds) {
+      for (const td of selectTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
         if (
           bounds.left + DEVIATION >= computeBounds.left &&
           bounds.right <= computeBounds.right + DEVIATION
         ) {
-          delTds.push(td);
+          selTds.push(td);
         } else {
           const offset = this.getColsOffset(colgroup, computeBounds, bounds);
           changeTds.push([td, offset]);
         }
       }
     } else {
-      for (const td of deleteTds) {
+      for (const td of selectTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
         if (
           bounds.left + DEVIATION >= computeBounds.left &&
           bounds.right <= computeBounds.right + DEVIATION
         ) {
-          delTds.push(td);
+          selTds.push(td);
         } else {
           const offset = this.getCellsOffset(
             computeBounds,
@@ -499,7 +495,28 @@ class TableMenus {
         }
       }
     }
-    return { changeTds, delTds };
+    return { changeTds, selTds };
+  }
+
+  getCorrectRows() {
+    const selectedTds = this.tableBetter.cellSelection.selectedTds;
+    const map: { [propName: string]: TableRow } = {};
+    for (const td of selectedTds) {
+      let rowspan = ~~td.getAttribute('rowspan') || 1;
+      let row = Quill.find(td.parentElement) as TableRow;
+      if (rowspan > 1) {
+        while (row && rowspan) {
+          const id = row.children.head.domNode.getAttribute('data-row');
+          if (!map[id]) map[id] = row;
+          row = row.next;
+          rowspan--;
+        }
+      } else {
+        const id = td.getAttribute('data-row');
+        if (!map[id]) map[id] = row;
+      }
+    }
+    return Object.values(map);
   }
 
   getDiffOffset(map: TableCellMap, colspan?: number) {
@@ -739,6 +756,24 @@ class TableMenus {
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
+  }
+
+  selectColumn() {
+    const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
+    const selectTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const { selTds } = this.getCorrectTds(selectTds, computeBounds, leftTd, rightTd);
+    this.tableBetter.cellSelection.setSelectedTds(selTds);
+    this.updateMenus();
+  }
+
+  selectRow() {
+    const rows = this.getCorrectRows();
+    const selectTds = rows.reduce((selTds: Element[], row: TableRow) => {
+      selTds.push(...Array.from(row.domNode.children));
+      return selTds;
+    }, []);
+    this.tableBetter.cellSelection.setSelectedTds(selectTds);
+    this.updateMenus();
   }
 
   setCellsMap(cell: TableCell, map: TableCellMap) {
