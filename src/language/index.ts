@@ -6,6 +6,7 @@ import pl_PL from './pl_PL';
 import de_DE from './de_DE';
 import ru_RU from './ru_RU';
 import tr_TR from './tr_TR';
+import pt_PT from './pt_PT';
 
 interface Config {
   [propName: string]: Props;
@@ -28,7 +29,8 @@ class Language {
       pl_PL,
       de_DE,
       ru_RU,
-      tr_TR
+      tr_TR,
+      pt_PT
     };
     this.init(language);
   }
