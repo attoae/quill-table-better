@@ -3,12 +3,17 @@ import type {
   CorrectBound,
   Props,
   TableCellChildren,
-  TableContainer
+  TableContainer,
 } from '../types';
 import {
+  TableBody,
   TableCell,
   TableCellBlock,
-  TableCol
+  TableCol,
+  TableHead,
+  TableRow,
+  TableHeadCell,
+  TableHeadRow
 } from '../formats/table';
 import TableList, { ListContainer } from '../formats/list';
 import TableHeader from '../formats/header';
@@ -221,7 +226,7 @@ function getCorrectBounds(target: Element, container: Element) {
 
 function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | null {
   while (blot) {
-    if (blot.statics.blotName === TableCell.blotName) {
+    if (blot.statics.blotName === TableCell.blotName || blot.statics.blotName === TableHeadCell.blotName) {
       // @ts-ignore
       return blot;
     }
@@ -229,6 +234,24 @@ function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | nu
     blot = blot.parent;
   }
   return null;
+}
+
+function getAdjacentRow(up: boolean, blot: TableCell | TableCellChildren): TableRow {
+  const key = up ? 'prev' : 'next';
+  const similarAdjacent = blot.parent[key];
+  if (!similarAdjacent) {
+    // There is no adjacent row in the same category (head or body), let's see if there is one in the other category
+    if (up && blot.parent.parent.statics.blotName === TableBody.blotName) {
+      const table = blot.parent.parent.parent;
+      const rows = table.descendants(TableHeadRow);
+      return rows.pop() as TableRow;
+    } else if (!up && blot.parent.parent.statics.blotName === TableHead.blotName) {
+      const table = blot.parent.parent.parent;
+      const rows = table.descendants(TableRow).filter(row => row.statics.blotName === TableRow.blotName);
+      return rows.shift() as TableRow;
+    }
+  }
+  return similarAdjacent as TableRow;
 }
 
 function getElementStyle(node: HTMLElement, rules: string[]) {
@@ -395,6 +418,7 @@ export {
   getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot,
+  getAdjacentRow,
   getElementStyle,
   isDimensions,
   isValidColor,

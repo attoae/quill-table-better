@@ -3,7 +3,7 @@ import Delta from 'quill-delta';
 import logger from 'quill/core/logger.js';
 import type { Range } from 'quill';
 import type { Props } from '../types';
-import { TableCellBlock, TableTemporary } from '../formats/table';
+import { TableCellBlock, TableHeadCellBlock, TableTemporary } from '../formats/table';
 
 const Module = Quill.import('core/module');
 const Clipboard = Quill.import('modules/clipboard') as typeof Module;
@@ -52,6 +52,28 @@ class TableClipboard extends Clipboard {
             op?.attributes?.header ||
             op?.attributes?.list ||
             !op?.attributes?.[TableCellBlock.blotName]
+        ) {
+          op.attributes = { ...op.attributes, ...formats };
+        }
+      }
+    } else if (formats[TableHeadCellBlock.blotName]) {
+      for (const op of delta.ops) {
+        // External copied tables or table contents copied within an editor.
+        // Subsequent version processing.
+        if (
+          op?.attributes &&
+          (
+            op.attributes[TableTemporary.blotName] ||
+            op.attributes[TableHeadCellBlock.blotName]
+          )
+        ) {
+          return new Delta();
+        }
+        // Process externally pasted lists or headers or text.
+        if (
+            op?.attributes?.header ||
+            op?.attributes?.list ||
+            !op?.attributes?.[TableHeadCellBlock.blotName]
         ) {
           op.attributes = { ...op.attributes, ...formats };
         }

@@ -595,7 +595,7 @@ class TablePropertiesForm {
   saveTableAction() {
     const { table, tableBetter } = this.tableMenus;
     const temporary = (Quill.find(table) as TableContainer).temporary()?.domNode;
-    const td = table.querySelector('td');
+    const td = table.querySelector('td,tr');
     const attrs = this.getDiffProperties();
     const align = attrs['align'];
     delete attrs['align'];

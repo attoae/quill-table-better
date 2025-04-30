@@ -55,5 +55,7 @@ export default {
   'turquoise': 'Turkusowy',
   'lightBlue': 'Jasnoniebieski',
   'blue': 'Niebieski',
-  'purple': 'Fioletowy'
+  'purple': 'Fioletowy',
+  'firstRowIsHeader': 'Pierwszy wiersz to nagłówek',
+  'fullWidth': 'Tabela o pełnej szerokości'
 };

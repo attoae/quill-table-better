@@ -31,7 +31,7 @@ export interface Props {
   [propName: string]: string;
 }
 
-export type InsertTableHandler = (rows: number, columns: number) => void;
+export type InsertTableHandler = (rows: number, columns: number, firstRowIsHeader: boolean, fullWidth: boolean) => void;
 
 export type TableCellAllowedChildren = TableCellBlock | TableHeader | ListContainer;
 

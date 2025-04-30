@@ -1,6 +1,6 @@
 import Quill from 'quill';
 import type { InlineBlot } from 'parchment';
-import type { InsertTableHandler } from '../types';
+import type { InsertTableHandler, QuillTableBetter, UseLanguageHandler } from '../types';
 import tableIcon from '../assets/icon/table.svg';
 
 const Inline = Quill.import('blots/inline') as typeof InlineBlot;
@@ -14,7 +14,7 @@ class ToolbarTable extends Inline {};
 class TableSelect {
   computeChildren: Element[];
   root: HTMLDivElement;
-  constructor() {
+  constructor(private tableBetter?: QuillTableBetter) {
     this.computeChildren = [];
     this.root = this.createContainer();
   }
@@ -24,10 +24,23 @@ class TableSelect {
       child.classList && child.classList.remove('ql-cell-selected');
     }
     this.computeChildren = [];
-    this.root && this.setLabelContent(this.root.lastElementChild, null);
+    this.root && this.setLabelContent(this.root.querySelector('.ql-table-select-label'), null);
+  }
+
+  createCheckbox(label: string, id: string) {
+    const container = document.createElement('div');
+    const labelELement = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.setAttribute('type', 'checkbox');
+    labelELement.innerHTML = label;
+    labelELement.appendChild(checkbox);
+    container.appendChild(labelELement);
+    container.classList.add(id);
+    return container;
   }
 
   createContainer() {
+    const useLanguage = this.getUseLanguage();
     const container = document.createElement('div');
     const list = document.createElement('div');
     const label = document.createElement('div');
@@ -40,6 +53,10 @@ class TableSelect {
         fragment.appendChild(child);
       }
     }
+
+    const firstRowIsHeader = this.createCheckbox(useLanguage('firstRowIsHeader'), 'ql-table-select-header');
+    const fullWidth = this.createCheckbox(useLanguage('fullWidth'), 'ql-table-select-full-width')
+
     label.innerHTML = '0 x 0';
     container.classList.add('ql-table-select-container', 'ql-hidden');
     list.classList.add('ql-table-select-list');
@@ -47,7 +64,10 @@ class TableSelect {
     list.appendChild(fragment);
     container.appendChild(list);
     container.appendChild(label);
-    container.addEventListener('mousemove', e => this.handleMouseMove(e, container));
+    container.appendChild(firstRowIsHeader);
+    container.appendChild(fullWidth);
+
+    list.addEventListener('mousemove', e => this.handleMouseMove(e, container));
     return container;
   }
 
@@ -63,15 +83,20 @@ class TableSelect {
     return computeChildren;
   }
 
-  getSelectAttrs(element: Element) {
+  getSelectAttrs(element: Element): [number, number] {
     const row = ~~element.getAttribute('row');
     const column = ~~element.getAttribute('column');
     return [row, column];
   }
 
   handleClick(e: MouseEvent, insertTable: InsertTableHandler) {
+    const target = e.target as Element;
+    if (target.closest('.ql-table-select-container') && !target.closest('.ql-table-select-list')) {
+      // then the click is outside the table size select array
+      return;
+    }
     this.toggle(this.root);
-    const span = (e.target as Element).closest('span[row]');
+    const span = target.closest('span[row]');
     if (!span) {
       // Click between two spans
       const child = this.computeChildren[this.computeChildren.length - 1];
@@ -89,7 +114,7 @@ class TableSelect {
       child.classList && child.classList.add('ql-cell-selected');
     }
     this.computeChildren = computeChildren;
-    this.setLabelContent(container.lastElementChild, computeChildren[computeChildren.length - 1]);
+    this.setLabelContent(container.querySelector('.ql-table-select-label'), computeChildren[computeChildren.length - 1]);
   }
 
   hide(element: Element) {
@@ -99,7 +124,9 @@ class TableSelect {
 
   insertTable(child: Element, insertTable: InsertTableHandler) {
     const [row, column] = this.getSelectAttrs(child);
-    insertTable(row, column);
+    const firstRowIsHeader = (this.root.querySelector('.ql-table-select-header input') as HTMLInputElement).checked;
+    const fullWidth = (this.root.querySelector('.ql-table-select-full-width input') as HTMLInputElement).checked;
+    insertTable(row, column, firstRowIsHeader, fullWidth);
     this.hide(this.root);
   }
 
@@ -120,6 +147,12 @@ class TableSelect {
   toggle(element: Element) {
     this.clearSelected(this.computeChildren);
     element && element.classList.toggle('ql-hidden');
+  }
+
+  getUseLanguage() {
+    const { language } = this.tableBetter;
+    const useLanguage = language.useLanguage.bind(language);
+    return useLanguage;
   }
 }
 

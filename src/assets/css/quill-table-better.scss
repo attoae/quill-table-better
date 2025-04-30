@@ -516,6 +516,19 @@ button.ql-table-better {
     color: #222f3eb3;
     margin-top: 2px;
   }
+  .ql-table-select-header,
+  .ql-table-select-full-width {
+    width: 100%;
+    line-height: 16px;
+    margin-left: 5px;
+    text-align: left;
+    color: #333;
+
+    input {
+      vertical-align: bottom;
+    }
+  }
+
   span {
     width: 16px;
     height: 16px;
@@ -534,4 +547,13 @@ ol.table-list-container {
   40% { transform: translateX(2px); }
   60% { transform: translateX(-1px); }
   80% { transform: translateX(1px); }
+}
+
+// Addition to base theme to apply the same styles to header cell as body cell
+.ql-editor table th {
+  outline: none;
+}
+.ql-editor th {
+  border: 1px solid #000;
+  padding: 2px 5px;
 }

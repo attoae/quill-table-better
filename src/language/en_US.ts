@@ -55,5 +55,7 @@ export default {
   'turquoise': 'Turquoise',
   'lightBlue': 'Light blue',
   'blue': 'Blue',
-  'purple': 'Purple'
+  'purple': 'Purple',
+  'firstRowIsHeader': 'First row is a header',
+  'fullWidth': 'Full width table'
 };

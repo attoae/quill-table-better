@@ -12,6 +12,7 @@ import type {
   TableRow
 } from '../types';
 import {
+  getAdjacentRow,
   getComputeBounds,
   getComputeSelectedTds,
   getCopyTd,
@@ -19,7 +20,7 @@ import {
   getCorrectCellBlot
 } from '../utils';
 import { applyFormat } from '../utils/clipboard-matchers';
-import { TableCellBlock, TableCell } from '../formats/table';
+import { TableCellBlock, TableCell, TableHeadRow } from '../formats/table';
 import { DEVIATION } from '../config';
 
 const WHITE_LIST = [
@@ -112,7 +113,7 @@ class CellSelection {
 
   getCopyColumns(container: Element) {
     const tr = container.querySelector('tr');
-    const children = Array.from(tr.querySelectorAll('td'));
+    const children = Array.from(tr.querySelectorAll('th,td'));
     return children.reduce((sum: number, td: HTMLTableCellElement) => {
       const colspan = ~~td.getAttribute('colspan') || 1;
       return sum += colspan;
@@ -164,7 +165,14 @@ class CellSelection {
     let row = cell.parent;
     while (row && rowspan) {
       // @ts-expect-error
-      row = row[key];
+      if (!row[key]) {
+        // We jumpt to the next table part if we ran out of rows
+        // @ts-expect-error
+        row = row.parent[key]?.children[(key === 'next')? 'head' : 'tail'];
+      } else {
+        // @ts-expect-error
+        row = row[key];
+      }
       rowspan--;
     }
     return row?.domNode;
@@ -317,14 +325,14 @@ class CellSelection {
     const table = (e.target as Element).closest('table');
     if (!table) return;
     this.tableBetter.tableMenus.destroyTablePropertiesForm();
-    const startTd = (e.target as Element).closest('td');
+    const startTd = (e.target as Element).closest('th,td');
     this.startTd = startTd;
     this.endTd = startTd;
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
     
     const handleMouseMove = (e: MouseEvent) => {
-      const endTd = (e.target as Element).closest('td');
+      const endTd = (e.target as Element).closest('th,td');
       if (!endTd) return;
       const isEqualNode = startTd.isEqualNode(endTd);
       if (isEqualNode) return;
@@ -458,7 +466,7 @@ class CellSelection {
       }
       const td = up ? this.startTd : this.endTd;
       const cell = Quill.find(td) as TableCell;
-      const targetRow = cell.parent[_key];
+      const targetRow = getAdjacentRow(up, cell);
       const { left: _left, right: _right } = td.getBoundingClientRect();
       if (targetRow) {
         let cellBlot = null;
@@ -525,7 +533,7 @@ class CellSelection {
     const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
     const pasteTds = this.getPasteTds(getComputeSelectedTds(computeBounds, table.domNode, this.quill.container));
     const copyTds = copyRows.reduce((copyTds: HTMLElement[][], row: HTMLTableRowElement) => {
-      copyTds.push(Array.from(row.querySelectorAll('td')));
+      copyTds.push(Array.from(row.querySelectorAll('th,td')));
       return copyTds;
     }, []);
     const selectedTds: HTMLElement[] = [];
