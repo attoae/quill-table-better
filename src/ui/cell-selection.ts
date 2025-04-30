@@ -20,7 +20,7 @@ import {
   getCorrectCellBlot
 } from '../utils';
 import { applyFormat } from '../utils/clipboard-matchers';
-import { TableCellBlock, TableCell } from '../formats/table';
+import { TableCellBlock, TableCell, TableHeadRow } from '../formats/table';
 import { DEVIATION } from '../config';
 
 const WHITE_LIST = [
@@ -165,7 +165,14 @@ class CellSelection {
     let row = cell.parent;
     while (row && rowspan) {
       // @ts-expect-error
-      row = row[key];
+      if (!row[key]) {
+        // We jumpt to the next table part if we ran out of rows
+        // @ts-expect-error
+        row = row.parent[key]?.children[(key === 'next')? 'head' : 'tail'];
+      } else {
+        // @ts-expect-error
+        row = row[key];
+      }
       rowspan--;
     }
     return row?.domNode;

@@ -474,13 +474,14 @@ class TableContainer extends Container {
   deleteRow(rows: TableRow[], deleteTable: () => void) {
     const body = this.tbody();
     if (body == null || body.children.head == null) return;
-    if (rows.length === body.children.length) {
+    const allRows = this.allRows();
+    if (rows.length === allRows.length) {
       deleteTable();
     } else {
       const weakMap: WeakMap<TableCell, { next: TableRow, rowspan: number }> = new WeakMap();
       const columnCells: [TableRow, Props, TableCell | null, TableCell | null][] = [];
       const keys: TableCell[] = [];
-      const maxColumns = this.getMaxColumns(body.children.head.children);
+      const maxColumns = this.getMaxColumns(allRows[0].children);
       for (const row of rows) {
         const prev = this.getCorrectRow(row, maxColumns);
         prev && prev.children.forEach((child: TableCell) => {
