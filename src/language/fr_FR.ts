@@ -41,7 +41,7 @@ export default {
   'save': 'Enregistrer',
   'cancel': 'Annuler',
   'colorMsg': 'La couleur est invalide. Essayez "#FF0000" ou "rgb(255,0,0)" ou "rouge".',
-  'dimsMsg': 'La valeur est invalide. Essayez "10px" ou "2em" ou simplement "2".',
+  'dimsMsg': 'La valeur est invalide. Essayez "10px" ou "2em" ou "2%" ou simplement "2".',
   'colorPicker': 'Sélecteur de couleur',
   'removeColor': 'Supprimer la couleur',
   'black': 'Noir',

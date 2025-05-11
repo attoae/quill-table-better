@@ -41,7 +41,7 @@ export default {
   'save': 'Guardar',
   'cancel': 'Cancelar',
   'colorMsg': 'A cor é inválida. Tente "#FF0000" ou "rgb(255,0,0)" ou "vermelho".',
-  'dimsMsg': 'O valor é inválido. Tente "10px" ou "2em" ou apenas "2".',
+  'dimsMsg': 'O valor é inválido. Tente "10px" ou "2em" ou "2%" ou apenas "2".',
   'colorPicker': 'Selecionar cor',
   'removeColor': 'Remover cor',
   'black': 'Preto',

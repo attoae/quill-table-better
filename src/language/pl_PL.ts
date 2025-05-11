@@ -41,7 +41,7 @@ export default {
   'save': 'Zapisz',
   'cancel': 'Anuluj',
   'colorMsg': 'Kolor jest nieprawidłowy. Spróbuj "#FF0000" lub "rgb(255,0,0)" lub "red".',
-  'dimsMsg': 'Wartość jest nieprawidłowa. Spróbuj "10px" lub "2em" lub po prostu "2".',
+  'dimsMsg': 'Wartość jest nieprawidłowa. Spróbuj "10px" lub "2em" lub "2%" lub po prostu "2".',
   'colorPicker': 'Wybór koloru',
   'removeColor': 'Usuń kolor',
   'black': 'Czarny',

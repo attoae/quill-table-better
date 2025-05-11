@@ -17,10 +17,8 @@ import { COLORS, DEVIATION } from '../config';
 
 function addDimensionsUnit(value: string) {
   if (!value) return value;
-  const unit = value.slice(-2); // 'px' or 'em'
-  if (unit !== 'px' && unit !== 'em') {
-    return value + 'px';
-  }
+  const unit = value.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  if (!unit) return value + 'px';
   return value;
 }
 
@@ -274,8 +272,9 @@ function isValidColor(color: string) {
 
 function isValidDimensions(value: string) {
   if (!value) return true;
-  const unit = value.slice(-2); // 'px' or 'em'
-  if (unit !== 'px' && unit !== 'em') {
+  const unit = value.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  if (!unit) return true;
+  if (unit !== 'px' && unit !== 'em' && unit !== '%') {
     return !/[a-z]/.test(unit) && !isNaN(parseFloat(unit));
   }
   return true;

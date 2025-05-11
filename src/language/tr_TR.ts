@@ -41,7 +41,7 @@ export default {
     'save': 'Kaydet',
     'cancel': 'İptal',
     'colorMsg': 'Renk geçersiz. "#FF0000", "rgb(255,0,0)" veya "red" deneyin.',
-    'dimsMsg': 'Değer geçersiz. "10px", "2em" veya sadece "2" deneyin.',
+    'dimsMsg': 'Değer geçersiz. "10px", "2em" veya "2%" veya sadece "2" deneyin.',
     'colorPicker': 'Renk seçici',
     'removeColor': 'Rengi kaldır',
     'black': 'Siyah',

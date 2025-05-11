@@ -41,7 +41,7 @@ export default {
   'save': 'Speichern',
   'cancel': 'Abbrechen',
   'colorMsg': 'Die Farbe ist ungültig. Probiere "#FF0000", "rgb(255,0,0)" oder "red".',
-  'dimsMsg': 'Der Wert ist ungültig. Probiere "10px", "2em" oder einfach "2".',
+  'dimsMsg': 'Der Wert ist ungültig. Probiere "10px", "2em" oder "2%" oder einfach "2".',
   'colorPicker': 'Farbwähler',
   'removeColor': 'Farbe entfernen',
   'black': 'Schwarz',
