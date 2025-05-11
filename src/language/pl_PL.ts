@@ -5,6 +5,7 @@ export default {
   'delCol': 'Usuń kolumnę',
   'selCol': 'Wybierz kolumnę',
   'row': 'Wiersz',
+  'headerRow': 'Wiersz nagłówka',
   'insRowAbv': 'Wstaw wiersz powyżej',
   'insRowBlw': 'Wstaw wiersz poniżej',
   'delRow': 'Usuń wiersz',

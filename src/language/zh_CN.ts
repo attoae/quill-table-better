@@ -5,6 +5,7 @@ export default {
   'delCol': '删除列',
   'selCol': '选择列',
   'row': '行',
+  'headerRow': '标题行',
   'insRowAbv': '在上面插入行',
   'insRowBlw': '在下面插入行',
   'delRow': '删除行',

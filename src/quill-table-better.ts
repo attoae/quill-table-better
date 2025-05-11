@@ -299,7 +299,7 @@ const keyboardBindings = {
 function makeCellBlockHandler(key: string) {
   return {
     key,
-    format: ['table-cell-block'],
+    format: ['table-cell-block', 'table-th-block'],
     collapsed: true,
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
@@ -331,7 +331,7 @@ function makeTableArrowHandler(up: boolean) {
   return {
     key: up ? 'ArrowUp' : 'ArrowDown',
     collapsed: true,
-    format: ['table-cell'],
+    format: ['table-cell', 'table-th'],
     handler() {
       return false;
     }

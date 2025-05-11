@@ -5,6 +5,7 @@ export default {
   'delCol': 'Delete column',
   'selCol': 'Select column',
   'row': 'Row',
+  'headerRow': 'Header row',
   'insRowAbv': 'Insert row above',
   'insRowBlw': 'Insert row below',
   'delRow': 'Delete row',

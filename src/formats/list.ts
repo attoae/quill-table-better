@@ -1,7 +1,7 @@
 import Quill from 'quill';
 import type { BlockBlot, ContainerBlot } from 'parchment';
 import type { Props, TableCellChildren } from '../types';
-import { TableCell, TableCellBlock } from './table';
+import { TableCellBlock, TableCell, TableTh } from './table';
 import { getCellFormats, getCorrectCellBlot } from '../utils';
 import { CELL_ATTRIBUTE } from '../config';
 
@@ -76,14 +76,17 @@ class TableList extends List {
       if (typeof value === 'string') {
         value = { cellId: value };
       }
-      const [formats, cellId] = this.getCorrectCellFormats(value);
-      this.wrap(TableCell.blotName, formats);
+      const [formats, cellId, blotName] = this.getCorrectCellFormats(value);
+      this.wrap(blotName, formats);
       this.wrap(name, { ...formats, cellId });
     } else if (name === 'header') {
       const [formats, cellId] = this.getCellFormats(this.parent);
       this.setReplace(isReplace, formats);
       return this.replaceWith('table-header', { cellId, value });
-    } else if (name === TableCell.blotName) {
+    } else if (
+      value &&
+      (name === TableCell.blotName || name === TableTh.blotName)
+    ) {
       const listContainer = this.getListContainer(this.parent);
       if (!listContainer) return;
       const formats = listContainer.formats()[listContainer.statics.blotName];
@@ -103,19 +106,20 @@ class TableList extends List {
     return getCellFormats(cellBlot);
   }
 
-  getCorrectCellFormats(value: Props): [Props, string] {
+  getCorrectCellFormats(value: Props): [Props, string, string] {
     const cellBlot = getCorrectCellBlot(this.parent);
     if (!cellBlot) {
       const cellId = value['cellId'];
       const formats = { ...value };
       delete formats['cellId'];
-      return [formats, cellId];
+      return [formats, cellId, TableCell.blotName];
     } else {
+      const blotName = cellBlot.statics.blotName;
       const [formats, cellId] = getCellFormats(cellBlot);
       const _formats = { ...formats, ...value };
       const _cellId = _formats['cellId'] || cellId;
       delete _formats['cellId'];
-      return [_formats, _cellId];
+      return [_formats, _cellId, blotName];
     }
   }
 

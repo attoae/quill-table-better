@@ -5,6 +5,7 @@ export default {
   'delCol': 'Spalte löschen',
   'selCol': 'Spalte auswählen',
   'row': 'Zeile',
+  'headerRow': 'Kopfzeile',
   'insRowAbv': 'Zeile oberhalb einfügen',
   'insRowBlw': 'Zeile unterhalb einfügen',
   'delRow': 'Zeile löschen',

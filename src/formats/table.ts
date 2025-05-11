@@ -43,10 +43,11 @@ class TableCellBlock extends Block {
 
   format(name: string, value: string | Props) {
     const cellId = this.formats()[this.statics.blotName];
-    const TableCell = this.statics.requiredContainer;
-    const TableRow = TableCell.requiredContainer;
     if (name === TableCell.blotName && value) {
       this.wrap(TableRow.blotName);
+      return this.wrap(name, value);
+    } else if (name === TableTh.blotName && value) {
+      this.wrap(TableThRow.blotName);
       return this.wrap(name, value);
     } else if (name === TableContainer.blotName) {
       this.wrap(name, value);
@@ -84,7 +85,7 @@ class TableCellBlock extends Block {
     const cellBlot = getCorrectCellBlot(parent);
     if (!cellBlot) return;
     const [formats] = getCellFormats(cellBlot);
-    this.wrap(TableCell.blotName, formats);
+    this.wrap(cellBlot.statics.blotName, formats);
   }
 }
 
@@ -542,18 +543,23 @@ class TableContainer extends Container {
     return prev;
   }
 
-  getInsertRow(prev: TableRow, ref: TableRow | null, offset: number) {
+  getInsertRow(prev: TableRow, ref: TableRow | null, offset: number, isTh?: boolean) {
     const body = this.tbody();
-    if (body == null || body.children.head == null) return;
+    const thead = this.thead();
+    if (
+      (body == null || body.children.head == null) &&
+      (thead == null || thead.children.head == null)
+    ) return;
     const id = tableId();
-    const row = this.scroll.create(TableRow.blotName) as TableRow;
-    const maxColumns = this.getMaxColumns(body.children.head.children);
+    const blotName = isTh ? TableThRow.blotName : TableRow.blotName;
+    const row = this.scroll.create(blotName) as TableRow;
+    const maxColumns = this.getMaxColumns((body || thead).children.head.children);
     const nextMaxColumns = this.getMaxColumns(prev.children);
     if (nextMaxColumns === maxColumns) {
       prev.children.forEach((child: TableCell) => {
         const formats = { height: '24', 'data-row': id };
         const colspan = ~~child.domNode.getAttribute('colspan') || 1;
-        this.insertTableCell(colspan, formats, row);
+        this.insertTableCell(colspan, formats, row, isTh);
       });
       return row;
     } else {
@@ -564,7 +570,7 @@ class TableContainer extends Container {
         const rowspan = ~~child.domNode.getAttribute('rowspan') || 1;
         if (rowspan > 1) {
           if (offset > 0 && !ref) {
-            this.insertTableCell(colspan, formats, row);
+            this.insertTableCell(colspan, formats, row, isTh);
           } else {
             const [formats] = getCellFormats(child);
             child.replaceWith(child.statics.blotName, {
@@ -573,7 +579,7 @@ class TableContainer extends Container {
             });
           }
         } else {
-          this.insertTableCell(colspan, formats, row);
+          this.insertTableCell(colspan, formats, row, isTh);
         }
       });
       return row;
@@ -590,18 +596,21 @@ class TableContainer extends Container {
   insertColumn(position: number, isLast: boolean, w: number, offset: number) {
     const colgroup = this.colgroup() as TableColgroup;
     const body = this.tbody() as TableBody;
-    if (body == null || body.children.head == null) return;
+    const thead = this.thead() as TableThead;
+    if (
+      (body == null || body.children.head == null) &&
+      (thead == null || thead.children.head == null)
+    ) return;
     const columnCells: [TableRow, string, TableCell | null, null][] = [];
     const cols: [TableColgroup, TableCol | null][] = [];
-    let row = body.children.head;
-    while (row) {
+    const rows = this.descendants(TableRow);
+    for (const row of rows) {
       if (isLast && offset > 0) {
         const id = row.children.tail.domNode.getAttribute('data-row');
         columnCells.push([row, id, null, null]);
       } else {
         this.setColumnCells(row, columnCells, { position, width: w });
       }
-      row = row.next;
     }
     if (colgroup) {
       if (isLast) {
@@ -643,39 +652,49 @@ class TableContainer extends Container {
     colgroup.insertBefore(col, ref);
   }
 
-  insertColumnCell(row: TableRow | null, id: string, ref: TableCell | null) {
-    const colgroup = this.colgroup();
-    const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
-    const cell = this.scroll.create(TableCell.blotName, formats) as TableCell;
-    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId()) as TableCellBlock;
-    cell.appendChild(cellBlock);
+  insertColumnCell(row: TableRow | TableThRow, id: string, ref: TableCell | TableTh) {
     if (!row) {
       const tbody = this.tbody();
       row = this.scroll.create(TableRow.blotName) as TableRow;
       tbody.insertBefore(row, null);
     }
+    const colgroup = this.colgroup();
+    const formats = colgroup ? { 'data-row': id } : { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` };
+    const isTableRow = row.statics.blotName === TableRow.blotName;
+    const cellBlotName = isTableRow ? TableCell.blotName : TableTh.blotName;
+    const blockBlotName = isTableRow ? TableCellBlock.blotName : TableThBlock.blotName;
+    const cell = this.scroll.create(cellBlotName, formats) as TableCell;
+    const cellBlock = this.scroll.create(blockBlotName, cellId()) as TableCellBlock;
+    cell.appendChild(cellBlock);
     row.insertBefore(cell, ref);
     cellBlock.optimize();
     return cell;
   }
 
-  insertRow(index: number, offset: number) {
+  insertRow(index: number, offset: number, isTh?: boolean) {
     const body = this.tbody() as TableBody;
-    if (body == null || body.children.head == null) return;
-    const ref = body.children.at(index);
+    const thead = this.thead() as TableThead;
+    if (
+      (body == null || body.children.head == null) &&
+      (thead == null || thead.children.head == null)
+    ) return;
+    const parent = isTh ? thead : body;
+    const ref = isTh ? thead.children.at(index) : body.children.at(index);
     const prev = ref ? ref : body.children.at(index - 1);
-    const correctRow = this.getInsertRow(prev, ref, offset);
-    body.insertBefore(correctRow, ref);
+    const correctRow = this.getInsertRow(prev, ref, offset, isTh);
+    parent.insertBefore(correctRow, ref);
   }
 
-  insertTableCell(colspan: number, formats: Props, row: TableRow) {
+  insertTableCell(colspan: number, formats: Props, row: TableRow, isTh?: boolean) {
     if (colspan > 1) {
       Object.assign(formats, { colspan });
     } else {
       delete formats['colspan'];
     }
-    const cell = this.scroll.create(TableCell.blotName, formats) as TableCell;
-    const cellBlock = this.scroll.create(TableCellBlock.blotName, cellId()) as TableCellBlock;
+    const cellBlotName = isTh ? TableTh.blotName : TableCell.blotName;
+    const blockBlotName = isTh ? TableThBlock.blotName : TableCellBlock.blotName;
+    const cell = this.scroll.create(cellBlotName, formats) as TableCell;
+    const cellBlock = this.scroll.create(blockBlotName, cellId()) as TableCellBlock;
     cell.appendChild(cellBlock);
     row.appendChild(cell);
     cellBlock.optimize();
@@ -810,7 +829,13 @@ class TableContainer extends Container {
     // @ts-expect-error
     const [temporary] = this.descendant(TableTemporary);
     return temporary;
-  } 
+  }
+
+  thead() {
+    // @ts-expect-error
+    const [thead] = this.descendant(TableThead);
+    return thead || this.findChild('table-thead') as TableThead;
+  }
 }
 
 TableContainer.allowedChildren = [TableBody, TableThead, TableTemporary, TableColgroup];
@@ -836,8 +861,6 @@ TableCell.allowedChildren = [TableCellBlock, TableHeader, ListContainer];
 TableCellBlock.requiredContainer = TableCell;
 TableHeader.requiredContainer = TableCell;
 ListContainer.requiredContainer = TableCell;
-TableTh.allowedChildren = [TableThBlock];
-TableThBlock.requiredContainer = TableTh;
 
 function cellId() {
   const id = Math.random()

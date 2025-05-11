@@ -7,6 +7,7 @@ import type {
 } from '../types';
 import {
   TableCell,
+  TableTh,
   TableCellBlock,
   TableCol
 } from '../formats/table';
@@ -221,7 +222,10 @@ function getCorrectBounds(target: Element, container: Element) {
 
 function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | null {
   while (blot) {
-    if (blot.statics.blotName === TableCell.blotName) {
+    if (
+      blot.statics.blotName === TableCell.blotName ||
+      blot.statics.blotName === TableTh.blotName
+    ) {
       // @ts-ignore
       return blot;
     }

@@ -5,6 +5,7 @@ export default {
     'delCol': 'Sütunu sil',
     'selCol': 'Sütunu seç',
     'row': 'Satır',
+    'headerRow': 'Başlık satırı',
     'insRowAbv': 'Üstüne satır ekle',
     'insRowBlw': 'Altına satır ekle',
     'delRow': 'Satırı sil',

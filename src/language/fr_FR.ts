@@ -5,6 +5,7 @@ export default {
   'delCol': 'Supprimer la colonne',
   'selCol': 'Sélectionner la colonne',
   'row': 'Ligne',
+  'headerRow': "Ligne d'en-tête",
   'insRowAbv': 'Insérer ligne au-dessus',
   'insRowBlw': 'Insérer ligne en dessous',
   'delRow': 'Supprimer la ligne',
