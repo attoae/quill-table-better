@@ -97,6 +97,7 @@ class Table extends Module {
     quill.root.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
+    this.listenDeleteTable();
     this.registerToolbarTable(options?.toolbarTable);
   }
 
@@ -158,9 +159,33 @@ class Table extends Module {
     if (!this.quill.isEnabled()) return;
     this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
-    if (!table) return this.hideTools();
+    if (!table) {
+      this.hideTools();
+      this.handleMouseMove();
+      return;
+    }
     this.cellSelection.handleMousedown(e);
     this.cellSelection.setDisabled(true);
+  }
+
+  // If the default selection includes table cells,
+  // automatically select the entire table
+  handleMouseMove() {
+    let table: Element = null;
+    const selection = window.getSelection();
+    const handleMouseMove = (e: MouseEvent) => {
+      selection.removeAllRanges();
+      if (!table) table = (e.target as Element).closest('table');
+    }
+
+    const handleMouseup = (e: MouseEvent) => {
+      if (table) selection.selectAllChildren(table);
+      this.quill.root.removeEventListener('mousemove', handleMouseMove);
+      this.quill.root.removeEventListener('mouseup', handleMouseup);
+    }
+
+    this.quill.root.addEventListener('mousemove', handleMouseMove);
+    this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
   handleScroll() {
@@ -212,6 +237,28 @@ class Table extends Module {
   private isTable(range: Range) {
     const formats = this.quill.getFormat(range.index);
     return !!formats[TableCellBlock.blotName];
+  }
+
+  // Completely delete empty tables
+  listenDeleteTable() {
+    this.quill.on(Quill.events.TEXT_CHANGE, (delta, old, source) => {
+      if (source !== Quill.sources.USER) return;
+      const tables = this.quill.scroll.descendants(TableContainer);
+      if (!tables.length) return;
+      const deleteTables: TableContainer[] = [];
+      tables.forEach(table => {
+        const tbody = table.tbody();
+        const thead = table.thead();
+        if (!tbody && !thead) deleteTables.push(table);
+      });
+      if (deleteTables.length) {
+        for (const table of deleteTables) {
+          table.remove();
+        }
+        this.hideTools();
+        this.quill.update(Quill.sources.API);
+      }
+    });
   }
 
   private registerToolbarTable(toolbarTable: boolean) {
