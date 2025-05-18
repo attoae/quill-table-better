@@ -191,12 +191,12 @@ function getComputeSelectedTds(
 
 function getCopyTd(html: string) {
   return html
-  .replace(/data-[a-z]+="[^"]*"/g, '')
+  .replace(/data-(?!list)[a-z]+="[^"]*"/g, '')
   .replace(/class="[^"]*"/g, collapse => {
     return collapse
-      .replace('ql-cell-selected', '')
-      .replace('ql-cell-focused', '')
-      .replace('ql-table-block', '');
+      .replace(/ql-cell-[^"]*/g, '')
+      .replace(/ql-table-[^"]*/, '')
+      .replace(/table-list(?:[^"]*)?/g, '');
   })
   .replace(/class="\s*"/g, '');
 }

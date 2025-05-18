@@ -66,7 +66,6 @@ class Table extends Module {
   
   static register() {
     Quill.register(TableCellBlock, true);
-    Quill.register(TableThBlock, true);
     Quill.register(TableCell, true);
     Quill.register(TableTh, true);
     Quill.register(TableRow, true);
@@ -78,6 +77,7 @@ class Table extends Module {
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
     Quill.register({
+      [TableThBlock.blotName]: TableThBlock,
       'modules/toolbar': TableToolbar,
       'modules/clipboard': TableClipboard
     }, true);

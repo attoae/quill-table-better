@@ -522,8 +522,8 @@ class TableContainer extends Container {
     return null;
   }
 
-  getCopyTable() {
-    return this.domNode.outerHTML
+  getCopyTable(html: string = this.domNode.outerHTML) {
+    return html
       .replace(/<temporary[^>]*>(.*?)<\/temporary>/gi, '')
       .replace(/<td[^>]*>(.*?)<\/td>/gi, ($1: string) => {
         return getCopyTd($1);

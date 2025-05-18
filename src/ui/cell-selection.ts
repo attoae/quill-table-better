@@ -149,6 +149,7 @@ class CellSelection {
       html += res;
     } 
     html = `<table><tbody>${html}</tbody></table>`;
+    html = tableBlot.getCopyTable(html);
     const text = this.getText(html);
     return { html, text };
   }
