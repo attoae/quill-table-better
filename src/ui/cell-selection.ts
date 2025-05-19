@@ -334,11 +334,12 @@ class CellSelection {
   }
 
   handleMousedown(e: MouseEvent) {
-    this.clearSelected();
     const table = (e.target as Element).closest('table');
     if (!table) return;
     this.tableBetter.tableMenus.destroyTablePropertiesForm();
     const startTd = (e.target as Element).closest('td,th');
+    if (!startTd) return;
+    this.clearSelected();
     this.startTd = startTd;
     this.endTd = startTd;
     this.selectedTds = [startTd];
