@@ -172,14 +172,27 @@ class Table extends Module {
   // automatically select the entire table
   handleMouseMove() {
     let table: Element = null;
-    const selection = window.getSelection();
     const handleMouseMove = (e: MouseEvent) => {
-      selection.removeAllRanges();
       if (!table) table = (e.target as Element).closest('table');
     }
 
     const handleMouseup = (e: MouseEvent) => {
-      if (table) selection.selectAllChildren(table);
+      if (table) {
+        const tableBlot = Quill.find(table);
+        if (!tableBlot) return;
+        // @ts-expect-error
+        const index = tableBlot.offset(this.quill.scroll);
+        // @ts-expect-error
+        const length = tableBlot.length();
+        const range = this.quill.getSelection();
+        const minIndex = Math.min(range.index, index);
+        const maxIndex = Math.max(range.index + range.length, index + length);
+        this.quill.setSelection(
+          minIndex,
+          maxIndex - minIndex,
+          Quill.sources.USER
+        );
+      }
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
