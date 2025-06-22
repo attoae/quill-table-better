@@ -8,6 +8,8 @@ import ru_RU from './ru_RU';
 import tr_TR from './tr_TR';
 import pt_PT from './pt_PT';
 import ja_JP from './ja_JP';
+import pt_BR from './pt_BR';
+import cs_CZ from './cs_CZ';
 
 interface Config {
   [propName: string]: Props;
@@ -32,7 +34,9 @@ class Language {
       ru_RU,
       tr_TR,
       pt_PT,
-      ja_JP
+      ja_JP,
+      pt_BR,
+      cs_CZ
     };
     this.init(language);
   }
