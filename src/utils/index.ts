@@ -23,9 +23,13 @@ function addDimensionsUnit(value: string) {
 }
 
 function convertUnitToInteger(withUnit: string) {
-  if (typeof withUnit !== 'string' || !withUnit) return withUnit;
-  const unit = withUnit.slice(-2); // 'px' or 'em'
-  const numberPart = withUnit.slice(0, -2);
+  if (
+    typeof withUnit !== 'string' ||
+    !withUnit ||
+    withUnit.endsWith('%')
+  ) return withUnit;
+  const unit = withUnit.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  const numberPart = withUnit.slice(0, -unit.length);
   const integerPart = Math.round(parseFloat(numberPart));
   return `${integerPart}${unit}`;
 }
@@ -233,6 +237,17 @@ function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | nu
   return null;
 }
 
+function getCorrectWidth(width: number, isPercent: boolean) {
+  const container = document.querySelector('.ql-editor');
+  const { clientWidth } = container;
+  const computedStyle = getComputedStyle(container);
+  const pl = ~~computedStyle.getPropertyValue('padding-left');
+  const pr = ~~computedStyle.getPropertyValue('padding-right');
+  const w = clientWidth - pl - pr;
+  if (!isPercent) return `${width}px`;
+  return `${((width / w) * 100).toFixed(2)}%`;
+}
+
 function getElementStyle(node: HTMLElement, rules: string[]) {
   const computedStyle = getComputedStyle(node);
   const style = node.style;
@@ -362,6 +377,7 @@ function updateTableWidth(
 ) {
   const tableBlot = Quill.find(table) as TableContainer;
   if (!tableBlot) return;
+  const isPercent = tableBlot.isPercent();
   const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
   if (colgroup) {
@@ -372,11 +388,11 @@ function updateTableWidth(
       _width += width;
     }
     setElementProperty(temporary.domNode, {
-      width: `${_width}px`
+      width: getCorrectWidth(_width, isPercent)
     });
   } else {
     setElementProperty(temporary.domNode, {
-      width: `${~~(tableBounds.width + change)}px`
+      width: getCorrectWidth(tableBounds.width + change, isPercent)
     });
   }
 }
@@ -398,6 +414,7 @@ export {
   getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot,
+  getCorrectWidth,
   getElementStyle,
   isDimensions,
   isValidColor,

@@ -31,7 +31,6 @@ import Language from './language';
 import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
-import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable, { TableSelect } from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
@@ -221,7 +220,7 @@ class Table extends Module {
     const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
-    const style = `width: ${CELL_DEFAULT_WIDTH * columns}px`;
+    const style = `width: 100%`;
     const formats = this.quill.getFormat(range.index - 1);
     const [, offset] = this.quill.getLine(range.index);
     const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
@@ -237,7 +236,7 @@ class Table extends Module {
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
           [TableCellBlock.blotName]: cellId(),
-          [TableCell.blotName]: { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` }
+          [TableCell.blotName]: { 'data-row': id }
         });
       }, memo);
     }, base);

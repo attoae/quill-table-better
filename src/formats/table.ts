@@ -700,6 +700,14 @@ class TableContainer extends Container {
     cellBlock.optimize();
   }
 
+  isPercent() {
+    const width =
+      this.domNode.getAttribute('width') ||
+      this.domNode.style.getPropertyValue('width');
+    if (!width) return false;
+    return width.endsWith('%');
+  }
+
   optimize(context: unknown) {
     super.optimize(context);
     const temporaries = this.descendants(TableTemporary);
