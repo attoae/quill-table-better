@@ -55,5 +55,7 @@ export default {
   'turquoise': 'Türkis',
   'lightBlue': 'Hellblau',
   'blue': 'Blau',
-  'purple': 'Lila'
+  'purple': 'Lila',
+  'firstRowIsHeader': 'Erste Zeile ist eine Kopfzeile',
+  'fullWidth': 'Tabelle mit voller Breite'
 };

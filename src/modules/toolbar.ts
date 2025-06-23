@@ -118,6 +118,11 @@ class TableToolbar extends Toolbar {
   }
 
   private toolbarAttach(input: HTMLElement, format: string, e: Event | MouseEvent) {
+    if (input.classList.contains('ql-table-better') && input.querySelector('.ql-table-select-container:not(.ql-hidden)')) {
+      // The dropdown menu is a child of the button, if the click bubbles up to the button but the dropdown
+      // is visible we should just ignore it
+      return;
+    }
     let value;
     if (input.tagName === 'SELECT') {
       // @ts-expect-error

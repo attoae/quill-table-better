@@ -9,6 +9,10 @@ import {
   TableCell,
   TableRow,
   TableBody,
+  TableHeadCellBlock,
+  TableHeadCell,
+  TableHeadRow,
+  TableHead,
   TableTemporary,
   TableContainer,
   tableId,
@@ -21,6 +25,7 @@ import {
   matchTable,
   matchTableCell,
   matchTableCol,
+  matchTableHeadCell,
   matchTableTemporary
 } from './utils/clipboard-matchers';
 import Language from './language';
@@ -65,6 +70,10 @@ class Table extends Module {
     Quill.register(TableCell, true);
     Quill.register(TableRow, true);
     Quill.register(TableBody, true);
+    Quill.register(TableHeadCellBlock, true);
+    Quill.register(TableHeadCell, true);
+    Quill.register(TableHeadRow, true);
+    Quill.register(TableHead, true);
     Quill.register(TableTemporary, true);
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
@@ -77,7 +86,8 @@ class Table extends Module {
 
   constructor(quill: Quill, options: Options) {
     super(quill, options);
-    quill.clipboard.addMatcher('td, th', matchTableCell);
+    quill.clipboard.addMatcher('td', matchTableCell);
+    quill.clipboard.addMatcher('th', matchTableHeadCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
     quill.clipboard.addMatcher('table', matchTableTemporary);
@@ -85,7 +95,7 @@ class Table extends Module {
     this.cellSelection = new CellSelection(quill, this);
     this.operateLine = new OperateLine(quill, this);
     this.tableMenus = new TableMenus(quill, this);
-    this.tableSelect = new TableSelect();
+    this.tableSelect = new TableSelect(this);
     quill.root.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
@@ -127,7 +137,7 @@ class Table extends Module {
   ): [null, null, null, -1] | [TableContainer, TableRow, TableCell, number] {
     if (range == null) return [null, null, null, -1];
     const [block, offset] = this.quill.getLine(range.index);
-    if (block == null || block.statics.blotName !== TableCellBlock.blotName) {
+    if (block == null || (block.statics.blotName !== TableCellBlock.blotName && block.statics.blotName !== TableHeadCellBlock.blotName)) {
       return [null, null, null, -1];
     }
     const cell = block.parent as TableCell;
@@ -171,14 +181,14 @@ class Table extends Module {
     this.tableMenus?.destroyTablePropertiesForm();
   }
 
-  insertTable(rows: number, columns: number) {
+  insertTable(rows: number, columns: number, firstRowIsHeader: boolean, fullWidth: boolean) {
     const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
-    const style = `width: ${CELL_DEFAULT_WIDTH * columns}px`;
+    const style = (fullWidth)? 'width: 100%' : `width: ${CELL_DEFAULT_WIDTH * columns}px`;
     const formats = this.quill.getFormat(range.index - 1);
     const [, offset] = this.quill.getLine(range.index);
-    const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
+    const isExtra = !!formats[(firstRowIsHeader)? TableHeadCellBlock.blotName : TableCellBlock.blotName] || offset !== 0;
     const _offset = isExtra ? 2 : 1;
     const extraDelta = isExtra ? new Delta().insert('\n') : new Delta();
     const base = new Delta()
@@ -186,8 +196,16 @@ class Table extends Module {
       .delete(range.length)
       .concat(extraDelta)
       .insert('\n', { [TableTemporary.blotName]: { style } });
-    const delta = new Array(rows).fill(0).reduce(memo => {
+    const delta = new Array(rows).fill(0).reduce((memo, value, index) => {
       const id = tableId();
+      if (firstRowIsHeader && index === 0) {
+        return new Array(columns).fill('\n').reduce((memo, text) => {
+          return memo.insert(text, {
+            [TableHeadCellBlock.blotName]: cellId(),
+            [TableHeadCell.blotName]: { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` }
+          });
+        }, memo);
+      }
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
           [TableCellBlock.blotName]: cellId(),
@@ -323,7 +341,7 @@ function makeTableArrowHandler(up: boolean) {
   return {
     key: up ? 'ArrowUp' : 'ArrowDown',
     collapsed: true,
-    format: ['table-cell'],
+    format: ['table-cell', 'table-head-cell'],
     handler() {
       return false;
     }

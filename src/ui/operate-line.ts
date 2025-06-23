@@ -1,5 +1,5 @@
 import Quill from 'quill';
-import type {
+import {
   QuillTableBetter,
   TableCell,
   TableColgroup
@@ -187,7 +187,7 @@ class OperateLine {
   handleMouseMove(e: MouseEvent) {
     if (!this.quill.isEnabled()) return;
     const tableNode = (e.target as Element).closest('table');
-    const cellNode = (e.target as Element).closest('td');
+    const cellNode = (e.target as Element).closest('td,th') as HTMLElement;
     const mousePosition = {
       clientX: e.clientX,
       clientY: e.clientY
@@ -244,7 +244,7 @@ class OperateLine {
       }
     } else {
       const isLastCell = cell.nextElementSibling == null;
-      const rows = cell.parentElement.parentElement.children;
+      const rows = cell.parentElement.parentElement.parentElement.querySelectorAll('tr');
       const preNodes: [Element, string][] = [];
       for (const row of rows) {
         const cells = row.children;

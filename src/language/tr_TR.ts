@@ -55,6 +55,7 @@ export default {
     'turquoise': 'Turkuaz',
     'lightBlue': 'Açık mavi',
     'blue': 'Mavi',
-    'purple': 'Mor'
+    'purple': 'Mor',
+    'firstRowIsHeader': 'İlk satır bir başlıktır',
+    'fullWidth': 'Tam genişlikte tablo'
   };
-  
