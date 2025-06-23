@@ -7,6 +7,7 @@ import type {
 } from '../types';
 import {
   TableCell,
+  TableTh,
   TableCellBlock,
   TableCol
 } from '../formats/table';
@@ -16,17 +17,19 @@ import { COLORS, DEVIATION } from '../config';
 
 function addDimensionsUnit(value: string) {
   if (!value) return value;
-  const unit = value.slice(-2); // 'px' or 'em'
-  if (unit !== 'px' && unit !== 'em') {
-    return value + 'px';
-  }
+  const unit = value.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  if (!unit) return value + 'px';
   return value;
 }
 
 function convertUnitToInteger(withUnit: string) {
-  if (typeof withUnit !== 'string' || !withUnit) return withUnit;
-  const unit = withUnit.slice(-2); // 'px' or 'em'
-  const numberPart = withUnit.slice(0, -2);
+  if (
+    typeof withUnit !== 'string' ||
+    !withUnit ||
+    withUnit.endsWith('%')
+  ) return withUnit;
+  const unit = withUnit.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  const numberPart = withUnit.slice(0, -unit.length);
   const integerPart = Math.round(parseFloat(numberPart));
   return `${integerPart}${unit}`;
 }
@@ -192,12 +195,12 @@ function getComputeSelectedTds(
 
 function getCopyTd(html: string) {
   return html
-  .replace(/data-[a-z]+="[^"]*"/g, '')
+  .replace(/data-(?!list)[a-z]+="[^"]*"/g, '')
   .replace(/class="[^"]*"/g, collapse => {
     return collapse
-      .replace('ql-cell-selected', '')
-      .replace('ql-cell-focused', '')
-      .replace('ql-table-block', '');
+      .replace(/ql-cell-[^"]*/g, '')
+      .replace(/ql-table-[^"]*/, '')
+      .replace(/table-list(?:[^"]*)?/g, '');
   })
   .replace(/class="\s*"/g, '');
 }
@@ -221,7 +224,10 @@ function getCorrectBounds(target: Element, container: Element) {
 
 function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | null {
   while (blot) {
-    if (blot.statics.blotName === TableCell.blotName) {
+    if (
+      blot.statics.blotName === TableCell.blotName ||
+      blot.statics.blotName === TableTh.blotName
+    ) {
       // @ts-ignore
       return blot;
     }
@@ -229,6 +235,17 @@ function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | nu
     blot = blot.parent;
   }
   return null;
+}
+
+function getCorrectWidth(width: number, isPercent: boolean) {
+  const container = document.querySelector('.ql-editor');
+  const { clientWidth } = container;
+  const computedStyle = getComputedStyle(container);
+  const pl = ~~computedStyle.getPropertyValue('padding-left');
+  const pr = ~~computedStyle.getPropertyValue('padding-right');
+  const w = clientWidth - pl - pr;
+  if (!isPercent) return `${width}px`;
+  return `${((width / w) * 100).toFixed(2)}%`;
 }
 
 function getElementStyle(node: HTMLElement, rules: string[]) {
@@ -270,8 +287,9 @@ function isValidColor(color: string) {
 
 function isValidDimensions(value: string) {
   if (!value) return true;
-  const unit = value.slice(-2); // 'px' or 'em'
-  if (unit !== 'px' && unit !== 'em') {
+  const unit = value.replace(/\d+\.?\d*/, ''); // 'px' or 'em' or '%'
+  if (!unit) return true;
+  if (unit !== 'px' && unit !== 'em' && unit !== '%') {
     return !/[a-z]/.test(unit) && !isNaN(parseFloat(unit));
   }
   return true;
@@ -359,6 +377,7 @@ function updateTableWidth(
 ) {
   const tableBlot = Quill.find(table) as TableContainer;
   if (!tableBlot) return;
+  const isPercent = tableBlot.isPercent();
   const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
   if (colgroup) {
@@ -369,11 +388,11 @@ function updateTableWidth(
       _width += width;
     }
     setElementProperty(temporary.domNode, {
-      width: `${_width}px`
+      width: getCorrectWidth(_width, isPercent)
     });
   } else {
     setElementProperty(temporary.domNode, {
-      width: `${~~(tableBounds.width + change)}px`
+      width: getCorrectWidth(tableBounds.width + change, isPercent)
     });
   }
 }
@@ -395,6 +414,7 @@ export {
   getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot,
+  getCorrectWidth,
   getElementStyle,
   isDimensions,
   isValidColor,

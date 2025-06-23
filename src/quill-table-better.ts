@@ -6,9 +6,13 @@ import type { BindingObject, Context } from './types/keyboard';
 import {
   cellId,
   TableCellBlock,
+  TableThBlock,
   TableCell,
+  TableTh,
   TableRow,
+  TableThRow,
   TableBody,
+  TableThead,
   TableTemporary,
   TableContainer,
   tableId,
@@ -27,7 +31,6 @@ import Language from './language';
 import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
-import { CELL_DEFAULT_WIDTH } from './config';
 import ToolbarTable, { TableSelect } from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
@@ -63,13 +66,17 @@ class Table extends Module {
   static register() {
     Quill.register(TableCellBlock, true);
     Quill.register(TableCell, true);
+    Quill.register(TableTh, true);
     Quill.register(TableRow, true);
+    Quill.register(TableThRow, true);
     Quill.register(TableBody, true);
+    Quill.register(TableThead, true);
     Quill.register(TableTemporary, true);
     Quill.register(TableContainer, true);
     Quill.register(TableCol, true);
     Quill.register(TableColgroup, true);
     Quill.register({
+      [TableThBlock.blotName]: TableThBlock,
       'modules/toolbar': TableToolbar,
       'modules/clipboard': TableClipboard
     }, true);
@@ -89,6 +96,7 @@ class Table extends Module {
     quill.root.addEventListener('keyup', this.handleKeyup.bind(this));
     quill.root.addEventListener('mousedown', this.handleMousedown.bind(this));
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
+    this.listenDeleteTable();
     this.registerToolbarTable(options?.toolbarTable);
   }
 
@@ -150,9 +158,46 @@ class Table extends Module {
     if (!this.quill.isEnabled()) return;
     this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
-    if (!table) return this.hideTools();
+    if (!table) {
+      this.hideTools();
+      this.handleMouseMove();
+      return;
+    }
     this.cellSelection.handleMousedown(e);
     this.cellSelection.setDisabled(true);
+  }
+
+  // If the default selection includes table cells,
+  // automatically select the entire table
+  handleMouseMove() {
+    let table: Element = null;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!table) table = (e.target as Element).closest('table');
+    }
+
+    const handleMouseup = (e: MouseEvent) => {
+      if (table) {
+        const tableBlot = Quill.find(table);
+        if (!tableBlot) return;
+        // @ts-expect-error
+        const index = tableBlot.offset(this.quill.scroll);
+        // @ts-expect-error
+        const length = tableBlot.length();
+        const range = this.quill.getSelection();
+        const minIndex = Math.min(range.index, index);
+        const maxIndex = Math.max(range.index + range.length, index + length);
+        this.quill.setSelection(
+          minIndex,
+          maxIndex - minIndex,
+          Quill.sources.USER
+        );
+      }
+      this.quill.root.removeEventListener('mousemove', handleMouseMove);
+      this.quill.root.removeEventListener('mouseup', handleMouseup);
+    }
+
+    this.quill.root.addEventListener('mousemove', handleMouseMove);
+    this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
   handleScroll() {
@@ -175,7 +220,7 @@ class Table extends Module {
     const range = this.quill.getSelection(true);
     if (range == null) return;
     if (this.isTable(range)) return;
-    const style = `width: ${CELL_DEFAULT_WIDTH * columns}px`;
+    const style = `width: 100%`;
     const formats = this.quill.getFormat(range.index - 1);
     const [, offset] = this.quill.getLine(range.index);
     const isExtra = !!formats[TableCellBlock.blotName] || offset !== 0;
@@ -191,7 +236,7 @@ class Table extends Module {
       return new Array(columns).fill('\n').reduce((memo, text) => {
         return memo.insert(text, {
           [TableCellBlock.blotName]: cellId(),
-          [TableCell.blotName]: { 'data-row': id, width: `${CELL_DEFAULT_WIDTH}` }
+          [TableCell.blotName]: { 'data-row': id }
         });
       }, memo);
     }, base);
@@ -204,6 +249,28 @@ class Table extends Module {
   private isTable(range: Range) {
     const formats = this.quill.getFormat(range.index);
     return !!formats[TableCellBlock.blotName];
+  }
+
+  // Completely delete empty tables
+  listenDeleteTable() {
+    this.quill.on(Quill.events.TEXT_CHANGE, (delta, old, source) => {
+      if (source !== Quill.sources.USER) return;
+      const tables = this.quill.scroll.descendants(TableContainer);
+      if (!tables.length) return;
+      const deleteTables: TableContainer[] = [];
+      tables.forEach(table => {
+        const tbody = table.tbody();
+        const thead = table.thead();
+        if (!tbody && !thead) deleteTables.push(table);
+      });
+      if (deleteTables.length) {
+        for (const table of deleteTables) {
+          table.remove();
+        }
+        this.hideTools();
+        this.quill.update(Quill.sources.API);
+      }
+    });
   }
 
   private registerToolbarTable(toolbarTable: boolean) {
@@ -291,7 +358,7 @@ const keyboardBindings = {
 function makeCellBlockHandler(key: string) {
   return {
     key,
-    format: ['table-cell-block'],
+    format: ['table-cell-block', 'table-th-block'],
     collapsed: true,
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
@@ -323,7 +390,7 @@ function makeTableArrowHandler(up: boolean) {
   return {
     key: up ? 'ArrowUp' : 'ArrowDown',
     collapsed: true,
-    format: ['table-cell'],
+    format: ['table-cell', 'table-th'],
     handler() {
       return false;
     }

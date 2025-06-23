@@ -8,7 +8,6 @@ import type {
   TableCellMap,
   TableColgroup,
   TableContainer,
-  TableRow,
   UseLanguageHandler
 } from '../types';
 import {
@@ -34,7 +33,11 @@ import deleteIcon from '../assets/icon/delete.svg';
 import copyIcon from '../assets/icon/copy.svg';
 import {
   TableCell,
-  tableId
+  tableId,
+  TableTh,
+  TableRow,
+  TableThRow,
+  TableThead
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
 import {
@@ -49,6 +52,8 @@ interface Children {
   [propName: string]: {
     content: string;
     handler: () => void;
+    divider?: boolean;
+    createSwitch?: boolean;
   }
 }
 
@@ -100,16 +105,31 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
           handler() {
             this.deleteColumn();
           }
+        },
+        select: {
+          content: useLanguage('selCol'),
+          handler() {
+            this.selectColumn();
+          }
         }
       }
     },
     row: {
       content: useLanguage('row'),
       icon: rowIcon,
-      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
-        this.toggleAttribute(list, tooltip);
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent) {
+        this.toggleAttribute(list, tooltip, e);
       },
       children: {
+        header: {
+          content: useLanguage('headerRow'),
+          divider: true,
+          createSwitch: true,
+          handler() {
+            this.toggleHeaderRow();
+            this.toggleHeaderRowSwitch();
+          }
+        },
         above: {
           content: useLanguage('insRowAbv'),
           handler() {
@@ -130,6 +150,12 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
           content: useLanguage('delRow'),
           handler() {
             this.deleteRow();
+          }
+        },
+        select: {
+          content: useLanguage('selRow'),
+          handler() {
+            this.selectRow();
           }
         }
       }
@@ -240,6 +266,7 @@ class TableMenus {
   scroll: boolean;
   tableBetter: QuillTableBetter;
   tablePropertiesForm: TablePropertiesForm;
+  tableHeaderRow: HTMLElement | null;
   constructor(quill: Quill, tableBetter?: QuillTableBetter) {
     this.quill = quill;
     this.table = null;
@@ -248,8 +275,65 @@ class TableMenus {
     this.scroll = false;
     this.tableBetter = tableBetter;
     this.tablePropertiesForm = null;
+    this.tableHeaderRow = null;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
     this.root = this.createMenus();
+  }
+
+  convertToRow() {
+    const tableBlot = Quill.find(this.table) as TableContainer;
+    const tbody = tableBlot.tbody();
+    const ref = tbody.children.head;
+    const rows = this.getCorrectRows();
+    let row = rows[0].next;
+    while (row) {
+      rows.unshift(row);
+      row = row.next;
+    }
+    for (const row of rows) {
+      const tdRow = this.quill.scroll.create(TableRow.blotName) as TableRow;
+      row.children.forEach(th => {
+        const tdFormats = th.formats()[th.statics.blotName];
+        const domNode = th.domNode.cloneNode(true);
+        const td = this.quill.scroll.create(domNode).replaceWith(TableCell.blotName, tdFormats);
+        tdRow.insertBefore(td, null);
+      });
+      tbody.insertBefore(tdRow, ref);
+      row.remove();
+    }
+    // @ts-expect-error
+    const [td] = tbody.descendant(TableCell);
+    this.tableBetter.cellSelection.setSelected(td.domNode);
+  }
+
+  convertToHeaderRow() {
+    const tableBlot = Quill.find(this.table) as TableContainer;
+    let thead = tableBlot.thead();
+    if (!thead) {
+      const tbody = tableBlot.tbody();
+      thead = this.quill.scroll.create(TableThead.blotName) as TableThead;
+      tableBlot.insertBefore(thead, tbody);
+    }
+    const rows = this.getCorrectRows();
+    let row = rows[0].prev;
+    while (row) {
+      rows.unshift(row);
+      row = row.prev;
+    }
+    for (const row of rows) {
+      const thRow = this.quill.scroll.create(TableThRow.blotName) as TableThRow;
+      row.children.forEach(td => {
+        const tdFormats = td.formats()[td.statics.blotName];
+        const domNode = td.domNode.cloneNode(true);
+        const th = this.quill.scroll.create(domNode).replaceWith(TableTh.blotName, tdFormats);
+        thRow.insertBefore(th, null);
+      });
+      thead.insertBefore(thRow, null);
+      row.remove();
+    }
+    // @ts-expect-error
+    const [th] = thead.descendant(TableTh);
+    this.tableBetter.cellSelection.setSelected(th.domNode);
   }
 
   async copyTable() {
@@ -278,17 +362,28 @@ class TableMenus {
     if (!children) return null;
     const container = document.createElement('ul');
     for (const [, child] of Object.entries(children)) {
-      const { content, handler } = child;
+      const { content, divider, createSwitch, handler } = child;
       const list = document.createElement('li');
-      list.innerText = content;
+      if (createSwitch) {
+        list.classList.add('ql-table-header-row');
+        list.appendChild(this.createSwitch(content));
+        this.tableHeaderRow = list;
+      } else {
+        list.innerText = content;
+      }
       list.addEventListener('click', handler.bind(this));
       container.appendChild(list);
+      if (divider) {
+        const dividerLine = document.createElement('li');
+        dividerLine.classList.add('ql-table-divider');
+        container.appendChild(dividerLine);
+      }
     }
     container.classList.add('ql-table-dropdown-list', 'ql-hidden');
     return container;
   }
 
-  createMenu(left: string, right: string, isDropDown: boolean) {
+  createMenu(left: string, right: string, isDropDown: boolean, category: string) {
     const container = document.createElement('div');
     const dropDown = document.createElement('span');
     if (isDropDown) {
@@ -298,6 +393,7 @@ class TableMenus {
     }
     container.classList.add('ql-table-dropdown');
     dropDown.classList.add('ql-table-tooltip-hover');
+    container.setAttribute('data-category', category);
     container.appendChild(dropDown);
     return container;
   }
@@ -308,11 +404,11 @@ class TableMenus {
     const useLanguage = language.useLanguage.bind(language);
     const container = document.createElement('div');
     container.classList.add('ql-table-menus-container', 'ql-hidden');
-    for (const [, val] of Object.entries(getMenusConfig(useLanguage, menus))) {
+    for (const [category, val] of Object.entries(getMenusConfig(useLanguage, menus))) {
       const { content, icon, children, handler } = val;
       const list = this.createList(children);
       const tooltip = createTooltip(content);
-      const menu = this.createMenu(icon, downIcon, !!children);
+      const menu = this.createMenu(icon, downIcon, !!children, category);
       menu.appendChild(tooltip);
       list && menu.appendChild(list);
       container.appendChild(menu);
@@ -322,39 +418,37 @@ class TableMenus {
     return container;
   }
 
+  createSwitch(content: string) {
+    const fragment = document.createDocumentFragment();
+    const title = document.createElement('span');
+    const switchContainer = document.createElement('span');
+    const switchInner = document.createElement('span');
+    title.innerText = content;
+    switchContainer.classList.add('ql-table-switch');
+    switchInner.classList.add('ql-table-switch-inner');
+    switchInner.setAttribute('aria-checked', 'false');
+    switchContainer.appendChild(switchInner);
+    fragment.append(title, switchContainer);
+    return fragment;
+  }
+
   deleteColumn(isKeyboard: boolean = false) {
     const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
     const bounds = this.table.getBoundingClientRect();
-    const deleteTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const selectTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
     const deleteCols = getComputeSelectedCols(computeBounds, this.table, this.quill.container);
     const tableBlot = (Quill.find(leftTd) as TableCell).table();
-    const { changeTds, delTds } = this.getCorrectTds(deleteTds, computeBounds, leftTd, rightTd);
-    if (isKeyboard && delTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
+    const { changeTds, selTds } = this.getCorrectTds(selectTds, computeBounds, leftTd, rightTd);
+    if (isKeyboard && selTds.length !== this.tableBetter.cellSelection.selectedTds.length) return;
     this.tableBetter.cellSelection.updateSelected('column');
-    tableBlot.deleteColumn(changeTds, delTds, this.deleteTable.bind(this), deleteCols);
+    tableBlot.deleteColumn(changeTds, selTds, this.deleteTable.bind(this), deleteCols);
     updateTableWidth(this.table, bounds, computeBounds.left - computeBounds.right);
     this.updateMenus();
   }
 
   deleteRow(isKeyboard: boolean = false) {
     const selectedTds = this.tableBetter.cellSelection.selectedTds;
-    const map: { [propName: string]: TableRow } = {};
-    for (const td of selectedTds) {
-      let rowspan = ~~td.getAttribute('rowspan') || 1;
-      let row = Quill.find(td.parentElement) as TableRow;
-      if (rowspan > 1) {
-        while (row && rowspan) {
-          const id = row.children.head.domNode.getAttribute('data-row');
-          if (!map[id]) map[id] = row;
-          row = row.next;
-          rowspan--;
-        }
-      } else {
-        const id = td.getAttribute('data-row');
-        if (!map[id]) map[id] = row;
-      }
-    }
-    const rows: TableRow[] = Object.values(map);
+    const rows = this.getCorrectRows();
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
         return sum += row.children.length;
@@ -380,6 +474,17 @@ class TableMenus {
     if (!this.tablePropertiesForm) return;
     this.tablePropertiesForm.removePropertiesForm();
     this.tablePropertiesForm = null;
+  }
+
+  disableMenu(category: string, disabled?: boolean) {
+    if (!this.root) return;
+    const menu = this.root.querySelector(`[data-category=${category}]`);
+    if (!menu) return;
+    if (disabled) {
+      menu.classList.add('ql-table-disabled');
+    } else {
+      menu.classList.remove('ql-table-disabled');
+    }
   }
 
   getCellsOffset(
@@ -457,37 +562,37 @@ class TableMenus {
   }
 
   getCorrectTds(
-    deleteTds: Element[],
+    selectTds: Element[],
     computeBounds: CorrectBound,
     leftTd: Element,
     rightTd: Element
   ) {
     const changeTds: [Element, number][] = [];
-    const delTds = [];
+    const selTds = [];
     const colgroup = (Quill.find(leftTd) as TableCell).table().colgroup() as TableColgroup;
     const leftColspan = (~~leftTd.getAttribute('colspan') || 1);
     const rightColspan = (~~rightTd.getAttribute('colspan') || 1);
     if (colgroup) {
-      for (const td of deleteTds) {
+      for (const td of selectTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
         if (
           bounds.left + DEVIATION >= computeBounds.left &&
           bounds.right <= computeBounds.right + DEVIATION
         ) {
-          delTds.push(td);
+          selTds.push(td);
         } else {
           const offset = this.getColsOffset(colgroup, computeBounds, bounds);
           changeTds.push([td, offset]);
         }
       }
     } else {
-      for (const td of deleteTds) {
+      for (const td of selectTds) {
         const bounds = getCorrectBounds(td, this.quill.container);
         if (
           bounds.left + DEVIATION >= computeBounds.left &&
           bounds.right <= computeBounds.right + DEVIATION
         ) {
-          delTds.push(td);
+          selTds.push(td);
         } else {
           const offset = this.getCellsOffset(
             computeBounds,
@@ -499,7 +604,28 @@ class TableMenus {
         }
       }
     }
-    return { changeTds, delTds };
+    return { changeTds, selTds };
+  }
+
+  getCorrectRows() {
+    const selectedTds = this.tableBetter.cellSelection.selectedTds;
+    const map: { [propName: string]: TableRow } = {};
+    for (const td of selectedTds) {
+      let rowspan = ~~td.getAttribute('rowspan') || 1;
+      let row = Quill.find(td.parentElement) as TableRow;
+      if (rowspan > 1) {
+        while (row && rowspan) {
+          const id = row.children.head.domNode.getAttribute('data-row');
+          if (!map[id]) map[id] = row;
+          row = row.next;
+          rowspan--;
+        }
+      } else {
+        const id = td.getAttribute('data-row');
+        if (!map[id]) map[id] = row;
+      }
+    }
+    return Object.values(map);
   }
 
   getDiffOffset(map: TableCellMap, colspan?: number) {
@@ -673,11 +799,12 @@ class TableMenus {
     const tdBlot = Quill.find(td) as TableCell;
     const index = tdBlot.rowOffset();
     const tableBlot = tdBlot.table();
+    const isTh = tdBlot.statics.blotName === TableTh.blotName;
     if (offset > 0) {
       const rowspan = ~~td.getAttribute('rowspan') || 1;
-      tableBlot.insertRow(index + offset + rowspan - 1, offset);
+      tableBlot.insertRow(index + offset + rowspan - 1, offset, isTh);
     } else {
-      tableBlot.insertRow(index + offset, offset);
+      tableBlot.insertRow(index + offset, offset, isTh);
     }
     this.quill.scrollSelectionIntoView();
   }
@@ -739,6 +866,24 @@ class TableMenus {
     head.format(leftTdBlot.statics.blotName, { ...formats, colspan, rowspan: rowspan - offset });
     this.tableBetter.cellSelection.setSelected(head.parent.domNode);
     this.quill.scrollSelectionIntoView();
+  }
+
+  selectColumn() {
+    const { computeBounds, leftTd, rightTd } = this.getSelectedTdsInfo();
+    const selectTds = getComputeSelectedTds(computeBounds, this.table, this.quill.container, 'column');
+    const { selTds } = this.getCorrectTds(selectTds, computeBounds, leftTd, rightTd);
+    this.tableBetter.cellSelection.setSelectedTds(selTds);
+    this.updateMenus();
+  }
+
+  selectRow() {
+    const rows = this.getCorrectRows();
+    const selectTds = rows.reduce((selTds: Element[], row: TableRow) => {
+      selTds.push(...Array.from(row.domNode.children));
+      return selTds;
+    }, []);
+    this.tableBetter.cellSelection.setSelectedTds(selectTds);
+    this.updateMenus();
   }
 
   setCellsMap(cell: TableCell, map: TableCellMap) {
@@ -809,7 +954,9 @@ class TableMenus {
     this.quill.scrollSelectionIntoView();
   }
 
-  toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement) {
+  toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent) {
+    // @ts-expect-error
+    if (e && e.target.closest('li.ql-table-header-row')) return;
     if (this.prevList && !this.prevList.isEqualNode(list)) {
       this.prevList.classList.add('ql-hidden');
       this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
@@ -819,6 +966,26 @@ class TableMenus {
     tooltip.classList.toggle('ql-table-tooltip-hidden');
     this.prevList = list;
     this.prevTooltip = tooltip;
+  }
+
+  toggleHeaderRow() {
+    const { selectedTds, hasTdTh } = this.tableBetter.cellSelection;
+    const { hasTd, hasTh } = hasTdTh(selectedTds);
+    if (!hasTd && hasTh) {
+      this.convertToRow();
+    } else {
+      this.convertToHeaderRow();
+    }
+  }
+
+  toggleHeaderRowSwitch(value?: string) {
+    if (!this.tableHeaderRow) return;
+    const switchInner = this.tableHeaderRow.querySelector('.ql-table-switch-inner');
+    if (!value) {
+      const ariaChecked = switchInner.getAttribute('aria-checked');
+      value = ariaChecked === 'false' ? 'true' : 'false';
+    }
+    switchInner.setAttribute('aria-checked', value);
   }
 
   updateMenus(table: HTMLElement = this.table) {

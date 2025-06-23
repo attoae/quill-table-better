@@ -8,8 +8,7 @@ import type {
   TableBody,
   TableCellAllowedChildren,
   TableCellChildren,
-  TableContainer,
-  TableRow
+  TableContainer
 } from '../types';
 import {
   getComputeBounds,
@@ -19,7 +18,12 @@ import {
   getCorrectCellBlot
 } from '../utils';
 import { applyFormat } from '../utils/clipboard-matchers';
-import { TableCellBlock, TableCell } from '../formats/table';
+import {
+  TableCellBlock,
+  TableCell,
+  TableRow,
+  TableThRow
+} from '../formats/table';
 import { DEVIATION } from '../config';
 
 const WHITE_LIST = [
@@ -112,7 +116,7 @@ class CellSelection {
 
   getCopyColumns(container: Element) {
     const tr = container.querySelector('tr');
-    const children = Array.from(tr.querySelectorAll('td'));
+    const children = Array.from(tr.querySelectorAll('td,th'));
     return children.reduce((sum: number, td: HTMLTableCellElement) => {
       const colspan = ~~td.getAttribute('colspan') || 1;
       return sum += colspan;
@@ -145,6 +149,7 @@ class CellSelection {
       html += res;
     } 
     html = `<table><tbody>${html}</tbody></table>`;
+    html = tableBlot.getCopyTable(html);
     const text = this.getText(html);
     return { html, text };
   }
@@ -268,6 +273,22 @@ class CellSelection {
     return Object.values(map);
   }
 
+  getTableArrowVerticalRow(cell: TableCell, up: boolean) {
+    const tableBlot = cell.table();
+    const tbody = tableBlot.tbody();
+    const thead = tableBlot.thead();
+    const key = up ? 'prev' : 'next';
+    const blotName = cell.parent.statics.blotName;
+    let row = cell.parent[key];
+    if (!row && up && blotName === TableRow.blotName) {
+      row = thead?.children?.tail;
+    }
+    if (!row && !up && blotName === TableThRow.blotName) {
+      row = tbody?.children?.head;
+    }
+    return row;
+  }
+
   getText(html: string): string {
     const delta: Delta = this.quill.clipboard.convert({ html });
     return delta
@@ -313,18 +334,21 @@ class CellSelection {
   }
 
   handleMousedown(e: MouseEvent) {
-    this.clearSelected();
     const table = (e.target as Element).closest('table');
     if (!table) return;
     this.tableBetter.tableMenus.destroyTablePropertiesForm();
-    const startTd = (e.target as Element).closest('td');
+    const startTd = (e.target as Element).closest('td,th');
+    if (!startTd) return;
+    this.clearSelected();
     this.startTd = startTd;
     this.endTd = startTd;
     this.selectedTds = [startTd];
     startTd.classList.add('ql-cell-focused');
+    this.setHeaderRowSwitch();
+    this.setMenuDisable('merge');
     
     const handleMouseMove = (e: MouseEvent) => {
-      const endTd = (e.target as Element).closest('td');
+      const endTd = (e.target as Element).closest('td,th');
       if (!endTd) return;
       const isEqualNode = startTd.isEqualNode(endTd);
       if (isEqualNode) return;
@@ -343,13 +367,21 @@ class CellSelection {
 
     const handleMouseup = (e: MouseEvent) => {
       this.setSingleDisabled();
-      this.setCorrectPositionTds(this.startTd, this.endTd, this.selectedTds); 
+      this.setCorrectPositionTds(this.startTd, this.endTd, this.selectedTds);
+      this.setHeaderRowSwitch();
+      this.setMenuDisable('merge');
       this.quill.root.removeEventListener('mousemove', handleMouseMove);
       this.quill.root.removeEventListener('mouseup', handleMouseup);
     }
 
     this.quill.root.addEventListener('mousemove', handleMouseMove);
     this.quill.root.addEventListener('mouseup', handleMouseup);
+  }
+
+  hasTdTh(selectedTds: Element[]) {
+    const hasTd = selectedTds.some(item => item.tagName === 'TD');
+    const hasTh = selectedTds.some(item => item.tagName === 'TH');
+    return { hasTd, hasTh };
   }
 
   initDocumentListener() {
@@ -458,7 +490,7 @@ class CellSelection {
       }
       const td = up ? this.startTd : this.endTd;
       const cell = Quill.find(td) as TableCell;
-      const targetRow = cell.parent[_key];
+      const targetRow = this.getTableArrowVerticalRow(cell, up);
       const { left: _left, right: _right } = td.getBoundingClientRect();
       if (targetRow) {
         let cellBlot = null;
@@ -525,7 +557,7 @@ class CellSelection {
     const computeBounds = this.getPasteComputeBounds(this.startTd, rightTd, pasteLastRow);
     const pasteTds = this.getPasteTds(getComputeSelectedTds(computeBounds, table.domNode, this.quill.container));
     const copyTds = copyRows.reduce((copyTds: HTMLElement[][], row: HTMLTableRowElement) => {
-      copyTds.push(Array.from(row.querySelectorAll('td')));
+      copyTds.push(Array.from(row.querySelectorAll('td,th')));
       return copyTds;
     }, []);
     const selectedTds: HTMLElement[] = [];
@@ -651,6 +683,21 @@ class CellSelection {
     this.setSingleDisabled();
   }
 
+  setHeaderRowSwitch() {
+    const { hasTd, hasTh } = this.hasTdTh(this.selectedTds);
+    if (hasTh && !hasTd) {
+      this.tableBetter.tableMenus.toggleHeaderRowSwitch('true');
+    } else {
+      this.tableBetter.tableMenus.toggleHeaderRowSwitch('false');
+    }
+  }
+
+  setMenuDisable(category: string) {
+    const { hasTd, hasTh } = this.hasTdTh(this.selectedTds);
+    const disabled = hasTd && hasTh;
+    this.tableBetter.tableMenus.disableMenu(category, disabled);
+  }
+
   setSelected(target: Element, force: boolean = true) {
     const cell = Quill.find(target) as TableCell;
     this.clearSelected();
@@ -722,7 +769,7 @@ class CellSelection {
           const target =
             this.endTd.nextElementSibling ||
             this.startTd.previousElementSibling;
-          if (!target) return;
+          if (!target) return this.tableBetter.hideTools();;
           this.setSelected(target);
         }
         break;
@@ -731,7 +778,7 @@ class CellSelection {
           const row =
             this.getCorrectRow(this.endTd, 'next') ||
             this.getCorrectRow(this.startTd, 'prev');
-          if (!row) return;
+          if (!row) return this.tableBetter.hideTools();
           const startCorrectBounds = getCorrectBounds(this.startTd, this.quill.container);
           let child = row.firstElementChild;
           while (child) {

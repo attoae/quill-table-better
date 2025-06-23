@@ -1,9 +1,13 @@
 import QuillTableBetter from '../quill-table-better';
 import {
   TableCellBlock,
+  TableThBlock,
   TableCell,
+  TableTh,
   TableRow,
+  TableThRow,
   TableBody,
+  TableThead,
   TableTemporary,
   TableContainer,
   TableCol,
@@ -44,9 +48,13 @@ export type UseLanguageHandler = (name: string) => string
 export type {
   QuillTableBetter,
   TableCellBlock,
+  TableThBlock,
   TableCell,
+  TableTh,
   TableRow,
+  TableThRow,
   TableBody,
+  TableThead,
   TableTemporary,
   TableContainer,
   TableCol,
