@@ -20,6 +20,8 @@ import {
   createTooltip,
   getClosestElement,
   getComputeSelectedCols,
+  getCorrectContainerWidth,
+  getCorrectWidth,
   isDimensions,
   isValidColor,
   setElementProperty,
@@ -555,18 +557,25 @@ class TablePropertiesForm {
   saveCellAction() {
     const { selectedTds } = this.tableMenus.tableBetter.cellSelection;
     const { quill, table } = this.tableMenus;
-    const colgroup = (Quill.find(table) as TableContainer).colgroup();
+    const tableBlot = Quill.find(table) as TableContainer;
+    const colgroup = tableBlot.colgroup();
+    const isPercent = tableBlot.isPercent();
     const attrs = this.getDiffProperties();
-    const width = parseFloat(attrs['width']);
+    const floatW = parseFloat(attrs['width']);
+    const width = 
+      attrs['width'].endsWith('%')
+        ? floatW * getCorrectContainerWidth() / 100
+        : floatW;
     const align = attrs['text-align'];
     align && delete attrs['text-align'];
     const newSelectedTds = [];
     if (colgroup && width) {
       delete attrs['width'];
+      const { operateLine } = this.tableMenus.tableBetter;
       const { computeBounds } = this.tableMenus.getSelectedTdsInfo();
       const cols = getComputeSelectedCols(computeBounds, table, quill.container);
       for (const col of cols) {
-        col.setAttribute('width', `${width}`);
+        operateLine.setColWidth(col as HTMLElement, `${width}`, isPercent);
       }
     }
     for (const td of selectedTds) {
@@ -590,6 +599,7 @@ class TablePropertiesForm {
       newSelectedTds.push(parent.domNode);
     }
     this.tableMenus.tableBetter.cellSelection.setSelectedTds(newSelectedTds);
+    if (!isPercent) this.updateTableWidth(table, tableBlot, isPercent);
   }
 
   saveTableAction() {
@@ -763,6 +773,16 @@ class TablePropertiesForm {
       return data === value;
     });
     selected && selected.classList.add(`ql-table-${type}-selected`);
+  }
+
+  updateTableWidth(table: HTMLElement, tableBlot: TableContainer, isPercent: boolean) {
+    const temporary = tableBlot.temporary();
+    setElementProperty(table, { width: 'auto' });
+    const { width } = table.getBoundingClientRect();
+    table.style.removeProperty('width');
+    setElementProperty(temporary.domNode, {
+      width: getCorrectWidth(width, isPercent)
+    });
   }
 }
 
