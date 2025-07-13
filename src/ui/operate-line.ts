@@ -188,6 +188,7 @@ class OperateLine {
   handleMouseMove(e: MouseEvent) {
     if (!this.quill.isEnabled()) return;
     const tableNode = (e.target as Element).closest('table');
+    if (tableNode && !this.quill.root.contains(tableNode)) return;
     const cellNode = (e.target as Element).closest('td,th');
     const mousePosition = {
       clientX: e.clientX,
