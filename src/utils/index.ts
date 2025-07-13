@@ -237,14 +237,19 @@ function getCorrectCellBlot(blot: TableCell | TableCellChildren): TableCell | nu
   return null;
 }
 
-function getCorrectWidth(width: number, isPercent: boolean) {
+function getCorrectContainerWidth() {
   const container = document.querySelector('.ql-editor');
   const { clientWidth } = container;
   const computedStyle = getComputedStyle(container);
   const pl = ~~computedStyle.getPropertyValue('padding-left');
   const pr = ~~computedStyle.getPropertyValue('padding-right');
   const w = clientWidth - pl - pr;
+  return w;
+}
+
+function getCorrectWidth(width: number, isPercent: boolean) {
   if (!isPercent) return `${width}px`;
+  const w = getCorrectContainerWidth();
   return `${((width / w) * 100).toFixed(2)}%`;
 }
 
@@ -378,18 +383,29 @@ function updateTableWidth(
   const tableBlot = Quill.find(table) as TableContainer;
   if (!tableBlot) return;
   const isPercent = tableBlot.isPercent();
+  if (isPercent && !change) return;
   const colgroup = tableBlot.colgroup();
   const temporary = tableBlot.temporary();
   if (colgroup) {
-    let _width = 0;
-    const cols = colgroup.domNode.querySelectorAll('col');
-    for (const col of cols) {
-      const width = ~~col.getAttribute('width');
-      _width += width;
+    if (isPercent) {
+      let _width = 0;
+      const cols = colgroup.domNode.querySelectorAll('col');
+      for (const col of cols) {
+        const width = col.style.getPropertyValue('width');
+        _width += (width ? parseFloat(width) : 0);
+      }
+      setElementProperty(temporary.domNode, { width: `${_width}%` });
+    } else {
+      let _width = 0;
+      const cols = colgroup.domNode.querySelectorAll('col');
+      for (const col of cols) {
+        const width = ~~col.getAttribute('width');
+        _width += width;
+      }
+      setElementProperty(temporary.domNode, {
+        width: getCorrectWidth(_width, isPercent)
+      });
     }
-    setElementProperty(temporary.domNode, {
-      width: getCorrectWidth(_width, isPercent)
-    });
   } else {
     setElementProperty(temporary.domNode, {
       width: getCorrectWidth(tableBounds.width + change, isPercent)
@@ -414,6 +430,7 @@ export {
   getCopyTd,
   getCorrectBounds,
   getCorrectCellBlot,
+  getCorrectContainerWidth,
   getCorrectWidth,
   getElementStyle,
   isDimensions,

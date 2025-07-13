@@ -162,6 +162,23 @@ The functions of the operation bar are as follows:
 8. copy (Not default)
   - Copy table
 
+In addition, the `menus` supports customization:
+
+```JavaScript
+'table-better': {
+  menus: [
+    { name: 'column', icon: '<span>column</span>' },
+    { name: 'row', icon: '<svg></svg>' },
+    'merge',
+    'table',
+    'cell', 
+    'wrap',
+    'copy',
+    'delete'
+  ]
+}
+```
+
 ### toolbarTable
 `toolbarTable` is used to add a button to insert a table on the toolbar (true or false).  
 And `table-better` needs to be added to toolbarOptions, for example:

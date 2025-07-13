@@ -188,6 +188,7 @@ class OperateLine {
   handleMouseMove(e: MouseEvent) {
     if (!this.quill.isEnabled()) return;
     const tableNode = (e.target as Element).closest('table');
+    if (tableNode && !this.quill.root.contains(tableNode)) return;
     const cellNode = (e.target as Element).closest('td,th');
     const mousePosition = {
       clientX: e.clientX,
@@ -238,11 +239,11 @@ class OperateLine {
     if (colgroup) {
       const col = this.getCorrectCol(colgroup, colSum);
       const nextCol = col.next;
-      const formats = col.formats()[col.statics.blotName];
-      col.domNode.setAttribute('width', `${parseFloat(formats['width']) + change}`);
+      const { width } = col.domNode.getBoundingClientRect();
+      this.setColWidth(col.domNode, `${width + change}`, isPercent);
       if (nextCol) {
-        const nextFormats = nextCol.formats()[nextCol.statics.blotName];
-        nextCol.domNode.setAttribute('width', `${parseFloat(nextFormats['width']) - change}`);
+        const { width } = nextCol.domNode.getBoundingClientRect();
+        this.setColWidth(nextCol.domNode, `${width - change}`, isPercent);
       }
     } else {
       const isLastCell = cell.nextElementSibling == null;
@@ -315,7 +316,7 @@ class OperateLine {
       }
       while (col) {
         const { width } = col.domNode.getBoundingClientRect();
-        setElementAttribute(col.domNode, { width: `${Math.ceil(width + averageX)}` });
+        this.setColWidth(col.domNode, `${Math.ceil(width + averageX)}`, isPercent);
         col = col.next;
       }
     } else {
@@ -326,6 +327,15 @@ class OperateLine {
       }
     }
     updateTableWidth(tableBlot.domNode, bounds, changeX);
+  }
+
+  setColWidth(domNode: HTMLElement, width: string, isPercent: boolean) {
+    if (isPercent) {
+      width = getCorrectWidth(parseFloat(width), isPercent);
+      domNode.style.setProperty('width', width);
+    } else {
+      setElementAttribute(domNode, { width });
+    }
   }
 
   setCellVerticalRect(cell: Element, clientY: number) {

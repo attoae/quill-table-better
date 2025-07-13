@@ -1,5 +1,6 @@
 import Quill from 'quill';
 import Delta from 'quill-delta';
+import merge from 'lodash.merge';
 import type { LinkedList } from 'parchment';
 import type {
   CorrectBound,
@@ -57,13 +58,19 @@ interface Children {
   }
 }
 
+interface Menu {
+  content: string;
+  icon: string;
+  handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void;
+  children?: Children;
+}
+
+interface CustomMenu extends Menu {
+  name: 'column' | 'row' | 'merge' | 'table' | 'cell' | 'wrap' | 'delete' | 'copy';
+}
+
 interface MenusDefaults {
-  [propName: string]: {
-    content: string;
-    icon: string;
-    handler: (list: HTMLUListElement, tooltip: HTMLDivElement) => void;
-    children?: Children;
-  }
+  [propName: string]: Menu
 }
 
 enum Alignment {
@@ -249,8 +256,14 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
     }
   };
   if (menus?.length) {
-    return Object.values(menus).reduce((config: MenusDefaults, key: string) => {
-      config[key] = Object.assign({}, DEFAULT, EXTRA)[key];
+    return Object.values(menus).reduce((config: MenusDefaults, menu: string | CustomMenu) => {
+      const ALL_MENUS = Object.assign({}, DEFAULT, EXTRA);
+      if (typeof menu === 'string') {
+        config[menu] = ALL_MENUS[menu];
+      }
+      if (menu != null && typeof menu === 'object' && menu.name) {
+        config[menu.name] = merge(ALL_MENUS[menu.name], menu);
+      }
       return config;
     }, {});
   }
@@ -746,6 +759,7 @@ class TableMenus {
   handleClick(e: MouseEvent) {
     if (!this.quill.isEnabled()) return;
     const table = (e.target as Element).closest('table');
+    if (table && !this.quill.root.contains(table)) return;
     this.prevList && this.prevList.classList.add('ql-hidden');
     this.prevTooltip && this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
     this.prevList = null;

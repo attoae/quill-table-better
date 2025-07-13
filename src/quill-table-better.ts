@@ -158,6 +158,11 @@ class Table extends Module {
     if (!this.quill.isEnabled()) return;
     this.tableSelect?.hide(this.tableSelect.root);
     const table = (e.target as Element).closest('table');
+    // In-table Editor
+    if (table && !this.quill.root.contains(table)) {
+      this.hideTools();
+      return;
+    }
     if (!table) {
       this.hideTools();
       this.handleMouseMove();

@@ -41,15 +41,7 @@ class TableClipboard extends Clipboard {
     if (formats[TableCellBlock.blotName] || formats[TableThBlock.blotName]) {
       for (const op of delta.ops) {
         // External copied tables or table contents copied within an editor.
-        // Subsequent version processing.
-        if (
-          op?.attributes &&
-          (
-            op.attributes[TableTemporary.blotName] ||
-            op.attributes[TableCellBlock.blotName] ||
-            op.attributes[TableThBlock.blotName]
-          )
-        ) {
+        if (op?.attributes?.[TableTemporary.blotName]) {
           return new Delta();
         }
         // Process externally pasted lists or headers or text.
