@@ -563,7 +563,7 @@ class TablePropertiesForm {
     const attrs = this.getDiffProperties();
     const floatW = parseFloat(attrs['width']);
     const width = 
-      attrs['width'].endsWith('%')
+      attrs['width']?.endsWith('%')
         ? floatW * getCorrectContainerWidth() / 100
         : floatW;
     const align = attrs['text-align'];
