@@ -12,6 +12,7 @@ import pt_BR from './pt_BR';
 import cs_CZ from './cs_CZ';
 import da_DK from './da_DK';
 import nb_NO from './nb_NO';
+import it_IT from './it_IT';
 
 interface Config {
   [propName: string]: Props;
@@ -41,6 +42,7 @@ class Language {
       cs_CZ,
       da_DK,
       nb_NO,
+      it_IT,
     };
     this.init(language);
   }
