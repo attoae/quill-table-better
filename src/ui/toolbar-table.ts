@@ -118,7 +118,6 @@ class TableSelect {
   }
 
   toggle(element: Element) {
-    this.clearSelected(this.computeChildren);
     element && element.classList.toggle('ql-hidden');
   }
 }
