@@ -51,7 +51,7 @@ function matchTableCell(node: HTMLTableCellElement, delta: Delta) {
     node.getAttribute('data-row') ||
     rows.indexOf((node.parentNode as HTMLTableRowElement)) + 1;
   const cellId = node?.firstElementChild?.getAttribute('data-cell') || cells.indexOf(node) + 1;
-  if (!delta.length()) delta.insert('\n', { blotName: { 'data-row': row } });
+  if (!delta.length()) delta.insert('\n', { [blotName]: { 'data-row': row } });
   delta.ops.forEach(op => {
     if (op.attributes && op.attributes[blotName]) {
       // @ts-ignore
