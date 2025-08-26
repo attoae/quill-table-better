@@ -64,8 +64,8 @@ interface ColorList {
 }
 
 const ACTION_LIST = [
-  { icon: saveIcon, label: 'save' },
-  { icon: closeIcon, label: 'cancel' }
+  { icon: saveIcon, label: 'save', type: 'button' },
+  { icon: closeIcon, label: 'cancel', type: 'button' }
 ];
 
 const COLOR_LIST: ColorList[] = [
@@ -116,12 +116,12 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     const fragment = document.createDocumentFragment();
     container.classList.add('properties-form-action-row');
-    for (const { icon, label } of ACTION_LIST) {
+    for (const { icon, label, type } of ACTION_LIST) {
       const button = document.createElement('button');
       const iconContainer = document.createElement('span');
       iconContainer.innerHTML = icon;
       button.appendChild(iconContainer);
-      setElementAttribute(button, { label });
+      setElementAttribute(button, { label, type });
       if (showLabel) {
         const labelContainer = document.createElement('span');
         labelContainer.innerText = useLanguage(label);
