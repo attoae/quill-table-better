@@ -38,7 +38,8 @@ import {
   TableTh,
   TableRow,
   TableThRow,
-  TableThead
+  TableThead,
+  TableBody
 } from '../formats/table';
 import TablePropertiesForm from './table-properties-form';
 import {
@@ -296,8 +297,10 @@ class TableMenus {
   convertToRow() {
     const tableBlot = Quill.find(this.table) as TableContainer;
     const tbody = tableBlot.tbody();
-    const ref = tbody.children.head;
+    const correctTbody = tbody || this.quill.scroll.create(TableBody.blotName) as TableBody;
+    const ref = correctTbody?.children?.head;
     const rows = this.getCorrectRows();
+    const convertRows: [TableRow, TableRow | null][] = [];
     let row = rows[0].next;
     while (row) {
       rows.unshift(row);
@@ -311,11 +314,15 @@ class TableMenus {
         const td = this.quill.scroll.create(domNode).replaceWith(TableCell.blotName, tdFormats);
         tdRow.insertBefore(td, null);
       });
-      tbody.insertBefore(tdRow, ref);
+      convertRows.unshift([tdRow, ref]);
       row.remove();
     }
+    for (const [row, ref] of convertRows) {
+      correctTbody.insertBefore(row, ref);
+    }
+    if (!tbody) tableBlot.insertBefore(correctTbody, null);
     // @ts-expect-error
-    const [td] = tbody.descendant(TableCell);
+    const [td] = correctTbody.descendant(TableCell);
     this.tableBetter.cellSelection.setSelected(td.domNode);
   }
 
