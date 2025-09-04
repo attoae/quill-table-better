@@ -119,6 +119,7 @@ The `language` parameter has two types:
 | Language | Code |
 | ---- | ---- |
 | Chinese | zh_CN |
+| Chinese(Taiwan) | zh_TW |
 | English | en_US |
 | French | fr_FR |
 | Polish | pl_PL |
