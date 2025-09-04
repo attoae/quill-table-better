@@ -62,10 +62,28 @@ class Table extends Module {
   options: Options;
   
   static keyboardBindings: { [propName: string]: BindingObject };
+
+  static register() {
+    Quill.register(TableCellBlock, true);
+    Quill.register(TableThBlock, true);
+    Quill.register(TableCell, true);
+    Quill.register(TableTh, true);
+    Quill.register(TableRow, true);
+    Quill.register(TableThRow, true);
+    Quill.register(TableBody, true);
+    Quill.register(TableThead, true);
+    Quill.register(TableTemporary, true);
+    Quill.register(TableContainer, true);
+    Quill.register(TableCol, true);
+    Quill.register(TableColgroup, true);
+    Quill.register({
+      'modules/toolbar': TableToolbar,
+      'modules/clipboard': TableClipboard
+    }, true);
+  }
   
   constructor(quill: Quill, options: Options) {
     super(quill, options);
-    this.register();
     quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
@@ -258,25 +276,6 @@ class Table extends Module {
         this.quill.update(Quill.sources.API);
       }
     });
-  }
-
-  private register() {
-    Quill.register(TableCellBlock, true);
-    Quill.register(TableThBlock, true);
-    Quill.register(TableCell, true);
-    Quill.register(TableTh, true);
-    Quill.register(TableRow, true);
-    Quill.register(TableThRow, true);
-    Quill.register(TableBody, true);
-    Quill.register(TableThead, true);
-    Quill.register(TableTemporary, true);
-    Quill.register(TableContainer, true);
-    Quill.register(TableCol, true);
-    Quill.register(TableColgroup, true);
-    Quill.register({
-      'modules/toolbar': TableToolbar,
-      'modules/clipboard': TableClipboard
-    }, true);
   }
 
   private registerToolbarTable(toolbarTable: boolean) {
