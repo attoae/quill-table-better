@@ -91,6 +91,7 @@ class TableCellBlock extends Block {
 
 class TableThBlock extends TableCellBlock {
   static blotName = 'table-th-block';
+  static className = 'table-th-block';
   static tagName = 'P';
 
   next: this | null;
