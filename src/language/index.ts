@@ -13,6 +13,7 @@ import cs_CZ from './cs_CZ';
 import da_DK from './da_DK';
 import nb_NO from './nb_NO';
 import it_IT from './it_IT';
+import zh_TW from './zh_TW';
 
 interface Config {
   [propName: string]: Props;
@@ -43,6 +44,7 @@ class Language {
       da_DK,
       nb_NO,
       it_IT,
+      zh_TW,
     };
     this.init(language);
   }
