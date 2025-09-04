@@ -13,6 +13,7 @@ import cs_CZ from './cs_CZ';
 import da_DK from './da_DK';
 import nb_NO from './nb_NO';
 import it_IT from './it_IT';
+import sv_SE from './sv_SE';
 import zh_TW from './zh_TW';
 
 interface Config {
@@ -44,6 +45,7 @@ class Language {
       da_DK,
       nb_NO,
       it_IT,
+      sv_SE,
       zh_TW,
     };
     this.init(language);
