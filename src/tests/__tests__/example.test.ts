@@ -3,7 +3,7 @@ import Quill from 'quill';
 import { setupQuillEditor } from '../setup';
 import { queryByRole } from '@testing-library/dom';
 
-describe('Quill Table Better Demo', () => {
+describe('example quill tble better tests', () => {
   test('should render the Quill editor', () => {
     const quill = setupQuillEditor();
     expect(quill).toBeInstanceOf(Quill);
