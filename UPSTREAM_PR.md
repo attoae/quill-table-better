@@ -1,8 +1,10 @@
 # Instance Management Improvements
 
+Fixes #117
+
 ## Overview
 
-This PR introduces critical improvements to the quill-table-better plugin to address issues with multi-instance Quill applications and memory management.
+This PR introduces critical improvements to the quill-table-better plugin to address issues with multi-instance Quill applications and memory management, specifically resolving the configuration issues reported in #117.
 
 ## Problem Statement
 
