@@ -1,7 +1,7 @@
 {
-  "name": "quill-table-better",
-  "version": "1.2.3",
-  "description": "A module that enhances the table functionality of Quill",
+  "name": "@iwanmastah/quill-table-better",
+  "version": "1.3.0",
+  "description": "A module that enhances the table functionality of Quill (Fork with improved instance management)",
   "main": "dist/quill-table-better.js",
   "types": "dist/types/index.d.ts",
   "scripts": {
@@ -11,19 +11,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/attoae/quill-table-better.git"
+    "url": "git+https://github.com/iwanmastah/quill-table-better.git"
   },
   "keywords": [
     "quill",
     "quill.js",
-    "quill-table"
+    "quill-table",
+    "fork",
+    "improved"
   ],
-  "author": "attoae",
+  "author": "iwanmastah",
+  "contributors": [
+    "attoae (Original author)"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/attoae/quill-table-better/issues"
+    "url": "https://github.com/iwanmastah/quill-table-better/issues"
   },
-  "homepage": "https://github.com/attoae/quill-table-better#readme",
+  "homepage": "https://github.com/iwanmastah/quill-table-better#readme",
   "devDependencies": {
     "@babel/core": "^7.24.5",
     "@babel/plugin-transform-runtime": "^7.24.3",
