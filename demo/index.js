@@ -3,6 +3,7 @@ import QuillTableBetter from '../src/quill-table-better';
 import 'quill/dist/quill.snow.css';
 import '../src/assets/css/quill-table-better.scss';
 
+// Only register the module class - formats will be registered automatically when needed
 Quill.register({
   'modules/table-better': QuillTableBetter
 }, true);
@@ -13,9 +14,9 @@ const toolbarOptions = [
   ['link', 'image', 'video', 'formula'],
 
   [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-  [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
-  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+  [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+  [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+  [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
   [{ 'direction': 'rtl' }],                         // text direction
 
   [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
@@ -43,8 +44,35 @@ const options = {
   }
 };
 
+// Create main editor WITH table functionality
 const editor = new Quill('#root', options);
 const tableModule = editor.getModule('table-better');
+
+// Create a second editor WITHOUT table functionality 
+const simpleOptions = {
+  theme: 'snow',
+  modules: {
+    toolbar: [['bold', 'italic'], ['link']], // No table-better in toolbar
+    table: false
+    // Note: No 'table-better' module configuration
+  }
+};
+
+// Add a second editor div if it doesn't exist
+let secondEditorDiv = document.getElementById('simple-editor');
+if (!secondEditorDiv) {
+  secondEditorDiv = document.createElement('div');
+  secondEditorDiv.id = 'simple-editor';
+  secondEditorDiv.style.marginTop = '20px';
+  secondEditorDiv.innerHTML = '<h3>Simple Editor (No Table Support)</h3><div id="simple-quill"></div>';
+  document.body.appendChild(secondEditorDiv);
+}
+
+const simpleEditor = new Quill('#simple-quill', simpleOptions);
+
+// Debug: Verify that the simple editor doesn't have table-better
+console.log('Main editor has table-better:', !!editor.getModule('table-better'));
+console.log('Simple editor has table-better:', !!simpleEditor.getModule('table-better'));
 const btn1 = document.getElementById('btn1');
 const btn2 = document.getElementById('btn2');
 const btn3 = document.getElementById('btn3');

@@ -1,5 +1,27 @@
-# quill-table-better
+# @your-org/quill-table-better
+
 A module that enhances the table functionality of [Quill](https://quilljs.com/).
+
+> **Note:** This is a fork of [attoae/quill-table-better](https://github.com/attoae/quill-table-better) with improvements for better instance management and memory leak prevention.
+
+## 🚀 Fork Improvements
+
+This fork includes several important improvements over the original:
+- **Instance-specific event management** - No global event listeners for non-table instances
+- **Automatic format registration** - No need for explicit registration calls
+- **Memory leak prevention** - Proper cleanup of event listeners
+- **Multiple instance support** - Mix table and non-table editors safely
+- **Toolbar compatibility fixes** - No errors when using standard Quill features
+
+## 📦 Installation
+
+```bash
+npm install @your-org/quill-table-better
+```
+
+## 🙏 Credits
+
+Original work by [attoae](https://github.com/attoae). This fork maintains full compatibility while adding instance management improvements.
 
 ![quill-table-better](https://github.com/user-attachments/assets/c5304bab-84bd-4a60-b4ec-6a941a7d0c11)
 
@@ -45,6 +67,7 @@ import QuillTableBetter from 'quill-table-better';
 import 'quill/dist/quill.snow.css';
 import 'quill-table-better/dist/quill-table-better.css'
 
+// Register the module class - formats will be registered automatically when needed
 Quill.register({
   'modules/table-better': QuillTableBetter
 }, true);
@@ -73,6 +96,31 @@ const options = {
 const quill = new Quill('#root', options);
 ```
 
+## Instance-Specific Behavior
+The table-better module now uses **lazy registration** and **instance-specific event handling**:
+
+- **Formats are registered automatically** when the first Quill instance with table-better is created
+- **Global event listeners are only attached** when at least one instance uses table-better
+- **Multiple instances** can coexist - some with table support, some without
+- **Automatic cleanup** when all table-better instances are destroyed
+
+```JavaScript
+// Instance 1: WITH table support
+const editorWithTables = new Quill('#editor1', {
+  modules: {
+    'table-better': { /* table options */ }
+  }
+});
+
+// Instance 2: WITHOUT table support (no global events attached unnecessarily)
+const simpleEditor = new Quill('#editor2', {
+  modules: {
+    toolbar: [['bold', 'italic']]
+    // No table-better module
+  }
+});
+```
+
 cdn
 ```html
 <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
@@ -82,6 +130,7 @@ cdn
 
 <div id="root"></div>
 <script>
+  // Register the module class - formats will be registered automatically when needed
   Quill.register({
     'modules/table-better': QuillTableBetter
   }, true);
@@ -291,9 +340,35 @@ module.getTable();
 module.insertTable(3, 3);
 ```
 
+## Cleanup
+When destroying Quill instances with table-better module, make sure to call the destroy method to clean up global event listeners:
+
+```JavaScript
+// When you need to destroy the quill instance
+const tableBetterModule = quill.getModule('table-better');
+if (tableBetterModule) {
+  tableBetterModule.destroy();
+}
+```
+
+This prevents memory leaks by removing all global event listeners that were attached by the module.
+
+## 📈 Changelog (Fork)
+
+### v1.3.0 (Fork Release)
+- ✅ **Fixed**: Instance-specific event management using CellSelectionRegistry
+- ✅ **Fixed**: Automatic format registration (lazy loading)
+- ✅ **Fixed**: Toolbar compatibility for non-table Quill instances
+- ✅ **Fixed**: Memory leaks from global event listeners
+- ✅ **Improved**: Support for multiple Quill instances (some with/without tables)
+- ✅ **Enhanced**: Proper cleanup mechanisms
+
+### Original Package
+For the original package and its changelog, see: https://github.com/attoae/quill-table-better
+
 ## Download
 ```JavaScript
-npm i quill-table-better
+npm i @your-org/quill-table-better
 ```
 
 ### CDN
