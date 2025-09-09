@@ -49,6 +49,80 @@ function isLine(blot: unknown): blot is BlockBlot | EmbedBlot {
   return blot instanceof BlockBlot || blot instanceof EmbedBlot;
 }
 
+// Static registry to track all active table instances
+class CellSelectionRegistry {
+  private static instances: Set<CellSelection> = new Set();
+  private static globalListenersAttached = false;
+
+  static register(instance: CellSelection) {
+    this.instances.add(instance);
+    if (!this.globalListenersAttached) {
+      this.attachGlobalListeners();
+      this.globalListenersAttached = true;
+    }
+  }
+
+  static unregister(instance: CellSelection) {
+    this.instances.delete(instance);
+    if (this.instances.size === 0 && this.globalListenersAttached) {
+      this.detachGlobalListeners();
+      this.globalListenersAttached = false;
+    }
+  }
+
+  private static globalCopyHandler = (e: ClipboardEvent) => {
+    const activeInstance = this.getActiveInstance();
+    if (activeInstance) {
+      activeInstance.onCaptureCopy(e, false);
+    }
+  };
+
+  private static globalCutHandler = (e: ClipboardEvent) => {
+    const activeInstance = this.getActiveInstance();
+    if (activeInstance) {
+      activeInstance.onCaptureCopy(e, true);
+    }
+  };
+
+  private static globalKeyupHandler = (e: KeyboardEvent) => {
+    const activeInstance = this.getActiveInstance();
+    if (activeInstance) {
+      activeInstance.handleDeleteKeyup(e);
+    }
+  };
+
+  private static globalPasteHandler = (e: ClipboardEvent) => {
+    const activeInstance = this.getActiveInstance();
+    if (activeInstance) {
+      activeInstance.onCapturePaste(e);
+    }
+  };
+
+  private static attachGlobalListeners() {
+    document.addEventListener('copy', this.globalCopyHandler);
+    document.addEventListener('cut', this.globalCutHandler);
+    document.addEventListener('keyup', this.globalKeyupHandler);
+    document.addEventListener('paste', this.globalPasteHandler);
+  }
+
+  private static detachGlobalListeners() {
+    document.removeEventListener('copy', this.globalCopyHandler);
+    document.removeEventListener('cut', this.globalCutHandler);
+    document.removeEventListener('keyup', this.globalKeyupHandler);
+    document.removeEventListener('paste', this.globalPasteHandler);
+  }
+
+  private static getActiveInstance(): CellSelection | null {
+    // Find the instance whose quill currently has focus or has selected cells
+    for (const instance of this.instances) {
+      if (instance.selectedTds.length > 0 || instance.quill.hasFocus()) {
+        return instance;
+      }
+    }
+    return null;
+  }
+}
+
 class CellSelection {
   quill: Quill;
   selectedTds: Element[];
@@ -66,8 +140,10 @@ class CellSelection {
     this.singleList = [];
     this.tableBetter = tableBetter;
     this.quill.root.addEventListener('click', this.handleClick.bind(this));
-    this.initDocumentListener();
     this.initWhiteList();
+
+    // Register this instance for global event handling
+    CellSelectionRegistry.register(this);
   }
 
   attach(input: HTMLElement) {
@@ -147,7 +223,7 @@ class CellSelection {
       }
       res = `<tr>${res}</tr>`;
       html += res;
-    } 
+    }
     html = `<table><tbody>${html}</tbody></table>`;
     html = tableBlot.getCopyTable(html);
     const text = this.getText(html);
@@ -346,7 +422,7 @@ class CellSelection {
     startTd.classList.add('ql-cell-focused');
     this.setHeaderRowSwitch();
     this.setMenuDisable('merge');
-    
+
     const handleMouseMove = (e: MouseEvent) => {
       const endTd = (e.target as Element).closest('td,th');
       if (!endTd) return;
@@ -384,11 +460,11 @@ class CellSelection {
     return { hasTd, hasTh };
   }
 
-  initDocumentListener() {
-    document.addEventListener('copy', (e: ClipboardEvent) => this.onCaptureCopy(e, false));
-    document.addEventListener('cut', (e: ClipboardEvent) => this.onCaptureCopy(e, true));
-    document.addEventListener('keyup', this.handleDeleteKeyup.bind(this));
-    document.addEventListener('paste', this.onCapturePaste.bind(this));
+  /**
+   * Clean up global event listeners
+   */
+  cleanup() {
+    CellSelectionRegistry.unregister(this);
   }
 
   initWhiteList() {
