@@ -20,8 +20,8 @@ import {
   TableColgroup
 } from './formats/table';
 import TableHeader from './formats/header';
-import { ListContainer } from './formats/list';
-import { 
+import TableList, { ListContainer } from './formats/list';
+import {
   matchTable,
   matchTableCell,
   matchTableCol,
@@ -60,10 +60,18 @@ class Table extends Module {
   tableMenus: TableMenus;
   tableSelect: TableSelect;
   options: Options;
-  
-  static keyboardBindings: { [propName: string]: BindingObject };
+  private globalEventListeners: Array<{ element: EventTarget, type: string, listener: EventListener }> = [];
 
+  static keyboardBindings: { [propName: string]: BindingObject };
+  private static formatsRegistered = false;
+
+  /**
+   * Register table formats globally (only needs to be called once per application)
+   * This is now optional - formats will be auto-registered when first instance is created
+   */
   static register() {
+    if (Table.formatsRegistered) return;
+
     Quill.register(TableCellBlock, true);
     Quill.register(TableThBlock, true);
     Quill.register(TableCell, true);
@@ -78,12 +86,29 @@ class Table extends Module {
     Quill.register(TableColgroup, true);
     Quill.register({
       'modules/toolbar': TableToolbar,
-      'modules/clipboard': TableClipboard
+      'modules/clipboard': TableClipboard,
+      'formats/table-list': TableList,
+      'formats/table-header': TableHeader
     }, true);
+
+    Table.formatsRegistered = true;
   }
-  
+
+  /**
+   * Automatically register formats when first instance is created
+   */
+  private static ensureFormatsRegistered() {
+    if (!Table.formatsRegistered) {
+      Table.register();
+    }
+  }
+
   constructor(quill: Quill, options: Options) {
     super(quill, options);
+
+    // Ensure formats are registered before using them
+    Table.ensureFormatsRegistered();
+
     quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
@@ -98,6 +123,35 @@ class Table extends Module {
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
     this.listenDeleteTable();
     this.registerToolbarTable(options?.toolbarTable);
+  }
+
+  /**
+   * Add a global event listener and track it for cleanup
+   */
+  private addGlobalEventListener(element: EventTarget, type: string, listener: EventListener) {
+    element.addEventListener(type, listener);
+    this.globalEventListeners.push({ element, type, listener });
+  }
+
+  /**
+   * Clean up all global event listeners
+   */
+  private cleanup() {
+    this.globalEventListeners.forEach(({ element, type, listener }) => {
+      element.removeEventListener(type, listener);
+    });
+    this.globalEventListeners = [];
+
+    // Cleanup UI components
+    this.cellSelection?.cleanup();
+  }
+
+  /**
+   * Destroy the module and clean up resources
+   * This should be called when the Quill instance is being destroyed
+   */
+  destroy() {
+    this.cleanup();
   }
 
   clearHistorySelected() {
@@ -285,16 +339,19 @@ class Table extends Module {
     const button = toolbar.container.querySelector('button.ql-table-better');
     if (!button || !this.tableSelect.root) return;
     button.appendChild(this.tableSelect.root);
-    button.addEventListener('click', (e: MouseEvent) => {
+    const buttonClickHandler = (e: MouseEvent) => {
       this.tableSelect.handleClick(e, this.insertTable.bind(this));
-    });
-    document.addEventListener('click', (e: MouseEvent) => {
+    };
+    const documentClickHandler = (e: MouseEvent) => {
       const visible = e.composedPath().includes(button);
       if (visible) return;
       if (!this.tableSelect.root.classList.contains('ql-hidden')) {
         this.tableSelect.hide(this.tableSelect.root);
       }
-    });
+    };
+
+    button.addEventListener('click', buttonClickHandler);
+    this.addGlobalEventListener(document, 'click', documentClickHandler);
   }
 
   showTools(force?: boolean) {
@@ -429,7 +486,7 @@ function makeTableListHandler(key: string) {
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
       const cellId = getCellId(line.parent.formats()[line.parent.statics.blotName]);
-      line.replaceWith(TableCellBlock.blotName, cellId);      
+      line.replaceWith(TableCellBlock.blotName, cellId);
     }
   }
 }
