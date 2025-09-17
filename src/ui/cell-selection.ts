@@ -312,7 +312,8 @@ class CellSelection {
     if (e.key === 'Backspace' || e.key === 'Delete') {
       if (e.ctrlKey) {
         this.tableBetter.tableMenus.deleteColumn(true);
-        this.tableBetter.tableMenus.deleteRow(true);
+        if (this.selectedTds?.length > 0)
+          this.tableBetter.tableMenus.deleteRow(true);
       } else {
         this.removeSelectedTdsContent();
       }
