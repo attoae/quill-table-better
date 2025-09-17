@@ -234,6 +234,7 @@ class TablePropertiesForm {
     const container = document.createElement('div');
     const icon = document.createElement('span');
     const button = document.createElement('button');
+    button.setAttribute('type', 'button');
     icon.innerHTML = svg;
     button.innerText = text;
     container.classList.add('erase-container');
