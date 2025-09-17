@@ -214,6 +214,7 @@ $focused-border: 1px solid $focused-border-color;
   position: relative;
   padding: 0 4px;
   cursor: pointer;
+  color: #515151;
   &:hover {
     background: $hover-background;
   }
@@ -292,6 +293,7 @@ $focused-border: 1px solid $focused-border-color;
   background: $color-white;
   z-index: 1;
   @include boxShadow($color-ccced1);
+
   .properties-form-header {
     height: 40px;
     line-height: 40px;
@@ -319,10 +321,8 @@ $focused-border: 1px solid $focused-border-color;
         }
       }
       .ql-table-btns-checked {
+        color: #2977ff;
         background: #f0f7ff;
-        & > svg path {
-          stroke: #2977ff;
-        }
       }
     }
   }
@@ -341,7 +341,7 @@ $focused-border: 1px solid $focused-border-color;
     display: flex;
     justify-content: space-around;
     padding: 0 12px;
-    & > button {
+    > button {
       background: $color-white;
       outline: none;
       border: none;
@@ -358,6 +358,17 @@ $focused-border: 1px solid $focused-border-color;
       }
       &[disabled] {
         background-color: transparent;
+      }
+    }
+
+    button[label="save"] {
+      svg {
+        color: #008a00;
+      }
+    }
+    button[label="cancel"] {
+      svg {
+        color: #db3700;
       }
     }
   }
@@ -487,6 +498,7 @@ $focused-border: 1px solid $focused-border-color;
   pointer-events: none;
 }
 .ql-table-button-disabled {
+  color: #999 !important;
   background: #f2f2f2 !important;
   pointer-events: none;
   svg {
