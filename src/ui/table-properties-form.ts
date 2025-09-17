@@ -99,7 +99,7 @@ class TablePropertiesForm {
     this.attrs = { ...options.attribute };
     this.borderForm = [];
     this.saveButton = null;
-    this.form = this.createPropertiesForm(options); 
+    this.form = this.createPropertiesForm(options);
   }
 
   checkBtnsAction(status: string) {
@@ -175,7 +175,7 @@ class TablePropertiesForm {
 
   createColorInput(child: Child) {
     const container = this.createInput(child);
-    container.classList.add('label-field-view-color');    
+    container.classList.add('label-field-view-color');
     return container;
   }
 
@@ -343,7 +343,7 @@ class TablePropertiesForm {
     const colorPicker = new iro.ColorPicker(iroContainer, {
       width: 110,
       layout: [
-        { 
+        {
           component: iro.ui.Wheel,
           options: {}
         }
@@ -562,7 +562,7 @@ class TablePropertiesForm {
     const isPercent = tableBlot.isPercent();
     const attrs = this.getDiffProperties();
     const floatW = parseFloat(attrs['width']);
-    const width = 
+    const width =
       attrs['width']?.endsWith('%')
         ? floatW * getCorrectContainerWidth() / 100
         : floatW;
@@ -703,7 +703,7 @@ class TablePropertiesForm {
     if (status) {
       wrapper.classList.add('label-field-view-error');
       this.setSaveButtonDisabled(true);
-    } else { 
+    } else {
       wrapper.classList.remove('label-field-view-error');
       const wrappers = this.form.querySelectorAll('.label-field-view-error');
       if (!wrappers.length) this.setSaveButtonDisabled(false);
@@ -731,11 +731,11 @@ class TablePropertiesForm {
       container.classList.add('ql-table-triangle-down');
       container.classList.remove('ql-table-triangle-up');
     }
-    if (correctLeft < containerBounds.left) {
+    if (correctLeft < 0) {
       correctLeft = 0;
       container.classList.add('ql-table-triangle-none');
-    } else if (correctLeft + width > containerBounds.right) {
-      correctLeft = containerBounds.right - width;
+    } else if (containerBounds.left + correctLeft + width > containerBounds.right) {
+      correctLeft = containerBounds.right - containerBounds.left - width;
       container.classList.add('ql-table-triangle-none');
     }
     setElementProperty(container, {

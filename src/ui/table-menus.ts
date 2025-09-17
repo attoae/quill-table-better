@@ -1033,11 +1033,11 @@ class TableMenus {
         this.root.classList.add('ql-table-triangle-down');
         this.root.classList.remove('ql-table-triangle-up');
       }
-      if (correctLeft < containerBounds.left) {
+      if (correctLeft < 0) {
         correctLeft = 0;
         this.root.classList.add('ql-table-triangle-none');
-      } else if (correctLeft + width > containerBounds.right) {
-        correctLeft = containerBounds.right - width;
+      } else if (containerBounds.left + correctLeft + width > containerBounds.right) {
+        correctLeft = containerBounds.right - containerBounds.left - width;
         this.root.classList.add('ql-table-triangle-none');
       }
       setElementProperty(this.root, {
