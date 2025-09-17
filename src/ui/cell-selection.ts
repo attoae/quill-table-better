@@ -97,6 +97,7 @@ class CellSelection {
 
   exitTableFocus(block: TableCellChildren, up: boolean) {
     const cell = getCorrectCellBlot(block);
+    if(!cell) return;
     const table = cell.table();
     const offset = up ? -1 : table.length();
     const index = table.offset(this.quill.scroll) + offset;
