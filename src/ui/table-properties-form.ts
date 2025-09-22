@@ -20,6 +20,7 @@ import {
   createTooltip,
   getClosestElement,
   getComputeSelectedCols,
+  getCorrectBounds,
   getCorrectContainerWidth,
   getCorrectWidth,
   isDimensions,
@@ -236,6 +237,7 @@ class TablePropertiesForm {
     const button = document.createElement('button');
     icon.innerHTML = svg;
     button.innerText = text;
+    button.setAttribute('type', 'button');
     container.classList.add('erase-container');
     container.appendChild(icon);
     container.appendChild(button);
@@ -713,7 +715,8 @@ class TablePropertiesForm {
   updatePropertiesForm(container: HTMLElement, type: string) {
     container.classList.remove('ql-table-triangle-none');
     const { height, width } = container.getBoundingClientRect();
-    const containerBounds = this.tableMenus.quill.container.getBoundingClientRect();
+    const quillContainer = this.tableMenus.quill.container;
+    const containerBounds = getCorrectBounds(quillContainer);
     const { top, left, right, bottom } = this.getComputeBounds(type);
     const { viewHeight } = this.getViewportSize();
     let correctTop = bottom + 10;

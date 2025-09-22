@@ -291,6 +291,7 @@ $focused-border: 1px solid $focused-border-color;
   padding-bottom: 8px;
   background: $color-white;
   z-index: 1;
+  line-height: normal;
   @include boxShadow($color-ccced1);
   .properties-form-header {
     height: 40px;

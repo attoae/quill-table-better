@@ -63,7 +63,6 @@ const COLORS = [
   'cornsilk',
   'crimson',
   'currentcolor',
-  'currentcolor',
   'cyan',
   'darkblue',
   'darkcyan',
