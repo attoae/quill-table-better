@@ -205,7 +205,7 @@ function getCopyTd(html: string) {
   .replace(/class="\s*"/g, '');
 }
 
-function getCorrectBounds(target: Element, container: Element) {
+function getCorrectBounds(target: Element, container: Element = target) {
   const targetBounds = target.getBoundingClientRect();
   const containerBounds = container.getBoundingClientRect();
   const left = targetBounds.left - containerBounds.left - container.scrollLeft;
