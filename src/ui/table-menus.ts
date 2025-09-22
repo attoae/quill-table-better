@@ -468,6 +468,7 @@ class TableMenus {
 
   deleteRow(isKeyboard: boolean = false) {
     const selectedTds = this.tableBetter.cellSelection.selectedTds;
+    if (!selectedTds?.length) return;
     const rows = this.getCorrectRows();
     if (isKeyboard) {
       const sum = rows.reduce((sum: number, row: TableRow) => {
