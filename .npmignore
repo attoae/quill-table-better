@@ -1,6 +1,6 @@
 .*
 .github
 .vscode
-config
-demo
+/config
+/demo
 tsconfig.json
