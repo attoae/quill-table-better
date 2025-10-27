@@ -14,7 +14,8 @@
     "./styles": {
       "import": "./dist/quill-table-better.css",
       "require": "./dist/quill-table-better.css"
-    }
+    },
+    "./dist/quill-table-better.css": "./dist/quill-table-better.css"
   },
   "private": false,
   "type": "module",
