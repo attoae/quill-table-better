@@ -35,6 +35,7 @@ import ToolbarTable, { TableSelect } from './ui/toolbar-table';
 import { getCellId, getCorrectCellBlot } from './utils';
 import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
+import Module from 'quill/core/module';
 
 interface Options {
   language?: string | {
@@ -50,8 +51,6 @@ interface Options {
 }
 
 type Line = TableCellBlock | TableHeader | ListContainer;
-
-const Module = Quill.import('core/module');
 
 class Table extends Module {
   language: Language;

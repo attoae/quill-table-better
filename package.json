@@ -3,10 +3,24 @@
   "version": "1.2.4",
   "description": "A module that enhances the table functionality of Quill",
   "main": "dist/quill-table-better.js",
+  "module": "dist/quill-table-better.mjs",
   "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/quill-table-better.mjs",
+      "require": "./dist/quill-table-better.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./styles": {
+      "import": "./dist/quill-table-better.css",
+      "require": "./dist/quill-table-better.css"
+    }
+  },
+  "private": false,
+  "type": "module",
   "scripts": {
-    "dev": "webpack-dev-server --config config/webpack.dev.js",
-    "build": "webpack --config config/webpack.prod.js && rm dist/quill-table-better",
+    "dev": "webpack-dev-server --config config/webpack.dev.cjs",
+    "build": "webpack --config config/webpack.prod.cjs && rm dist/quill-table-better",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
