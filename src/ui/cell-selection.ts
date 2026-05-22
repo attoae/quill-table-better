@@ -312,6 +312,7 @@ class CellSelection {
 
   handleDeleteKeyup(e: KeyboardEvent) {
     if (this.selectedTds?.length < 2) return;
+    if (this.isEventFromAnotherEditor(e)) return;
     if (e.key === 'Backspace' || e.key === 'Delete') {
       if (e.ctrlKey) {
         this.tableBetter.tableMenus.deleteColumn(true);
@@ -382,13 +383,24 @@ class CellSelection {
     this.quill.root.addEventListener('mouseup', handleMouseup);
   }
 
+  isEventFromAnotherEditor(e: Event) {
+    return !this.quill.container.contains(e.target as Node) && document.activeElement !== document.body;
+  }
+
   hasTdTh(selectedTds: Element[]) {
     const hasTd = selectedTds.some(item => item.tagName === 'TD');
     const hasTh = selectedTds.some(item => item.tagName === 'TH');
     return { hasTd, hasTh };
   }
 
+  handleDocumentMousedown(e: MouseEvent) {
+    if (!this.selectedTds?.length) return;
+    if (this.quill.container.contains(e.target as Node)) return;
+    this.tableBetter.hideTools();
+  }
+
   initDocumentListener() {
+    document.addEventListener('mousedown', this.handleDocumentMousedown.bind(this), true);
     document.addEventListener('copy', (e: ClipboardEvent) => this.onCaptureCopy(e, false));
     document.addEventListener('cut', (e: ClipboardEvent) => this.onCaptureCopy(e, true));
     document.addEventListener('keyup', this.handleDeleteKeyup.bind(this));
@@ -530,6 +542,7 @@ class CellSelection {
   onCaptureCopy(e: ClipboardEvent, isCut = false) {
     if (this.selectedTds?.length < 2) return;
     if (e.defaultPrevented) return;
+    if (this.isEventFromAnotherEditor(e)) return;
     e.preventDefault();
     const { html, text } = this.getCopyData();
     e.clipboardData?.setData('text/plain', text);
@@ -539,6 +552,7 @@ class CellSelection {
 
   onCapturePaste(e: ClipboardEvent) {
     if (!this.selectedTds?.length) return;
+    if (this.isEventFromAnotherEditor(e)) return;
     e.preventDefault();
     const html = e.clipboardData?.getData('text/html');
     const text = e.clipboardData?.getData('text/plain');
