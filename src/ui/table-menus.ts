@@ -84,8 +84,8 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
     column: {
       content: useLanguage('col'),
       icon: columnIcon,
-      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
-        this.toggleAttribute(list, tooltip);
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent | KeyboardEvent) {
+        this.toggleAttribute(list, tooltip, e);
       },
       children: {
         left: {
@@ -125,7 +125,7 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
     row: {
       content: useLanguage('row'),
       icon: rowIcon,
-      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent) {
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent | KeyboardEvent) {
         this.toggleAttribute(list, tooltip, e);
       },
       children: {
@@ -171,8 +171,8 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
     merge: {
       content: useLanguage('mCells'),
       icon: mergeIcon,
-      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
-        this.toggleAttribute(list, tooltip);
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent | KeyboardEvent) {
+        this.toggleAttribute(list, tooltip, e);
       },
       children: {
         merge: {
@@ -221,8 +221,8 @@ function getMenusConfig(useLanguage: UseLanguageHandler, menus?: string[]): Menu
     wrap: {
       content: useLanguage('insParaOTbl'),
       icon: wrapIcon,
-      handler(list: HTMLUListElement, tooltip: HTMLDivElement) {
-        this.toggleAttribute(list, tooltip);
+      handler(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent | KeyboardEvent) {
+        this.toggleAttribute(list, tooltip, e);
       },
       children: {
         before: {
@@ -384,6 +384,7 @@ class TableMenus {
     for (const [, child] of Object.entries(children)) {
       const { content, divider, createSwitch, handler } = child;
       const list = document.createElement('li');
+      list.setAttribute('tabindex', '0');
       if (createSwitch) {
         list.classList.add('ql-table-header-row');
         list.appendChild(this.createSwitch(content));
@@ -392,6 +393,21 @@ class TableMenus {
         list.innerText = content;
       }
       list.addEventListener('click', handler.bind(this));
+      list.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          handler.call(this);
+        }
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          const shift = event.key === 'ArrowDown' ? 1 : -1
+          const lists = [...container.children] as HTMLElement[];
+          const currentIndex = lists.indexOf(event.target as HTMLElement);
+          let nextIndex = (currentIndex + shift + lists.length) % lists.length;
+          if (!lists[nextIndex].hasAttribute('tabindex')) {
+            nextIndex += shift;
+          }
+          lists[nextIndex].focus();
+        }
+      });
       container.appendChild(list);
       if (divider) {
         const dividerLine = document.createElement('li');
@@ -412,6 +428,7 @@ class TableMenus {
       dropDown.innerHTML = left;
     }
     container.classList.add('ql-table-dropdown');
+    container.setAttribute('tabindex', '0');
     dropDown.classList.add('ql-table-tooltip-hover');
     container.setAttribute('data-category', category);
     container.appendChild(dropDown);
@@ -433,6 +450,15 @@ class TableMenus {
       list && menu.appendChild(list);
       container.appendChild(menu);
       menu.addEventListener('click', handler.bind(this, list, tooltip));
+      menu.addEventListener('keydown', (event) => {
+        // Do not toggle on escape with bubbled event
+        if (event.key === 'Escape' && menu !== event.target) {
+          handler.call(this, list, tooltip, event);
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          handler.call(this, list, tooltip, event);
+        }
+      });
     }
     this.quill.container.appendChild(container);
     return container;
@@ -508,6 +534,10 @@ class TableMenus {
     }
   }
 
+  focusMenu() {
+    (this.root.querySelector('.ql-table-dropdown') as HTMLElement).focus();
+  }
+
   getCellsOffset(
     computeBounds: CorrectBound,
     bounds: CorrectBound,
@@ -577,8 +607,8 @@ class TableMenus {
     const tableBounds = getCorrectBounds(table, this.quill.container);
     return (
       tableBounds.width >= bounds.width
-       ? [{ ...tableBounds, left: 0, right: bounds.width }, bounds]
-       : [tableBounds, bounds]
+        ? [{ ...tableBounds, left: 0, right: bounds.width }, bounds]
+        : [tableBounds, bounds]
     );
   }
 
@@ -759,9 +789,9 @@ class TableMenus {
 
   getTdsFromMap(map: TableCellMap) {
     return Object.values(Object.fromEntries(map))
-    .reduce((tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
-      return tds.length > item.length ? tds : item;
-    }, []);
+      .reduce((tds: HTMLTableCellElement[], item: HTMLTableCellElement[]) => {
+        return tds.length > item.length ? tds : item;
+      }, []);
   }
 
   handleClick(e: MouseEvent) {
@@ -976,15 +1006,19 @@ class TableMenus {
     this.quill.scrollSelectionIntoView();
   }
 
-  toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent) {
+  toggleAttribute(list: HTMLUListElement, tooltip: HTMLDivElement, e?: PointerEvent | KeyboardEvent) {
     // @ts-expect-error
-    if (e && e.target.closest('li.ql-table-header-row')) return;
+    if (e && e instanceof PointerEvent && e.target.closest('li.ql-table-header-row')) return;
     if (this.prevList && !this.prevList.isEqualNode(list)) {
       this.prevList.classList.add('ql-hidden');
       this.prevTooltip.classList.remove('ql-table-tooltip-hidden');
     }
     if (!list) return;
-    list.classList.toggle('ql-hidden');
+    const isHidden = list.classList.toggle('ql-hidden');
+    // Focus first element when dropdown is opened via keyboard
+    if (!isHidden && e instanceof KeyboardEvent) {
+      (list.firstChild as HTMLElement)?.focus();
+    }
     tooltip.classList.toggle('ql-table-tooltip-hidden');
     this.prevList = list;
     this.prevTooltip = tooltip;

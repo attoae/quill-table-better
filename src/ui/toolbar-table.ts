@@ -8,12 +8,16 @@ const icons = Quill.import('ui/icons');
 // @ts-expect-error
 icons['table-better'] = tableIcon;
 const SUM = 10;
- 
-class ToolbarTable extends Inline {};
+
+class ToolbarTable extends Inline { };
 
 class TableSelect {
   computeChildren: Element[];
   root: HTMLDivElement;
+  keyboardX = 0;
+  keyboardY = 0;
+  insertTableHandler: InsertTableHandler;
+
   constructor() {
     this.computeChildren = [];
     this.root = this.createContainer();
@@ -37,6 +41,8 @@ class TableSelect {
         const child = document.createElement('span');
         child.setAttribute('row', `${row}`);
         child.setAttribute('column', `${column}`);
+        child.setAttribute('tabindex', '0');
+        child.setAttribute('aria-label', `Row ${row} Column: ${column}`);
         fragment.appendChild(child);
       }
     }
@@ -45,9 +51,11 @@ class TableSelect {
     list.classList.add('ql-table-select-list');
     label.classList.add('ql-table-select-label');
     list.appendChild(fragment);
+    list.setAttribute('tabindex', '0');
     container.appendChild(list);
     container.appendChild(label);
     container.addEventListener('mousemove', e => this.handleMouseMove(e, container));
+    container.addEventListener('keydown', e => this.handleKeyboardMove(e, container));
     return container;
   }
 
@@ -78,15 +86,62 @@ class TableSelect {
   }
 
   handleClick(e: MouseEvent, insertTable: InsertTableHandler) {
+    this.insertTableHandler = insertTable;
     const [isBetweenSpans, span] = this.getClickInfo(e);
     this.toggle(this.root, isBetweenSpans);
     if (!span) {
       // Click between two spans
       const child = this.computeChildren[this.computeChildren.length - 1];
       if (child) this.insertTable(child, insertTable);
+      // Focus select container (only works if 'clicked' by keyboard)
+      (this.root.firstChild as HTMLDivElement).focus()
       return;
     }
     this.insertTable(span, insertTable);
+  }
+
+  handleKeyboardMove(event: KeyboardEvent, container: Element) {
+    event.preventDefault();
+
+    function clamp(coord: number, delta: -1 | 1) {
+      return Math.min(Math.max(0, coord + delta), SUM - 1)
+    }
+
+    switch (event.key) {
+      case 'ArrowLeft':
+        this.keyboardX = clamp(this.keyboardX, -1);
+        break;
+      case 'ArrowRight':
+        this.keyboardX = clamp(this.keyboardX, 1);
+        break;
+      case 'ArrowUp':
+        this.keyboardY = clamp(this.keyboardY, -1);
+        break;
+      case 'ArrowDown':
+        this.keyboardY = clamp(this.keyboardY, 1);
+        break;
+      case 'Enter':
+        this.insertTableHandler(this.keyboardY + 1, this.keyboardX + 1);
+        this.hide(this.root);
+        this.keyboardX = 0;
+        this.keyboardY = 0;
+        break;
+    }
+
+    container.firstChild.childNodes.forEach((child: HTMLSpanElement) => {
+      child.classList.remove('ql-cell-selected');
+    });
+
+    let lastSquare: HTMLElement = container.firstChild.firstChild as HTMLElement;
+    for (let x = 0; x <= this.keyboardX; x++) {
+      for (let y = 0; y <= this.keyboardY; y++) {
+        const square = container.querySelector(`span[row="${y + 1}"][column="${x + 1}"]`)
+        square.classList && square.classList.add('ql-cell-selected');
+        lastSquare = square as HTMLElement;
+      }
+    }
+    lastSquare.focus();
+     this.setLabelContent(container.lastElementChild, lastSquare);
   }
 
   handleMouseMove(e: MouseEvent, container: Element) {

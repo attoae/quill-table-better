@@ -21,7 +21,7 @@ import {
 } from './formats/table';
 import TableHeader from './formats/header';
 import { ListContainer } from './formats/list';
-import { 
+import {
   matchTable,
   matchTableCell,
   matchTableCol,
@@ -60,7 +60,7 @@ class Table extends Module {
   tableMenus: TableMenus;
   tableSelect: TableSelect;
   options: Options;
-  
+
   static keyboardBindings: { [propName: string]: BindingObject };
 
   static register() {
@@ -81,7 +81,7 @@ class Table extends Module {
       'modules/clipboard': TableClipboard
     }, true);
   }
-  
+
   constructor(quill: Quill, options: Options) {
     super(quill, options);
     quill.clipboard.addMatcher('td, th', matchTableCell);
@@ -357,6 +357,17 @@ const keyboardBindings = {
       const cell = getCorrectCellBlot(blot);
       cell && tableModule.cellSelection.setSelected(cell.domNode, false);
     }
+  },
+  'table-cell shift tab': {
+    key: 'Tab',
+    collapsed: true,
+    shiftKey: true,
+    format: ['table-cell', 'table-th'],
+    handler(range: Range, context: Context) {
+      const tableModule = this.quill.getModule('table-better');
+      tableModule?.tableMenus.focusMenu();
+      return false;
+    }
   }
 }
 
@@ -429,7 +440,7 @@ function makeTableListHandler(key: string) {
     handler(range: Range, context: Context) {
       const [line] = this.quill.getLine(range.index);
       const cellId = getCellId(line.parent.formats()[line.parent.statics.blotName]);
-      line.replaceWith(TableCellBlock.blotName, cellId);      
+      line.replaceWith(TableCellBlock.blotName, cellId);
     }
   }
 }
