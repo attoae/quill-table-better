@@ -300,6 +300,13 @@ function isValidDimensions(value: string) {
   return true;
 }
 
+function isValidPadding(value: string) {
+  if (!value) return true;
+  const parts = value.trim().split(/\s+/);
+  if (parts.length < 1 || parts.length > 4) return false;
+  return parts.every(part => isValidDimensions(part));
+}
+
 function removeElementProperty(node: HTMLElement, properties: string[]) {
   for (const property of properties) {
     node.style.removeProperty(property);
@@ -358,7 +365,7 @@ function throttle(cb: Function, delay: number) {
 
 function throttleStrong(cb: Function, delay: number) {
   let last = 0, timer: NodeJS.Timeout = null;
-  return function () { 
+  return function () {
     let context = this;
     let args = arguments;
     let now = +new Date();
@@ -436,6 +443,7 @@ export {
   isDimensions,
   isValidColor,
   isValidDimensions,
+  isValidPadding,
   removeElementProperty,
   rgbToHex,
   rgbaToHex,
