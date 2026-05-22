@@ -197,7 +197,7 @@ class TableCell extends Container {
     return this.domNode.outerHTML.replace(reg, (
       match: string, $1: string, $2: string
     ) => {
-      return match.replace($1, 'ul').replace($2, 'ul');
+      return match.replace(/<ol/, '<ul').replace(/<\/ol>/, '</ul>');
     });
   }
 
