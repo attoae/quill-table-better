@@ -15,6 +15,7 @@ import nb_NO from './nb_NO';
 import it_IT from './it_IT';
 import sv_SE from './sv_SE';
 import zh_TW from './zh_TW';
+import ko_KR from './ko_KR';
 
 interface Config {
   [propName: string]: Props;
@@ -47,6 +48,7 @@ class Language {
       it_IT,
       sv_SE,
       zh_TW,
+      ko_KR,
     };
     this.init(language);
   }
