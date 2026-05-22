@@ -35,7 +35,8 @@ const options = {
     toolbar: toolbarOptions,
     table: false,
     'table-better': {
-      toolbarTable: true
+      toolbarTable: true,
+      headerTable: false,
     },
     keyboard: {
       bindings: QuillTableBetter.keyboardBindings

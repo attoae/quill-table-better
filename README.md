@@ -62,7 +62,8 @@ const options = {
     'table-better': {
       language: 'en_US',
       menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
-      toolbarTable: true
+      toolbarTable: true,
+      headerTable: false,
     },
     keyboard: {
       bindings: QuillTableBetter.keyboardBindings
@@ -99,7 +100,8 @@ cdn
       'table-better': {
         language: 'en_US',
         menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
-        toolbarTable: true
+        toolbarTable: true,
+        headerTable: false,
       },
       keyboard: {
         bindings: QuillTableBetter.keyboardBindings
@@ -193,6 +195,10 @@ const toolbarOptions = [
 ];
 ```
 
+### headerTable
+`headerTable` allows the table to be initialized where the first table row includes table header `<th>` elements.  
+**Note** Headers may still be toggled on/off via the table row menu.
+
 ### toolbarButtons
 `toolbarButtons` is used when focusing on the table, you can specify which buttons to disable and which not.
 
@@ -217,7 +223,8 @@ toolbarButtons: {
     whiteList: ['link', 'image'],
     singleWhiteList: ['link', 'image']
   },
-  toolbarTable: true
+  toolbarTable: true,
+  headerTable: false,
 }
 ```
 
