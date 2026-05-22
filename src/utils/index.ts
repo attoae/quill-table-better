@@ -375,6 +375,73 @@ function throttleStrong(cb: Function, delay: number) {
   }
 }
 
+/**
+ * Normalize table-related attribute ordering in delta ops.
+ *
+ * Quill's applyDelta iterates Object.keys(attributes) to apply formats.
+ * For table blots, line formats (table-cell-block, table-th-block) MUST be
+ * processed before their container formats (table-cell, table-th), because
+ * the line format replaces the Block with a TableCellBlock whose format()
+ * method knows how to wrap itself in the correct container with the right
+ * value.  When the container format is iterated first, the line is still a
+ * plain Block which doesn't handle it, causing Parchment to call
+ * TableCell.create() without a value → TypeError.
+ *
+ * Server-side delta pipelines (e.g. Python OT libraries using JSON
+ * serialization) can reorder dict/object keys, breaking the required order.
+ * This function ensures line formats always precede container formats
+ * regardless of the original key ordering.
+ */
+function normalizeTableAttributes<T extends { attributes?: Record<string, unknown> }>(ops: T[]): T[] {
+  const LINE_FORMATS = ['table-cell-block', 'table-th-block'];
+  const CONTAINER_FORMATS = ['table-cell', 'table-th'];
+
+  return ops.map(op => {
+    const attrs = op.attributes;
+    if (!attrs) return op;
+
+    // Check if this op has both a line format and its container format
+    const hasLineFormat = LINE_FORMATS.some(f => f in attrs);
+    const hasContainerFormat = CONTAINER_FORMATS.some(f => f in attrs);
+    if (!hasLineFormat || !hasContainerFormat) return op;
+
+    // Check if any container format key appears before its line format key
+    const keys = Object.keys(attrs);
+    let needsReorder = false;
+    for (let i = 0; i < LINE_FORMATS.length; i++) {
+      const lineKey = LINE_FORMATS[i];
+      const containerKey = CONTAINER_FORMATS[i];
+      if (lineKey in attrs && containerKey in attrs) {
+        if (keys.indexOf(containerKey) < keys.indexOf(lineKey)) {
+          needsReorder = true;
+          break;
+        }
+      }
+    }
+    if (!needsReorder) return op;
+
+    // Rebuild attributes with line formats before container formats
+    const reordered: Record<string, unknown> = {};
+    const lineSet = new Set(LINE_FORMATS);
+    const containerSet = new Set(CONTAINER_FORMATS);
+    // First: all non-table-hierarchy keys (preserve their relative order)
+    for (const k of keys) {
+      if (!lineSet.has(k) && !containerSet.has(k)) {
+        reordered[k] = attrs[k];
+      }
+    }
+    // Then: line formats
+    for (const k of LINE_FORMATS) {
+      if (k in attrs) reordered[k] = attrs[k];
+    }
+    // Then: container formats
+    for (const k of CONTAINER_FORMATS) {
+      if (k in attrs) reordered[k] = attrs[k];
+    }
+    return { ...op, attributes: reordered };
+  });
+}
+
 function updateTableWidth(
   table: HTMLElement,
   tableBounds: CorrectBound,
@@ -436,6 +503,7 @@ export {
   isDimensions,
   isValidColor,
   isValidDimensions,
+  normalizeTableAttributes,
   removeElementProperty,
   rgbToHex,
   rgbaToHex,

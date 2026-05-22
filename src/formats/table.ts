@@ -130,11 +130,12 @@ class TableCell extends Container {
     return false;
   }
   
-  static create(value: Props) {
+  static create(value?: Props) {
     const node = super.create() as HTMLElement;
-    const keys = Object.keys(value);
-    for (const key of keys) {
-      value[key] && node.setAttribute(key, value[key]);
+    if (value != null && typeof value === 'object') {
+      for (const key of Object.keys(value)) {
+        value[key] && node.setAttribute(key, value[key]);
+      }
     }
     return node;
   }
@@ -327,15 +328,16 @@ class TableTemporary extends Block {
 
   next: this | null;
 
-  static create(value: Props) {
+  static create(value?: Props) {
     const node = super.create();
-    const keys = Object.keys(value);
-    const className = TableContainer.defaultClassName;
-    for (const key of keys) {
-      if (key === 'data-class' && !~value[key].indexOf(className)) {
-        node.setAttribute(key, `${className} ${value[key]}`);
-      } else {
-        node.setAttribute(key, value[key]);
+    if (value != null && typeof value === 'object') {
+      const className = TableContainer.defaultClassName;
+      for (const key of Object.keys(value)) {
+        if (key === 'data-class' && !~value[key].indexOf(className)) {
+          node.setAttribute(key, `${className} ${value[key]}`);
+        } else {
+          node.setAttribute(key, value[key]);
+        }
       }
     }
     return node;
@@ -383,11 +385,12 @@ class TableCol extends Block {
 
   next: this | null;
 
-  static create(value: Props) {
+  static create(value?: Props) {
     const node = super.create();
-    const keys = Object.keys(value);
-    for (const key of keys) {
-      node.setAttribute(key, value[key]);
+    if (value != null && typeof value === 'object') {
+      for (const key of Object.keys(value)) {
+        node.setAttribute(key, value[key]);
+      }
     }
     return node;
   }

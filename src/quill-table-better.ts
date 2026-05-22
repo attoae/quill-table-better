@@ -32,7 +32,7 @@ import CellSelection from './ui/cell-selection';
 import OperateLine from './ui/operate-line';
 import TableMenus from './ui/table-menus';
 import ToolbarTable, { TableSelect } from './ui/toolbar-table';
-import { getCellId, getCorrectCellBlot } from './utils';
+import { getCellId, getCorrectCellBlot, normalizeTableAttributes } from './utils';
 import TableToolbar from './modules/toolbar';
 import TableClipboard from './modules/clipboard';
 
@@ -84,6 +84,7 @@ class Table extends Module {
   
   constructor(quill: Quill, options: Options) {
     super(quill, options);
+    this.patchContentMethods(quill);
     quill.clipboard.addMatcher('td, th', matchTableCell);
     quill.clipboard.addMatcher('tr', matchTable);
     quill.clipboard.addMatcher('col', matchTableCol);
@@ -98,6 +99,46 @@ class Table extends Module {
     quill.root.addEventListener('scroll', this.handleScroll.bind(this));
     this.listenDeleteTable();
     this.registerToolbarTable(options?.toolbarTable);
+  }
+
+  // Patch setContents and updateContents to:
+  // 1. Normalize table attribute ordering (line formats before container
+  //    formats) so the blot hierarchy builds correctly regardless of how
+  //    keys are ordered in the incoming delta.
+  // 2. Route setContents through updateContents (applyDelta) instead of
+  //    insertContents, because Quill's Scroll.createBlock() misidentifies
+  //    table container blots (TableCell, TableTh) as block-level line blots,
+  //    breaking the blot hierarchy.
+  //    See: https://github.com/slab/quill/pull/4398
+  private patchContentMethods(quill: Quill) {
+    const normalize = (delta: Delta | { ops: Delta['ops'] }) => {
+      if (delta instanceof Delta) {
+        return new Delta(normalizeTableAttributes(delta.ops));
+      }
+      if (delta && Array.isArray((delta as any).ops)) {
+        return new Delta(normalizeTableAttributes((delta as any).ops));
+      }
+      if (Array.isArray(delta)) {
+        return new Delta(normalizeTableAttributes(delta as any));
+      }
+      return new Delta(delta as any);
+    };
+
+    const origUpdateContents = quill.updateContents.bind(quill);
+    quill.updateContents = ((delta: any, source?: any) => {
+      return origUpdateContents(normalize(delta), source);
+    }) as typeof quill.updateContents;
+
+    // Route setContents through updateContents (applyDelta path).
+    // applyDelta builds the table hierarchy correctly from the inside out
+    // via TableCellBlock.format(), whereas insertContents/createBlock
+    // tries to build it from the outside in and misidentifies containers.
+    quill.setContents = ((delta: any, source?: any) => {
+      const normalized = normalize(delta) as Delta;
+      const length = quill.getLength();
+      const combined = new Delta().delete(length).concat(normalized);
+      return origUpdateContents(combined, source);
+    }) as typeof quill.setContents;
   }
 
   clearHistorySelected() {
