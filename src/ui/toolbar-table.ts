@@ -9,7 +9,7 @@ const icons = Quill.import('ui/icons');
 icons['table-better'] = tableIcon;
 const SUM = 10;
  
-class ToolbarTable extends Inline {};
+class ToolbarTable extends Inline {}
 
 class TableSelect {
   computeChildren: Element[];

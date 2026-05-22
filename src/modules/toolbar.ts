@@ -25,7 +25,7 @@ class TableToolbar extends Toolbar {
   controls: [string, HTMLElement][];
   update: (range: Range | null) => void;
   container?: HTMLElement | null;
-  
+
   attach(input: HTMLElement) {
     let format = Array.from(input.classList).find((className) => {
       return className.indexOf('ql-') === 0;
@@ -36,17 +36,17 @@ class TableToolbar extends Toolbar {
       input.setAttribute('type', 'button');
     }
     if (
-      this.handlers[format] == null &&
-      this.quill.scroll.query(format) == null
+        this.handlers[format] == null &&
+        this.quill.scroll.query(format) == null
     ) {
       console.warn('ignoring attaching to nonexistent format', format, input);
       return;
     }
     const eventName = input.tagName === 'SELECT' ? 'change' : 'click';
     input.addEventListener(eventName, (e) => {
-      const { cellSelection } = this.getTableBetter();
-      if (cellSelection?.selectedTds?.length > 1) {
-        this.cellSelectionAttach(input, format, e, cellSelection);
+      const tableBetter = this.getTableBetter();
+      if (tableBetter && tableBetter.cellSelection.selectedTds?.length > 1) {
+        this.cellSelectionAttach(input, format, e, tableBetter.cellSelection);
       } else {
         this.toolbarAttach(input, format, e);
       }
@@ -55,10 +55,10 @@ class TableToolbar extends Toolbar {
   }
 
   private cellSelectionAttach(
-    input: HTMLElement,
-    format: string,
-    e: Event | MouseEvent,
-    cellSelection: CellSelection
+      input: HTMLElement,
+      format: string,
+      e: Event | MouseEvent,
+      cellSelection: CellSelection
   ) {
     if (input.tagName === 'SELECT') {
       // @ts-ignore
@@ -66,9 +66,9 @@ class TableToolbar extends Toolbar {
       // @ts-ignore
       const selected = input.options[input.selectedIndex];
       const val =
-        typeof selected?.value === 'string'
-          ? selected?.value
-          : true;
+          typeof selected?.value === 'string'
+              ? selected?.value
+              : true;
       const value = cellSelection.getCorrectValue(format, val);
       cellSelection.setSelectedTdsFormat(format, value);
     } else {
@@ -80,19 +80,23 @@ class TableToolbar extends Toolbar {
     }
   }
 
-  getTableBetter() {
-    return this.quill.getModule('table-better') as QuillTableBetter;
+  getTableBetter(): QuillTableBetter | null {
+    return this.quill.getModule('table-better') as QuillTableBetter | null;
   }
 
   setTableFormat(
-    range: Range,
-    selectedTds: Element[],
-    value: string,
-    name: string,
-    lines: TableCellChildren[]
+      range: Range,
+      selectedTds: Element[],
+      value: string,
+      name: string,
+      lines: TableCellChildren[]
   ) {
     let blot = null;
-    const { cellSelection, tableMenus } = this.getTableBetter();
+    const tableBetter = this.getTableBetter();
+    if (!tableBetter) {
+      return;
+    }
+    const { cellSelection, tableMenus } = tableBetter;
     const _isReplace = isReplace(range, selectedTds, lines);
     for (const line of lines) {
       const isReplace = getHeaderReplace(selectedTds, name, line, _isReplace);
@@ -143,17 +147,17 @@ class TableToolbar extends Toolbar {
     if (this.handlers[format] != null) {
       this.handlers[format].call(this, value);
     } else if (
-      // @ts-expect-error
-      this.quill.scroll.query(format).prototype instanceof EmbedBlot
+        // @ts-expect-error
+        this.quill.scroll.query(format).prototype instanceof EmbedBlot
     ) {
       value = prompt(`Enter ${format}`); // eslint-disable-line no-alert
       if (!value) return;
       this.quill.updateContents(
-        new Delta()
-          .retain(range.index)
-          .delete(range.length)
-          .insert({ [format]: value }),
-        Quill.sources.USER,
+          new Delta()
+              .retain(range.index)
+              .delete(range.length)
+              .insert({ [format]: value }),
+          Quill.sources.USER,
       );
     } else {
       this.quill.format(format, value, Quill.sources.USER);
@@ -163,29 +167,29 @@ class TableToolbar extends Toolbar {
 }
 
 function containers(
-  blot: TableCell,
-  index = 0,
-  length = Number.MAX_VALUE
+    blot: TableCell,
+    index = 0,
+    length = Number.MAX_VALUE
 ) {
   const getContainers = (
-    blot: TableCell | TableCellAllowedChildren,
-    blotIndex: number,
-    blotLength: number
+      blot: TableCell | TableCellAllowedChildren,
+      blotIndex: number,
+      blotLength: number
   ) => {
     // @ts-ignore
     let containers: Container[] = [];
     let lengthLeft = blotLength;
     blot.children.forEachAt(
-      blotIndex,
-      blotLength,
-      // @ts-ignore
-      (child, childIndex, childLength) => {
-        if (child instanceof Container) {
-          containers.push(child);
-          containers = containers.concat(getContainers(child, childIndex, lengthLeft));
-        } 
-        lengthLeft -= childLength;
-      }
+        blotIndex,
+        blotLength,
+        // @ts-ignore
+        (child, childIndex, childLength) => {
+          if (child instanceof Container) {
+            containers.push(child);
+            containers = containers.concat(getContainers(child, childIndex, lengthLeft));
+          }
+          lengthLeft -= childLength;
+        }
     );
     return containers;
   };
@@ -193,15 +197,15 @@ function containers(
 }
 
 function getHeaderReplace(
-  selectedTds: Element[],
-  name: string,
-  line: TableCellChildren,
-  _isReplace: boolean
+    selectedTds: Element[],
+    name: string,
+    line: TableCellChildren,
+    _isReplace: boolean
 ) {
   if (
-    selectedTds.length === 1 &&
-    name === 'list' &&
-    line.statics.blotName === TableHeader.blotName
+      selectedTds.length === 1 &&
+      name === 'list' &&
+      line.statics.blotName === TableHeader.blotName
   ) {
     return true;
   }
@@ -226,10 +230,10 @@ function isReplace(range: Range, selectedTds: Element[], lines: TableCellChildre
 }
 
 function tablehandler(
-  value: string,
-  selectedTds: Element[],
-  name: string,
-  lines?: TableCellChildren[]
+    value: string,
+    selectedTds: Element[],
+    name: string,
+    lines?: TableCellChildren[]
 ) {
   const range = this.quill.getSelection();
   if (!lines) {
@@ -246,25 +250,25 @@ function tablehandler(
 TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
   handlers: {
     header(value: string, lines?: TableCellChildren[]) {
-      const { cellSelection } = this.getTableBetter(); 
-      const selectedTds = cellSelection?.selectedTds;
+      const tableBetter = this.getTableBetter();
+      const selectedTds = tableBetter?.cellSelection?.selectedTds;
       if (selectedTds?.length) {
         return tablehandler.call(this, value, selectedTds, 'header', lines);
       }
       this.quill.format('header', value, Quill.sources.USER);
     },
     list(value: string, lines?: TableCellChildren[]) {
-      const { cellSelection } = this.getTableBetter();
-      const selectedTds = cellSelection?.selectedTds;
-      if (selectedTds?.length) {
+      const tableBetter = this.getTableBetter();
+      const selectedTds = tableBetter?.cellSelection?.selectedTds;
+      if (selectedTds?.length && tableBetter?.cellSelection) {
         if (selectedTds.length === 1) {
           const range = this.quill.getSelection(true);
           const formats = this.quill.getFormat(range);
-          value = cellSelection.getListCorrectValue('list', value, formats);
+          value = tableBetter.cellSelection.getListCorrectValue('list', value, formats);
         }
         return tablehandler.call(this, value, selectedTds, 'list', lines);
       }
-      
+
       const range = this.quill.getSelection(true);
       const formats = this.quill.getFormat(range);
       if (value === 'check') {
@@ -277,7 +281,7 @@ TableToolbar.DEFAULTS = merge({}, Toolbar.DEFAULTS, {
         this.quill.format('list', value, Quill.sources.USER);
       }
     },
-    'table-better'() {}
+    'table-better'() { }
   }
 });
 

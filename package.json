@@ -1,7 +1,7 @@
 {
-  "name": "quill-table-better",
-  "version": "1.2.4",
-  "description": "A module that enhances the table functionality of Quill",
+  "name": "@sd-vk/spa-quill-table-better",
+  "version": "1.3.3",
+  "description": "Fork of attoae/quill-table-better v1.2.3 which resolves issues with redundant event listeners, memory leaks in SPA, format registration pollution and null safety fixes",
   "main": "dist/quill-table-better.js",
   "types": "dist/types/index.d.ts",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/attoae/quill-table-better.git"
+    "url": "git+https://github.com/sd-vk/quill-table-better.git"
   },
   "keywords": [
     "quill",
@@ -52,6 +52,9 @@
     "@types/lodash.merge": "^4.6.7",
     "lodash.merge": "^4.6.2",
     "webpack-merge": "^5.8.0"
+  },
+  "overrides": {
+    "preact": "10.28.2"
   },
   "browserslist": [
     "last 1 version",

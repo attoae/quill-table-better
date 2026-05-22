@@ -30,7 +30,7 @@ class ListContainer extends Container {
     }
     return node;
   }
-  
+
   format(name: string, value: string | Props) {
     return this.wrap(name, value);
   }
@@ -61,7 +61,7 @@ ListContainer.tagName = 'OL';
 
 class TableList extends List {
   parent: ListContainer;
-  
+
   format(name: string, value: string | Props, isReplace?: boolean) {
     const list = this.formats()[this.statics.blotName];
     if (name === 'list') {
@@ -84,8 +84,8 @@ class TableList extends List {
       this.setReplace(isReplace, formats);
       return this.replaceWith('table-header', { cellId, value });
     } else if (
-      value &&
-      (name === TableCell.blotName || name === TableTh.blotName)
+        value &&
+        (name === TableCell.blotName || name === TableTh.blotName)
     ) {
       const listContainer = this.getListContainer(this.parent);
       if (!listContainer) return;
@@ -148,10 +148,6 @@ class TableList extends List {
 }
 TableList.blotName = 'table-list';
 TableList.className = 'table-list';
-
-Quill.register({
-  'formats/table-list': TableList
-}, true);
 
 ListContainer.allowedChildren = [TableList];
 TableList.requiredContainer = ListContainer;

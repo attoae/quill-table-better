@@ -39,8 +39,8 @@ class TableHeader extends Header {
       }
       return this.replaceWith('table-list', value);
     } else if (
-      value &&
-      (name === TableCell.blotName || name === TableTh.blotName)
+        value &&
+        (name === TableCell.blotName || name === TableTh.blotName)
     ) {
       return this.wrap(name, value);
     } else if (name === this.statics.blotName && !value) {
@@ -71,9 +71,5 @@ class TableHeader extends Header {
     return [...getCellFormats(cellBlot), cellBlot.statics.blotName];
   }
 }
-
-Quill.register({
-  'formats/table-header': TableHeader
-}, true);
 
 export default TableHeader;
